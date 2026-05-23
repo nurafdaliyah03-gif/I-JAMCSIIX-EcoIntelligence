@@ -8,38 +8,51 @@ import numpy as np
 st.set_page_config(page_title="I-JAMCSIIX - Eco Intelligence", layout="wide", initial_sidebar_state="collapsed")
 
 # --- 2. SESSION STATE ---
-if 'page' not in st.session_state: st.session_state.page = "Portal"
-if 'df' not in st.session_state: st.session_state.df = None
+if 'page' not in st.session_state:
+    st.session_state.page = "Portal"
+if 'df' not in st.session_state:
+    st.session_state.df = None
 
-def set_page(name): st.session_state.page = name
+def set_page(name):
+    st.session_state.page = name
 
-# --- FUNGSI NORMALISASI PETA (FIX SEMUA PROVINSI) ---
-def normalize_name(nama):
+# --- FUNGSI SINKRONISASI NAMA (FIX PETA) ---
+def sync_prov_name(nama):
     mapping = {
-        "KEP. RIAU": "KEPULAUAN RIAU", "KEP RIAU": "KEPULAUAN RIAU",
-        "JAKARTA": "DKI JAKARTA", "DKI JAKARTA": "DKI JAKARTA",
-        "YOGYAKARTA": "DI YOGYAKARTA", "DI YOGYAKARTA": "DI YOGYAKARTA",
-        "BANGKA BELITUNG": "BANGKA BELITUNG", "KEP. BANGKA BELITUNG": "BANGKA BELITUNG",
-        "PAPUA BARAT": "PAPUA BARAT", "PAPUA BARAT DAYA": "PAPUA BARAT DAYA",
-        "KALIMANTAN UTARA": "KALIMANTAN UTARA", "SULAWESI BARAT": "SULAWESI BARAT"
+        "KEP. RIAU": "KEPULAUAN RIAU",
+        "DKI JAKARTA": "DKI JAKARTA",
+        "JAKARTA": "DKI JAKARTA",
+        "DI YOGYAKARTA": "DI YOGYAKARTA",
+        "YOGYAKARTA": "DI YOGYAKARTA",
+        "BANGKA BELITUNG": "KEP. BANGKA BELITUNG"
     }
-    n = str(nama).strip().upper()
-    return mapping.get(n, n)
+    return mapping.get(str(nama).strip().upper(), str(nama).strip().upper())
 
 # --- 3. CSS CUSTOM ---
 st.markdown("""
 <style>
-    .stApp { background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=2000&auto=format&fit=crop'); background-size: cover; background-position: center; background-attachment: fixed; color: #ffffff; }
+    .stApp {
+        background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), 
+                    url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=2000&auto=format&fit=crop');
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+        color: #ffffff;
+    }
     .stSelectbox div[data-baseweb="select"] { background-color: #ffffff !important; border-radius: 10px; }
     .stSelectbox div[data-baseweb="select"] div { color: #000000 !important; font-weight: 600 !important; }
     .stSelectbox label p { color: #facc15 !important; font-weight: bold !important; font-size: 1.05rem !important; }
     [data-testid="stFileUploader"] label p { color: #facc15 !important; font-weight: bold !important; font-size: 1.1rem !important; text-shadow: 1px 1px 3px rgba(0,0,0,0.8); }
+    [data-testid="stFileUploader"] section div div { color: #ffffff !important; }
     [data-testid="stFileUploader"] button { background-color: #15803d !important; color: #ffffff !important; border: 1px solid #facc15 !important; }
     .main-title { font-size: 5rem !important; font-family: 'Arial Black', sans-serif; background: linear-gradient(to bottom, #facc15 0%, #fbbf24 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-align: center; font-weight: 900 !important; filter: drop-shadow(0px 5px 15px rgba(0,0,0,0.9)); }
     .menu-card { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 30px; padding: 40px; text-align: center; height: 350px; display: flex; flex-direction: column; justify-content: center; }
     .stPlotlyChart { background-color: white !important; border-radius: 20px; padding: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+    [data-testid="stMetricValue"] { color: #ffffff !important; font-weight: 800 !important; font-size: 1.8rem !important; }
+    [data-testid="stMetricLabel"] { color: #facc15 !important; font-weight: bold !important; font-size: 0.9rem !important; }
     div.stButton > button { background: linear-gradient(135deg, #15803d 0%, #166534 100%) !important; color: white !important; border: 1px solid #facc15 !important; border-radius: 12px; width: 100%; }
     .research-card { background: rgba(15, 23, 42, 0.65); border: 1px solid rgba(250, 191, 36, 0.3); border-radius: 16px; padding: 25px; margin-bottom: 20px; backdrop-filter: blur(8px); }
+    .research-card h4 { color: #facc15 !important; margin-top: 0px; border-bottom: 2px solid #15803d; padding-bottom: 8px; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -48,12 +61,7 @@ st.markdown("""
 def load_geojson():
     try:
         url = "https://raw.githubusercontent.com/superpikar/indonesia-geojson/master/indonesia-province-simple.json"
-        res = requests.get(url).json()
-        for feature in res['features']:
-            nama_raw = feature['properties'].get('Propinsi', '')
-            # Normalisasi GeoJSON ke standar yang sama
-            feature['properties']['PROV_KEY'] = normalize_name(nama_raw)
-        return res
+        return requests.get(url).json()
     except: return None
 
 geojson = load_geojson()
@@ -66,34 +74,40 @@ if st.session_state.page == "Portal":
     c_up1, c_up2, c_up3 = st.columns([1, 2, 1])
     with c_up2:
         up_file = st.file_uploader("📥 Unggah Dataset Deforestasi (CSV)", type=["csv"])
-        if up_file:
+        if up_file is not None:
             raw_df = pd.read_csv(up_file)
             raw_df.columns = raw_df.columns.str.strip()
             if 'PROVINSI' in raw_df.columns:
-                raw_df['PROVINSI'] = raw_df['PROVINSI'].apply(normalize_name)
+                # Sinkronkan nama provinsi saat upload
+                raw_df['PROVINSI_DISPLAY'] = raw_df['PROVINSI']
+                raw_df['PROVINSI'] = raw_df['PROVINSI'].apply(sync_prov_name)
             st.session_state.df = raw_df
             st.success("🌲 Data Terintegrasi Sempurna!")
 
     c1, c2, c3 = st.columns(3)
-    if c1.button("Buka Dashboard", disabled=st.session_state.df is None): set_page("Dashboard"); st.rerun()
-    if c2.button("Mulai Prediksi", disabled=st.session_state.df is None): set_page("Prediksi"); st.rerun()
-    if c3.button("Lihat Penelitian"): set_page("Penelitian"); st.rerun()
+    with c1:
+        st.markdown("<div class='menu-card'><h1>🛰️</h1><h3>Dashboard Spasial</h3></div>", unsafe_allow_html=True)
+        if st.button("Buka Dashboard", disabled=st.session_state.df is None): set_page("Dashboard"); st.rerun()
+    with c2:
+        st.markdown("<div class='menu-card'><h1>🧪</h1><h3>Prediksi MERF</h3></div>", unsafe_allow_html=True)
+        if st.button("Mulai Prediksi", disabled=st.session_state.df is None): set_page("Prediksi"); st.rerun()
+    with c3:
+        st.markdown("<div class='menu-card'><h1>📖</h1><h3>Info Penelitian</h3></div>", unsafe_allow_html=True)
+        if st.button("Lihat Penelitian"): set_page("Penelitian"); st.rerun()
 
 else:
     if st.button("⬅️ KEMBALI KE PORTAL"): set_page("Portal"); st.rerun()
     if st.session_state.page == "Dashboard" and st.session_state.df is not None:
         df = st.session_state.df
+        st.header("📊 Dashboard Deskriptif Spasial")
         sel_thn = st.selectbox("Pilih Tahun:", sorted(df['TAHUN'].unique(), reverse=True))
-        sel_prov = st.selectbox("Fokus Wilayah:", ["Semua Provinsi"] + sorted(df['PROVINSI'].unique().tolist()))
-        
         df_filt = df[df['TAHUN'] == sel_thn]
-        if geojson:
-            data_peta = df_filt if sel_prov == "Semua Provinsi" else df_filt[df_filt['PROVINSI'] == sel_prov]
-            fig = px.choropleth(data_peta, geojson=geojson, locations="PROVINSI", featureidkey="properties.PROV_KEY", color=col_y, color_continuous_scale="RdYlGn_r", hover_name="PROVINSI")
-            if sel_prov != "Semua Provinsi": fig.update_geos(fitbounds="locations", visible=False)
-            else: fig.update_geos(projection_type="mercator", center={"lat": -2.5, "lon": 118.0}, visible=False)
-            fig.update_layout(height=500, margin={"r":0,"t":0,"l":0,"b":0})
-            st.plotly_chart(fig, use_container_width=True)
+        
+        # Plotting dengan sinkronisasi
+        fig = px.choropleth(df_filt, geojson=geojson, locations="PROVINSI", featureidkey="properties.Propinsi", color=col_y, color_continuous_scale="RdYlGn_r")
+        fig.update_geos(projection_type="mercator", center={"lat": -2.5, "lon": 118.0}, visible=False)
+        fig.update_layout(height=450, margin={"r":0,"t":0,"l":0,"b":0}, paper_bgcolor='white')
+        st.plotly_chart(fig, use_container_width=True)
 
     elif st.session_state.page == "Prediksi":
         st.header("📈 Prediksi Deforestasi (MERF)")
