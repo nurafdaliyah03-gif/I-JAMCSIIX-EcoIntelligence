@@ -258,37 +258,60 @@ else:
             """, unsafe_allow_html=True)
             
         with rc2:
-            with st.container():
+            st.markdown("""
+            <div class='research-card'>
 
-                st.markdown("""
-                <div class='research-card'>
+            <h4>🧮 Persamaan Dasar Model MERF</h4>
 
-                <h4>🧮 Persamaan Dasar Model MERF</h4>
-
-                <p style='font-size:22px; color:white; text-align:center; margin-top:20px;'>
+            <div style='text-align:center; font-size:38px; color:white; margin-top:20px; margin-bottom:30px; font-weight:600;'>
                 y<sub>i</sub> = f(X<sub>i</sub>) + Z<sub>i</sub>b<sub>i</sub> + ε<sub>i</sub>
-                </p>
+            </div>
 
-                <p style='font-size: 0.85rem; color: #cbd5e1; margin-top: 10px; line-height: 1.6;'>
+            <p style='font-size:1.15rem; color:#e2e8f0; font-weight:600; margin-bottom:25px;'>
+                Keterangan fungsi dan simbol (p. 5):
+            </p>
 
-                <b>Keterangan fungsi dan simbol:</b><br><br>
+            <ul style='color:#f8fafc; line-height:1.9; font-size:1.08rem; padding-left:28px;'>
 
-                • <i>y<sub>i</sub></i> : Vektor nilai variabel respon 
-                (<i>Tree Cover Loss</i>) untuk provinsi ke-i.<br><br>
+                <li style='margin-bottom:18px;'>
+                    <b><i>y<sub>i</sub></i></b> :
+                    Vektor nilai variabel respon (<i>Tree Cover Loss</i>) untuk subjek provinsi ke-i.
+                </li>
 
-                • <i>f</i>(<b>X</b><sub>i</sub>) : Fungsi non-linear fixed effects 
-                menggunakan algoritma <b>Random Forest</b>.<br><br>
+                <li style='margin-bottom:18px;'>
+                    <b><i>f(X<sub>i</sub>)</i></b> :
+                    Fungsi non-linear <i>fixed effects</i> yang diestimasi menggunakan algoritma
+                    <b>Random Forest</b> berdasarkan matriks prediktor
+                    <b>X<sub>i</sub></b>.
+                </li>
 
-                • <b>Z</b><sub>i</sub> : Matriks desain untuk random effects.<br><br>
+                <li style='margin-bottom:18px;'>
+                    <b><i>Z<sub>i</sub></i></b> :
+                    Matriks desain untuk komponen <i>random effects</i>
+                    (dalam kasus Anda, konstanta intercept untuk tiap provinsi).
+                </li>
 
-                • <b>b</b><sub>i</sub> : Vektor random effects provinsi ke-i.<br><br>
+                <li style='margin-bottom:18px;'>
+                    <b><i>b<sub>i</sub></i></b> :
+                    Vektor penyimpangan acak (<i>random effects</i>) untuk provinsi ke-i,
+                    di mana
+                    <b>b<sub>i</sub></b> ~ <i>N</i>(0, <b>D</b>).
+                </li>
 
-                • <i>ε<sub>i</sub></i> : Residual error model.
-                </p>
+                <li style='margin-bottom:10px;'>
+                    <b><i>ε<sub>i</sub></i></b> :
+                    Vektor <i>error</i> acak sisaan (<i>residual error</i>),
+                    di mana
+                    <i>ε<sub>i</sub></i> ~ <i>N</i>(0, <b>R<sub>i</sub></b>)
+                    dengan
+                    <b>R<sub>i</sub></b> = σ²<b>I<sub>n<sub>i</sub></sub></b>.
+                </li>
 
-                </div>
-                """, unsafe_allow_html=True)
-                st.markdown("""
+            </ul>
+
+            </div>
+            """, unsafe_allow_html=True)
+            st.markdown("""
         <div style='background: linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%); padding: 25px; border-radius: 15px; border: 1px solid #ef4444; margin-top: 10px;'>
             <h5 style='margin: 0 0 10px 0; color: #fca5a5; font-weight: bold;'>⚠️ Batasan Penelitian & Disclaimer Model</h5>
             <ul style='color: #ffeeee; font-size: 0.9rem; line-height: 1.5;'>
