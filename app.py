@@ -258,31 +258,32 @@ else:
             """, unsafe_allow_html=True)
             
         with rc2:
-                    with rc2:
             with st.container():
-                st.markdown("<div class='research-card'><h4>🧮 Persamaan Dasar Model MERF</h4>", unsafe_allow_html=True)
+                st.markdown(
+                    "<div class='research-card'><h4>🧮 Persamaan Dasar Model MERF</h4>",
+                    unsafe_allow_html=True
+                )
+
                 st.latex(r"y_i = f(X_i) + Z_i b_i + \varepsilon_i")
+
                 st.markdown("""
                 <p style='font-size: 0.85rem; color: #cbd5e1; margin-top: 10px; line-height: 1.6;'>
                     <b>Keterangan fungsi dan simbol (p. 5):</b><br><br>
+
                     • <i>y<sub>i</sub></i> : Vektor nilai variabel respon (<i>Tree Cover Loss</i>) untuk subjek provinsi ke-<i>i</i>.<br><br>
 
                     • <i>f</i>(<b>X</b><sub><i>i</i></sub>) : Fungsi non-linear <i>fixed effects</i> yang diestimasi menggunakan algoritma
                     <b>Random Forest</b> berdasarkan matriks prediktor <b>X</b><sub><i>i</i></sub>.<br><br>
 
-                    • <b>Z</b><sub><i>i</i></sub> : Matriks desain untuk komponen <i>random effects</i> (dalam kasus Anda, konstanta
-                    intercept untuk tiap provinsi).<br><br>
+                    • <b>Z</b><sub><i>i</i></sub> : Matriks desain untuk komponen <i>random effects</i>.<br><br>
 
-                    • <b>b</b><sub><i>i</i></sub> : Vektor penyimpangan acak (<i>random effects</i>) untuk provinsi ke-<i>i</i>,
-                    di mana <b>b</b><sub><i>i</i></sub> ~ <i>N</i>(0, <b>D</b>).<br><br>
+                    • <b>b</b><sub><i>i</i></sub> : Vektor penyimpangan acak (<i>random effects</i>) untuk provinsi ke-<i>i</i>.<br><br>
 
-                    • <i>ε<sub>i</sub></i> : Vektor <i>error</i> acak sisaan (<i>residual error</i>),
-                    di mana <i>ε<sub>i</sub></i> ~ <i>N</i>(0, <b>R</b><sub><i>i</i></sub>)
-                    dengan <b>R</b><sub><i>i</i></sub> = σ²<b>I</b><sub><i>n<sub>i</sub></i></sub>.
+                    • <i>ε<sub>i</sub></i> : Vektor <i>error</i> acak sisaan (<i>residual error</i>).
                 </p>
                 </div>
                 """, unsafe_allow_html=True)
-        st.markdown("""
+                st.markdown("""
         <div style='background: linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%); padding: 25px; border-radius: 15px; border: 1px solid #ef4444; margin-top: 10px;'>
             <h5 style='margin: 0 0 10px 0; color: #fca5a5; font-weight: bold;'>⚠️ Batasan Penelitian & Disclaimer Model</h5>
             <ul style='color: #ffeeee; font-size: 0.9rem; line-height: 1.5;'>
