@@ -275,12 +275,12 @@ else:
                 st.latex(r"y_i = f(X_i) + Z_ib_i + \varepsilon_i")
                 st.markdown("""
                 <p style='font-size: 0.85rem; color: #cbd5e1; margin-top: 10px; line-height: 1.4;'>
-                    <b>Keterangan fungsi dan simbol (p. 5):</b><br>
-                    • <b>y_i</b>: Vektor nilai variabel respon (<i>Tree Cover Loss</i>) untuk subjek provinsi ke-<i>i</i>.<br>
-                    • <b>f(X_i)</b>: Fungsi non-linear <i>fixed effects</i> yang diestimasi menggunakan algoritma <b>Random Forest</b> berdasarkan matriks prediktor X_i.<br>
-                    • <b>Z_i</b>: Matriks desain untuk komponen <i>random effects</i> (dalam kasus Anda, konstanta intercept untuk tiap provinsi).<br>
-                    • <b>b_i</b>: Vektor penyimpangan acak (<i>random effects</i>) untuk provinsi ke-<i>i</i>, di mana b_i ~ N(0, D).<br>
-                    • <b>ε_i</b>: Vektor error acak sisaan (<i>residual error</i>), di mana ε_i ~ N(0, R_i) dengan R_i = σ^2 I_(n_i).
+                    <b>Keterangan:</b><br>
+                    • y_i: Vektor nilai variabel respon (Tree Cover Loss) untuk subjek provinsi ke-i.<br>
+                    • f(X_i): Fungsi non-linear fixed effects yang diestimasi menggunakan algoritma Random Forest berdasarkan matriks prediktor Xi.<br>
+                    • Z_i: Matriks desain untuk komponen random effects (konstanta intercept untuk tiap provinsi).<br>
+                    • b_i: Vektor penyimpangan acak untuk provinsi ke-i, dimana b_i ~ N(0, D).<br>
+                    • ε_i: Vektor error acak sisaan (residual error), dimana ε_i~N(0,R_i) dengan R_i=σ^2 I_(n_i).
                 </p>
                 </div>
                 """, unsafe_allow_html=True)
