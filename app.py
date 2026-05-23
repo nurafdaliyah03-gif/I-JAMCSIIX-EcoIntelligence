@@ -393,19 +393,19 @@ else:
 
     # --- HALAMAN PENELITIAN JAMCSICX ---
     elif st.session_state.page == "Penelitian":
-        st.markdown("<h2 style='text-align:center; color:#facc15; font-weight: 800;'>📖 Info Penelitian & Kerangka Teoretis Model</h2>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align:center; color:#dcfce7;'>Dokumentasi Ilmiah Sistem Monitoring dan Estimasi Deforestasi Tingkat Provinsi</p>", unsafe_allow_html=True)
+        # POIN 1: Mengubah header judul utama halaman info penelitian
+        st.markdown("<h2 style='text-align:center; color:#facc15; font-weight: 800;'>📖 Info Penelitian</h2>", unsafe_allow_html=True)
         st.markdown("<br>", unsafe_allow_html=True)
         
         rc1, rc2 = st.columns(2)
         with rc1:
+            # POIN 2: Menyederhanakan dan mengganti tujuan penelitian menjadi tepat 2 butir saja sesuai teks permintaan
             st.markdown("""
             <div class='research-card'>
                 <h4>🎯 Tujuan Penelitian</h4>
                 <ul style='color: #f8fafc; padding-left: 20px; line-height: 1.6;'>
-                    <li><b>Analisis Pola Historis:</b> Mengidentifikasi pola musiman dan tren sekuler dari <i>Tree Cover Loss</i> di seluruh provinsi Indonesia.</li>
-                    <li><b>Pemodelan Efek Campuran:</b> Memisahkan faktor pemicu global (Fixed Effects) dengan karakteristik spasial unik bawaan masing-masing daerah (Random Effects).</li>
-                    <li><b>Sistem Pendukung Keputusan:</b> Menyediakan alat proyeksi prediktif multi-tahun berbasis web bagi pemangku kepentingan untuk merumuskan kebijakan mitigasi lingkungan.</li>
+                    <li>Menerapkan pendekatan data longitudinal dan model hibrida Mixed Effects Random Forest (MERF) untuk menangkap tren perubahan waktu sekaligus.</li>
+                    <li>Membangun aplikasi web interaktif ForestGuard sebagai media visualisasi spasial-temporal (Choropleth Map) dan sistem prediksi risiko deforestasi yang praktis dan mudah dipahami oleh pemangku kebijakan serta masyarakat umum.</li>
                 </ul>
             </div>
             """, unsafe_allow_html=True)
@@ -435,21 +435,23 @@ else:
             """, unsafe_allow_html=True)
             
             with st.container():
+                # POIN 3: Mengubah penjelasan persamaan model sesuai isi gambar dan menghapus kalimat pengantar yang tidak perlu
                 st.markdown("<div class='research-card'><h4>🧮 Persamaan Dasar Model MERF</h4>", unsafe_allow_html=True)
-                st.write("Formulasi matematis dari struktur data panel pengamatan model ditulis sebagai berikut:")
-                st.latex(r"Y_{it} = f(X_{it}) + Z_{it}b_i + \varepsilon_{it}")
+                st.write("Persamaan matematis untuk model Mixed Effects Random Forest (MERF) adalah sebagai berikut:")
+                st.latex(r"Y_{ij} = f(X_{ij}) + Z_{ij}b_i + \varepsilon_{ij}")
                 st.markdown("""
                 <p style='font-size: 0.85rem; color: #cbd5e1; margin-top: 10px; line-height: 1.4;'>
                     <b>Keterangan:</b><br>
-                    • $Y_{it}$: Nilai Tree Cover Loss provinsi ke-$i$ pada tahun ke-$t$.<br>
-                    • $f(X_{it})$: Komponen non-linear Fixed Effect yang diestimasi menggunakan <i>Forest Structure</i>.<br>
-                    • $Z_{it}b_i$: Komponen Spasial Random Effect khusus untuk karakteristik intrinsik wilayah ke-$i$.<br>
-                    • $\varepsilon_{it}$: Error residu komponen acak.
+                    • $Y_{ij}$: Variabel dependen (Tree Cover Loss) untuk pengamatan ke-$j$ dalam kluster ke-$i$.<br>
+                    • $f(X_{ij})$: Fungsi populasi (fixed effects) yang menangkap hubungan non-linear menggunakan Random Forest.<br>
+                    • $Z_{ij}$: Matriks desain untuk efek acak (random effects).<br>
+                    • $b_i$: Vektor efek acak untuk kluster ke-$i$, diasumsikan berdistribusi normal $b_i \sim N(0, D)$.<br>
+                    • $\varepsilon_{ij}$: Error residual untuk pengamatan ke-$j$ dalam kluster ke-$i$, diasumsikan $\varepsilon_{ij} \sim N(0, \sigma^2 I)$.
                 </p>
                 </div>
                 """, unsafe_allow_html=True)
 
-        # --- BAGIAN BARU: PENJELASAN TAMBAHAN PROSES ETAP OPTIMASI (TANPA MENGHAPUS YANG LAIN) ---
+        # --- TETAP DIPERTAHANKAN: PROSEDUR OPTIMASI EM (TIDAK DIHAPUS) ---
         st.markdown("""
         <div class='research-card'>
             <h4>⚙️ Prosedur Optimasi & Algoritma Ekspektasi-Maksimisasi (EM)</h4>
@@ -530,12 +532,16 @@ else:
             </div>
             """, unsafe_allow_html=True)
 
+        # POIN 4: Mengubah batasan penelitian berdasarkan tangkapan gambar dengan penyesuaian kalimat khusus di poin ke-4
         st.markdown("""
         <div style='background: linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%); padding: 25px; border-radius: 15px; border: 1px solid #ef4444; margin-top: 10px;'>
             <h5 style='margin: 0 0 10px 0; color: #fca5a5; font-weight: bold;'>⚠️ Batasan Penelitian & Disclaimer Model</h5>
-            <p style='margin: 0; font-size: 0.9rem; color: #ffeeee; text-align: justify; line-height: 1.5;'>
-                Hasil proyeksi yang disajikan oleh sistem ini bersifat <b>estimatif probabilitas</b> berdasarkan pola matematis historis data panel yang diunggah. Model tidak memperhitungkan faktor pemicu eksternal mendadak (<i>exogenous shocks</i>) di luar variabel terdata, seperti perubahan regulasi moratorium pembukaan lahan baru, penegakan hukum lokal, ataupun anomali iklim ekstrem yang dapat mengubah laju deforestasi secara drastis di lapangan.
-            </p>
+            <ol style='margin: 0; padding-left: 20px; font-size: 0.9rem; color: #ffeeee; text-align: justify; line-height: 1.6;'>
+                <li>Model ini bergantung pada ketersediaan dan akurasi data sekunder dari BPS dan KLHK; ketidakberadaan data pada tahun tertentu atau wilayah tertentu dapat memengaruhi konsistensi prediksi.</li>
+                <li>Hasil prediksi bersifat estimasi numerik berdasarkan pola historis dan tidak menjamin kepastian mutlak di masa depan.</li>
+                <li>Model MERF mengasumsikan efek acak (random effects) bersifat linear pada tingkat kluster, sehingga pola spasial yang sangat kompleks atau non-linear pada tingkat sub-kluster mungkin tidak sepenuhnya tertangkap.</li>
+                <li>Tidak memperhitungkan faktor pemicu eksternal mendadak (exogenous shocks) di luar variabel terdata, seperti perubahan kebijakan pemerintah yang drastis, bencana alam berskala besar, atau penegakan hukum lokal yang tidak tercatat dalam statistik formal.</li>
+            </ol>
         </div>
         <br>
         """, unsafe_allow_html=True)
