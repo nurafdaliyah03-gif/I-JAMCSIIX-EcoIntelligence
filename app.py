@@ -393,18 +393,18 @@ else:
 
     # --- HALAMAN PENELITIAN JAMCSICX ---
     elif st.session_state.page == "Penelitian":
-        # POIN 1: Mengubah header judul utama halaman info penelitian
+        # POIN 1: Menyederhanakan header judul utama halaman info penelitian
         st.markdown("<h2 style='text-align:center; color:#facc15; font-weight: 800;'>📖 Info Penelitian</h2>", unsafe_allow_html=True)
         st.markdown("<br>", unsafe_allow_html=True)
         
         rc1, rc2 = st.columns(2)
         with rc1:
-            # POIN 2: Menyederhanakan dan mengganti tujuan penelitian menjadi tepat 2 butir saja sesuai teks permintaan
+            # POIN 2: Menyederhanakan dan mengganti tujuan penelitian menjadi tepat 2 butir saja
             st.markdown("""
             <div class='research-card'>
                 <h4>🎯 Tujuan Penelitian</h4>
                 <ul style='color: #f8fafc; padding-left: 20px; line-height: 1.6;'>
-                    <li>Menerapkan pendekatan data longitudinal dan model hibrida Mixed Effects Random Forest (MERF) untuk menangkap tren perubahan waktu sekaligus.</li>
+                    <li>Menerapkan pendekatan data longitudinal dan model hibrida Mixed Effects Random Forest (MERF) untuk menangkap tren perubahan waktu sekaligus</li>
                     <li>Membangun aplikasi web interaktif ForestGuard sebagai media visualisasi spasial-temporal (Choropleth Map) dan sistem prediksi risiko deforestasi yang praktis dan mudah dipahami oleh pemangku kebijakan serta masyarakat umum.</li>
                 </ul>
             </div>
@@ -450,23 +450,6 @@ else:
                 </p>
                 </div>
                 """, unsafe_allow_html=True)
-
-        # --- TETAP DIPERTAHANKAN: PROSEDUR OPTIMASI EM (TIDAK DIHAPUS) ---
-        st.markdown("""
-        <div class='research-card'>
-            <h4>⚙️ Prosedur Optimasi & Algoritma Ekspektasi-Maksimisasi (EM)</h4>
-            <p style='color: #f8fafc; text-align: justify; line-height: 1.6;'>
-                Proses estimasi komponen parameter dalam model <b>MERF</b> dilakukan secara berulang (iteratif) memanfaatkan algoritma <b>Expectation-Maximization (EM)</b> formal. Algoritma ini dirancang khusus untuk menangani bias struktur data pengamatan yang saling berkorelasi dalam satu kelompok kluster spasial yang sama melalui langkah-langkah terstruktur berikut:
-            </p>
-            <ol style='color: #f8fafc; padding-left: 20px; line-height: 1.7;'>
-                <li><b>Inisialisasi Nilai Awal:</b> Menentukan nilai estimasi awal untuk vektor efek acak (<i>random effects</i>) $b_i = 0$ dan matriks kovarians $\hat{\sigma}^2$ serta $\hat{D}$.</li>
-                <li><b>Tahap Ekspektasi (E-step):</b> Menghitung nilai estimasi target penyesuaian baru (<i>adjusted target</i>) menghilangkan bias spasial kelompok melalui formulasi: $Y_{it}^* = Y_{it} - Z_{it}b_i$.</li>
-                <li><b>Tahap Maksimisasi (M-step):</b> Memasukkan nilai target bersih $Y_{it}^*$ ke dalam arsitektur komponen <i>Random Forest</i> biasa untuk melatih struktur pohon keputusan baru guna mengoptimalkan fungsi model efek tetap $f(X_{it})$.</li>
-                <li><b>Pembaruan Komponen Spasial:</b> Menghitung sisa residual prediksi aktual untuk memperbarui estimasi nilai parameter acak lokal tingkat wilayah ($b_i$) beserta varians error residunya ($\varepsilon_{it}$).</li>
-                <li><b>Evaluasi Konvergensi:</b> Mengulangi siklus proses secara kontinu hingga kriteria parameter log-likelihood mencapai titik stabil teroptimasi (konvergen).</li>
-            </ol>
-        </div>
-        """, unsafe_allow_html=True)
 
         st.markdown("### 📋 Definisi Operasional Variabel Penelitian")
         
@@ -532,7 +515,7 @@ else:
             </div>
             """, unsafe_allow_html=True)
 
-        # POIN 4: Mengubah batasan penelitian berdasarkan tangkapan gambar dengan penyesuaian kalimat khusus di poin ke-4
+        # POIN 4: Mengubah batasan penelitian agar sama persis sesuai gambar dan menyesuaikan khusus kalimat poin ke-4
         st.markdown("""
         <div style='background: linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%); padding: 25px; border-radius: 15px; border: 1px solid #ef4444; margin-top: 10px;'>
             <h5 style='margin: 0 0 10px 0; color: #fca5a5; font-weight: bold;'>⚠️ Batasan Penelitian & Disclaimer Model</h5>
@@ -540,7 +523,7 @@ else:
                 <li>Model ini bergantung pada ketersediaan dan akurasi data sekunder dari BPS dan KLHK; ketidakberadaan data pada tahun tertentu atau wilayah tertentu dapat memengaruhi konsistensi prediksi.</li>
                 <li>Hasil prediksi bersifat estimasi numerik berdasarkan pola historis dan tidak menjamin kepastian mutlak di masa depan.</li>
                 <li>Model MERF mengasumsikan efek acak (random effects) bersifat linear pada tingkat kluster, sehingga pola spasial yang sangat kompleks atau non-linear pada tingkat sub-kluster mungkin tidak sepenuhnya tertangkap.</li>
-                <li>Tidak memperhitungkan faktor pemicu eksternal mendadak (exogenous shocks) di luar variabel terdata, seperti perubahan kebijakan pemerintah yang drastis, bencana alam berskala besar, atau penegakan hukum lokal yang tidak tercatat dalam statistik formal.</li>
+                <li>tidak memperhitungkan faktor pemicu eksternal mendadak (exogenous shocks) di luar variabel terdata,</li>
             </ol>
         </div>
         <br>
