@@ -393,13 +393,13 @@ else:
 
     # --- HALAMAN PENELITIAN JAMCSICX ---
     elif st.session_state.page == "Penelitian":
-        # POIN 1: Menyederhanakan header judul utama halaman info penelitian
+        # POIN 1: Mengubah judul utama sesuai permintaan
         st.markdown("<h2 style='text-align:center; color:#facc15; font-weight: 800;'>📖 Info Penelitian</h2>", unsafe_allow_html=True)
         st.markdown("<br>", unsafe_allow_html=True)
         
         rc1, rc2 = st.columns(2)
         with rc1:
-            # POIN 2: Menyederhanakan dan mengganti tujuan penelitian menjadi tepat 2 butir saja
+            # POIN 2: Tujuan penelitian dibuat tepat 2 poin sesuai teks yang diminta
             st.markdown("""
             <div class='research-card'>
                 <h4>🎯 Tujuan Penelitian</h4>
@@ -435,7 +435,7 @@ else:
             """, unsafe_allow_html=True)
             
             with st.container():
-                # POIN 3: Mengubah penjelasan persamaan model sesuai isi gambar dan menghapus kalimat pengantar yang tidak perlu
+                # POIN 3: Persamaan dibuat seperti di gambar dan menghapus kalimat "dalam kasus Anda"
                 st.markdown("<div class='research-card'><h4>🧮 Persamaan Dasar Model MERF</h4>", unsafe_allow_html=True)
                 st.write("Persamaan matematis untuk model Mixed Effects Random Forest (MERF) adalah sebagai berikut:")
                 st.latex(r"Y_{ij} = f(X_{ij}) + Z_{ij}b_i + \varepsilon_{ij}")
@@ -445,8 +445,8 @@ else:
                     • $Y_{ij}$: Variabel dependen (Tree Cover Loss) untuk pengamatan ke-$j$ dalam kluster ke-$i$.<br>
                     • $f(X_{ij})$: Fungsi populasi (fixed effects) yang menangkap hubungan non-linear menggunakan Random Forest.<br>
                     • $Z_{ij}$: Matriks desain untuk efek acak (random effects).<br>
-                    • $b_i$: Vektor efek acak untuk kluster ke-$i$, diasumsikan berdistribusi normal $b_i \sim N(0, D)$.<br>
-                    • $\varepsilon_{ij}$: Error residual untuk pengamatan ke-$j$ dalam kluster ke-$i$, diasumsikan $\varepsilon_{ij} \sim N(0, \sigma^2 I)$.
+                    • $b_i$: Vektor efek acak untuk kluster ke-$i$, diasumsikan berdistribusi normal $b_i \\sim N(0, D)$.<br>
+                    • $\\varepsilon_{ij}$: Error residual untuk pengamatan ke-$j$ dalam kluster ke-$i$, diasumsikan $\\varepsilon_{ij} \\sim N(0, \\sigma^2 I)$.
                 </p>
                 </div>
                 """, unsafe_allow_html=True)
@@ -515,7 +515,7 @@ else:
             </div>
             """, unsafe_allow_html=True)
 
-        # POIN 4: Mengubah batasan penelitian agar sama persis sesuai gambar dan menyesuaikan khusus kalimat poin ke-4
+        # POIN 4: Bagian batasan dibuat sama persis dengan gambar, dengan teks poin ke-4 disesuaikan instruksi Anda
         st.markdown("""
         <div style='background: linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%); padding: 25px; border-radius: 15px; border: 1px solid #ef4444; margin-top: 10px;'>
             <h5 style='margin: 0 0 10px 0; color: #fca5a5; font-weight: bold;'>⚠️ Batasan Penelitian & Disclaimer Model</h5>
