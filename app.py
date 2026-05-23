@@ -259,28 +259,33 @@ else:
             
         with rc2:
             with st.container():
-                st.markdown(
-                    "<div class='research-card'><h4>🧮 Persamaan Dasar Model MERF</h4>",
-                    unsafe_allow_html=True
-                )
-
-                st.latex(r"y_i = f(X_i) + Z_i b_i + \varepsilon_i")
 
                 st.markdown("""
-                <p style='font-size: 0.85rem; color: #cbd5e1; margin-top: 10px; line-height: 1.6;'>
-                    <b>Keterangan fungsi dan simbol (p. 5):</b><br><br>
+                <div class='research-card'>
 
-                    • <i>y<sub>i</sub></i> : Vektor nilai variabel respon (<i>Tree Cover Loss</i>) untuk subjek provinsi ke-<i>i</i>.<br><br>
+                <h4>🧮 Persamaan Dasar Model MERF</h4>
 
-                    • <i>f</i>(<b>X</b><sub><i>i</i></sub>) : Fungsi non-linear <i>fixed effects</i> yang diestimasi menggunakan algoritma
-                    <b>Random Forest</b> berdasarkan matriks prediktor <b>X</b><sub><i>i</i></sub>.<br><br>
-
-                    • <b>Z</b><sub><i>i</i></sub> : Matriks desain untuk komponen <i>random effects</i>.<br><br>
-
-                    • <b>b</b><sub><i>i</i></sub> : Vektor penyimpangan acak (<i>random effects</i>) untuk provinsi ke-<i>i</i>.<br><br>
-
-                    • <i>ε<sub>i</sub></i> : Vektor <i>error</i> acak sisaan (<i>residual error</i>).
+                <p style='font-size:22px; color:white; text-align:center; margin-top:20px;'>
+                y<sub>i</sub> = f(X<sub>i</sub>) + Z<sub>i</sub>b<sub>i</sub> + ε<sub>i</sub>
                 </p>
+
+                <p style='font-size: 0.85rem; color: #cbd5e1; margin-top: 10px; line-height: 1.6;'>
+
+                <b>Keterangan fungsi dan simbol:</b><br><br>
+
+                • <i>y<sub>i</sub></i> : Vektor nilai variabel respon 
+                (<i>Tree Cover Loss</i>) untuk provinsi ke-i.<br><br>
+
+                • <i>f</i>(<b>X</b><sub>i</sub>) : Fungsi non-linear fixed effects 
+                menggunakan algoritma <b>Random Forest</b>.<br><br>
+
+                • <b>Z</b><sub>i</sub> : Matriks desain untuk random effects.<br><br>
+
+                • <b>b</b><sub>i</sub> : Vektor random effects provinsi ke-i.<br><br>
+
+                • <i>ε<sub>i</sub></i> : Residual error model.
+                </p>
+
                 </div>
                 """, unsafe_allow_html=True)
                 st.markdown("""
