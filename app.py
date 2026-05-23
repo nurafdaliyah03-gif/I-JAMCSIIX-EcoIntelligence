@@ -449,6 +449,23 @@ else:
                 </div>
                 """, unsafe_allow_html=True)
 
+        # --- BAGIAN BARU: PENJELASAN TAMBAHAN PROSES ETAP OPTIMASI (TANPA MENGHAPUS YANG LAIN) ---
+        st.markdown("""
+        <div class='research-card'>
+            <h4>⚙️ Prosedur Optimasi & Algoritma Ekspektasi-Maksimisasi (EM)</h4>
+            <p style='color: #f8fafc; text-align: justify; line-height: 1.6;'>
+                Proses estimasi komponen parameter dalam model <b>MERF</b> dilakukan secara berulang (iteratif) memanfaatkan algoritma <b>Expectation-Maximization (EM)</b> formal. Algoritma ini dirancang khusus untuk menangani bias struktur data pengamatan yang saling berkorelasi dalam satu kelompok kluster spasial yang sama melalui langkah-langkah terstruktur berikut:
+            </p>
+            <ol style='color: #f8fafc; padding-left: 20px; line-height: 1.7;'>
+                <li><b>Inisialisasi Nilai Awal:</b> Menentukan nilai estimasi awal untuk vektor efek acak (<i>random effects</i>) $b_i = 0$ dan matriks kovarians $\hat{\sigma}^2$ serta $\hat{D}$.</li>
+                <li><b>Tahap Ekspektasi (E-step):</b> Menghitung nilai estimasi target penyesuaian baru (<i>adjusted target</i>) menghilangkan bias spasial kelompok melalui formulasi: $Y_{it}^* = Y_{it} - Z_{it}b_i$.</li>
+                <li><b>Tahap Maksimisasi (M-step):</b> Memasukkan nilai target bersih $Y_{it}^*$ ke dalam arsitektur komponen <i>Random Forest</i> biasa untuk melatih struktur pohon keputusan baru guna mengoptimalkan fungsi model efek tetap $f(X_{it})$.</li>
+                <li><b>Pembaruan Komponen Spasial:</b> Menghitung sisa residual prediksi aktual untuk memperbarui estimasi nilai parameter acak lokal tingkat wilayah ($b_i$) beserta varians error residunya ($\varepsilon_{it}$).</li>
+                <li><b>Evaluasi Konvergensi:</b> Mengulangi siklus proses secara kontinu hingga kriteria parameter log-likelihood mencapai titik stabil teroptimasi (konvergen).</li>
+            </ol>
+        </div>
+        """, unsafe_allow_html=True)
+
         st.markdown("### 📋 Definisi Operasional Variabel Penelitian")
         
         v_col1, v_col2 = st.columns(2)
