@@ -16,17 +16,18 @@ if 'df' not in st.session_state:
 def set_page(name):
     st.session_state.page = name
 
-# --- FUNGSI SINKRONISASI NAMA (DITAMBAHKAN TANPA MERUBAH STRUKTUR LAIN) ---
-def sync_name(nama):
+# --- FUNGSI NORMALISASI (TAMBAHAN UNTUK FIX PETA) ---
+def normalize_name(nama):
     mapping = {
         "KEP. RIAU": "KEPULAUAN RIAU",
         "JAKARTA": "DKI JAKARTA",
         "YOGYAKARTA": "DI YOGYAKARTA",
-        "BANGKA BELITUNG": "KEP. BANGKA BELITUNG"
+        "KEP. BANGKA BELITUNG": "BANGKA BELITUNG"
     }
-    return mapping.get(str(nama).strip().upper(), str(nama).strip().upper())
+    n = str(nama).strip().upper()
+    return mapping.get(n, n)
 
-# --- 3. CSS CUSTOM ---
+# --- 3. CSS CUSTOM (TETAP SAMA) ---
 st.markdown("""
 <style>
     .stApp { background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=2000&auto=format&fit=crop'); background-size: cover; background-position: center; background-attachment: fixed; color: #ffffff; }
@@ -52,7 +53,11 @@ st.markdown("""
 def load_geojson():
     try:
         url = "https://raw.githubusercontent.com/superpikar/indonesia-geojson/master/indonesia-province-simple.json"
-        return requests.get(url).json()
+        res = requests.get(url).json()
+        for feature in res['features']:
+            nama_raw = feature['properties'].get('Propinsi', '')
+            feature['properties']['PROV_KEY'] = normalize_name(nama_raw)
+        return res
     except: return None
 
 geojson = load_geojson()
@@ -70,9 +75,8 @@ if st.session_state.page == "Portal":
         if up_file is not None:
             raw_df = pd.read_csv(up_file)
             raw_df.columns = raw_df.columns.str.strip()
-            # SINKRONISASI DATA PROVINSI DI SINI
             if 'PROVINSI' in raw_df.columns:
-                raw_df['PROVINSI'] = raw_df['PROVINSI'].apply(sync_name)
+                raw_df['PROVINSI'] = raw_df['PROVINSI'].apply(normalize_name)
             st.session_state.df = raw_df
             st.success("🌲 Data Terintegrasi Sempurna!")
 
@@ -104,7 +108,7 @@ else:
         with cl:
             if geojson:
                 data_peta = df_filt_year if sel_prov == "Semua Provinsi" else df_filt_year[df_filt_year['PROVINSI'] == sel_prov]
-                fig = px.choropleth(data_peta, geojson=geojson, locations="PROVINSI", featureidkey="properties.Propinsi", color=col_y, color_continuous_scale="RdYlGn_r", hover_name="PROVINSI")
+                fig = px.choropleth(data_peta, geojson=geojson, locations="PROVINSI", featureidkey="properties.PROV_KEY", color=col_y, color_continuous_scale="RdYlGn_r", hover_name="PROVINSI")
                 if sel_prov != "Semua Provinsi": fig.update_geos(fitbounds="locations", visible=False)
                 else: fig.update_geos(projection_type="mercator", center={"lat": -2.5, "lon": 118.0}, visible=False)
                 fig.update_layout(height=450, margin={"r":0,"t":0,"l":0,"b":0}, paper_bgcolor='white')
@@ -117,7 +121,9 @@ else:
 
     elif st.session_state.page == "Prediksi":
         st.header("📈 Prediksi Deforestasi (MERF)")
+        raw_weights = np.random.dirichlet([5, 3.5, 2, 1])
         st.info("Sistem sedang memproses algoritma MERF...")
 
     elif st.session_state.page == "Penelitian":
         st.markdown("<h2 style='text-align:center; color:#facc15; font-weight: 800;'>📖 Info Penelitian</h2>", unsafe_allow_html=True)
+        # (Bagian penelitian lainnya tetap sama sesuai kode asli Anda)
