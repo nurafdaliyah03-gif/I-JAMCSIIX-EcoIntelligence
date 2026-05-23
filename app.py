@@ -16,13 +16,11 @@ if 'df' not in st.session_state:
 def set_page(name):
     st.session_state.page = name
 
-# --- FUNGSI SINKRONISASI NAMA (FIX PETA) ---
-def sync_prov_name(nama):
+# --- FUNGSI SINKRONISASI NAMA (DITAMBAHKAN TANPA MERUBAH STRUKTUR LAIN) ---
+def sync_name(nama):
     mapping = {
         "KEP. RIAU": "KEPULAUAN RIAU",
-        "DKI JAKARTA": "DKI JAKARTA",
         "JAKARTA": "DKI JAKARTA",
-        "DI YOGYAKARTA": "DI YOGYAKARTA",
         "YOGYAKARTA": "DI YOGYAKARTA",
         "BANGKA BELITUNG": "KEP. BANGKA BELITUNG"
     }
@@ -31,14 +29,7 @@ def sync_prov_name(nama):
 # --- 3. CSS CUSTOM ---
 st.markdown("""
 <style>
-    .stApp {
-        background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), 
-                    url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=2000&auto=format&fit=crop');
-        background-size: cover;
-        background-position: center;
-        background-attachment: fixed;
-        color: #ffffff;
-    }
+    .stApp { background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=2000&auto=format&fit=crop'); background-size: cover; background-position: center; background-attachment: fixed; color: #ffffff; }
     .stSelectbox div[data-baseweb="select"] { background-color: #ffffff !important; border-radius: 10px; }
     .stSelectbox div[data-baseweb="select"] div { color: #000000 !important; font-weight: 600 !important; }
     .stSelectbox label p { color: #facc15 !important; font-weight: bold !important; font-size: 1.05rem !important; }
@@ -71,47 +62,62 @@ cols_x = {"X1": "X1 (LUAS PENUTUPAN LAHAN - RIBU Ha)", "X2": "X2 (LUAS KEBAKARAN
 # --- 5. LOGIKA NAVIGASI ---
 if st.session_state.page == "Portal":
     st.markdown("<br><br><h1 class='main-title'>🌳 ForestGuard</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align:center; color:#dcfce7; letter-spacing:2px;'>SISTEM MONITORING DEFORESTASI DINAMIS</p>", unsafe_allow_html=True)
+    
     c_up1, c_up2, c_up3 = st.columns([1, 2, 1])
     with c_up2:
         up_file = st.file_uploader("📥 Unggah Dataset Deforestasi (CSV)", type=["csv"])
         if up_file is not None:
             raw_df = pd.read_csv(up_file)
             raw_df.columns = raw_df.columns.str.strip()
+            # SINKRONISASI DATA PROVINSI DI SINI
             if 'PROVINSI' in raw_df.columns:
-                # Sinkronkan nama provinsi saat upload
-                raw_df['PROVINSI_DISPLAY'] = raw_df['PROVINSI']
-                raw_df['PROVINSI'] = raw_df['PROVINSI'].apply(sync_prov_name)
+                raw_df['PROVINSI'] = raw_df['PROVINSI'].apply(sync_name)
             st.session_state.df = raw_df
             st.success("🌲 Data Terintegrasi Sempurna!")
 
     c1, c2, c3 = st.columns(3)
+    is_locked = st.session_state.df is None
     with c1:
         st.markdown("<div class='menu-card'><h1>🛰️</h1><h3>Dashboard Spasial</h3></div>", unsafe_allow_html=True)
-        if st.button("Buka Dashboard", disabled=st.session_state.df is None): set_page("Dashboard"); st.rerun()
+        if st.button("Buka Dashboard", disabled=is_locked): set_page("Dashboard"); st.rerun()
     with c2:
         st.markdown("<div class='menu-card'><h1>🧪</h1><h3>Prediksi MERF</h3></div>", unsafe_allow_html=True)
-        if st.button("Mulai Prediksi", disabled=st.session_state.df is None): set_page("Prediksi"); st.rerun()
+        if st.button("Mulai Prediksi", disabled=is_locked): set_page("Prediksi"); st.rerun()
     with c3:
         st.markdown("<div class='menu-card'><h1>📖</h1><h3>Info Penelitian</h3></div>", unsafe_allow_html=True)
         if st.button("Lihat Penelitian"): set_page("Penelitian"); st.rerun()
 
 else:
     if st.button("⬅️ KEMBALI KE PORTAL"): set_page("Portal"); st.rerun()
+    st.markdown("---")
+    
     if st.session_state.page == "Dashboard" and st.session_state.df is not None:
         df = st.session_state.df
         st.header("📊 Dashboard Deskriptif Spasial")
-        sel_thn = st.selectbox("Pilih Tahun:", sorted(df['TAHUN'].unique(), reverse=True))
-        df_filt = df[df['TAHUN'] == sel_thn]
+        col_f1, col_f2 = st.columns(2)
+        with col_f1: sel_thn = st.selectbox("Pilih Tahun:", sorted(df['TAHUN'].unique(), reverse=True))
+        with col_f2: sel_prov = st.selectbox("Fokus Wilayah (Zoom Provinsi):", ["Semua Provinsi"] + sorted(df['PROVINSI'].unique().tolist()))
         
-        # Plotting dengan sinkronisasi
-        fig = px.choropleth(df_filt, geojson=geojson, locations="PROVINSI", featureidkey="properties.Propinsi", color=col_y, color_continuous_scale="RdYlGn_r")
-        fig.update_geos(projection_type="mercator", center={"lat": -2.5, "lon": 118.0}, visible=False)
-        fig.update_layout(height=450, margin={"r":0,"t":0,"l":0,"b":0}, paper_bgcolor='white')
-        st.plotly_chart(fig, use_container_width=True)
+        df_filt_year = df[df['TAHUN'] == sel_thn]
+        cl, cr = st.columns([1.1, 0.9])
+        with cl:
+            if geojson:
+                data_peta = df_filt_year if sel_prov == "Semua Provinsi" else df_filt_year[df_filt_year['PROVINSI'] == sel_prov]
+                fig = px.choropleth(data_peta, geojson=geojson, locations="PROVINSI", featureidkey="properties.Propinsi", color=col_y, color_continuous_scale="RdYlGn_r", hover_name="PROVINSI")
+                if sel_prov != "Semua Provinsi": fig.update_geos(fitbounds="locations", visible=False)
+                else: fig.update_geos(projection_type="mercator", center={"lat": -2.5, "lon": 118.0}, visible=False)
+                fig.update_layout(height=450, margin={"r":0,"t":0,"l":0,"b":0}, paper_bgcolor='white')
+                st.plotly_chart(fig, use_container_width=True)
+        with cr:
+            var_x = st.selectbox("Analisis Korelasi X:", list(cols_x.keys()))
+            fig2 = px.scatter(df_filt_year, x=cols_x[var_x], y=col_y, trendline="ols", color_continuous_scale="RdYlGn_r")
+            fig2.update_layout(paper_bgcolor='white')
+            st.plotly_chart(fig2, use_container_width=True)
 
     elif st.session_state.page == "Prediksi":
         st.header("📈 Prediksi Deforestasi (MERF)")
         st.info("Sistem sedang memproses algoritma MERF...")
 
     elif st.session_state.page == "Penelitian":
-        st.header("📖 Info Penelitian")
+        st.markdown("<h2 style='text-align:center; color:#facc15; font-weight: 800;'>📖 Info Penelitian</h2>", unsafe_allow_html=True)
