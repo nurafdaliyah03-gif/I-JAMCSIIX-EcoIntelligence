@@ -257,40 +257,35 @@ else:
             </div>
             """, unsafe_allow_html=True)
             
-st.markdown("""
-<ul style='color:#f8fafc; line-height:1.9; font-size:1.08rem; padding-left:28px;'>
+        with rc2:
+            st.markdown("""
+            <div class='research-card'>
+                <h4>🤖 Metode MERF (Mixed-Effects Random Forest)</h4>
+                <p style='color: #f8fafc; text-align: justify; line-height: 1.6; margin-bottom: 10px;'>
+                    <b>Mixed-Effects Random Forest (MERF)</b> merupakan algoritma lanjut yang memadukan keunggulan non-linearitas dari <i>Random Forest</i> dengan kemampuan menangani data panel berhirarki milik <i>Linear Mixed Models</i>.
+                </p>
+                <p style='color: #f8fafc; text-align: justify; line-height: 1.6;'>
+                    Setiap provinsi memiliki karakteristik dasar lingkungan yang berbeda (efek acak) yang tidak bisa disamaratakan oleh model regresi biasa standar. MERF mengisolasi efek kontekstual wilayah ini sehingga tingkat akurasi prediksi meningkat tajam secara lokal.
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            with st.container():
+                st.markdown("<div class='research-card'><h4>🧮 Persamaan Dasar Model MERF</h4>", unsafe_allow_html=True)
+                st.latex(r"y_i = f(X_i) + Z_ib_i + \varepsilon_i")
+                st.markdown("""
+                <p style='font-size: 0.85rem; color: #cbd5e1; margin-top: 10px; line-height: 1.4;'>
+                    <b>Keterangan:</b><br>
+                    • y_i: Vektor nilai variabel respon (Tree Cover Loss) untuk subjek provinsi ke-i.<br>
+                    • f(X_i): Fungsi non-linear fixed effects yang diestimasi menggunakan algoritma Random Forest berdasarkan matriks prediktor Xi.<br>
+                    • Z_i: Matriks desain untuk komponen random effects (konstanta intercept untuk tiap provinsi).<br>
+                    • b_i: Vektor penyimpangan acak untuk provinsi ke-i, dimana b_i ~ N(0, D).<br>
+                    • ε_i: Vektor error acak sisaan (residual error), dimana ε_i~N(0,R_i) dengan R_i=σ^2 I_(n_i).
+                </p>
+                </div>
+                """, unsafe_allow_html=True)
 
-<li style='margin-bottom:18px;'>
-    <b><i>y<sub>i</sub></i></b> :
-    Vektor nilai variabel respon (<i>Tree Cover Loss</i>) untuk subjek provinsi ke-i.
-</li>
-
-<li style='margin-bottom:18px;'>
-    <b><i>f(X<sub>i</sub>)</i></b> :
-    Fungsi non-linear <i>fixed effects</i> yang diestimasi menggunakan algoritma
-    <b>Random Forest</b> berdasarkan matriks prediktor
-    <b>X<sub>i</sub></b>.
-</li>
-
-<li style='margin-bottom:18px;'>
-    <b><i>Z<sub>i</sub></i></b> :
-    Matriks desain untuk komponen <i>random effects</i>.
-</li>
-
-<li style='margin-bottom:18px;'>
-    <b><i>b<sub>i</sub></i></b> :
-    Vektor penyimpangan acak (<i>random effects</i>) untuk provinsi ke-i.
-</li>
-
-<li style='margin-bottom:10px;'>
-    <b><i>ε<sub>i</sub></i></b> :
-    Vektor <i>error</i> acak sisaan (<i>residual error</i>).
-</li>
-
-</ul>
-""", unsafe_allow_html=True)
-
-st.markdown("""
+        st.markdown("""
         <div style='background: linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%); padding: 25px; border-radius: 15px; border: 1px solid #ef4444; margin-top: 10px;'>
             <h5 style='margin: 0 0 10px 0; color: #fca5a5; font-weight: bold;'>⚠️ Batasan Penelitian & Disclaimer Model</h5>
             <ul style='color: #ffeeee; font-size: 0.9rem; line-height: 1.5;'>
