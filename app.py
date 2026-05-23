@@ -418,10 +418,10 @@ else:
             <div class='research-card'>
                 <h4>🤖 Metode MERF (Mixed-Effects Random Forest)</h4>
                 <p style='color: #f8fafc; text-align: justify; line-height: 1.6; margin-bottom: 10px;'>
-                    <b>Mixed-Effects Random Forest (MERF)</b> merupakan algoritma lanjut yang memadukan keunggulan non-linearitas dari <i>Random Forest</i> dengan kemampuan menangani data panel berhirarki/kluster milik <i>Linear Mixed Models</i>.
+                    <b>Mixed-Effects Random Forest (MERF)</b> merupakan algoritma lanjut yang memadukan keunggulan non-linearitas dari <i>Random Forest</i> dengan kemampuan menangani data panel berhirarki milik <i>Linear Mixed Models</i>.
                 </p>
                 <p style='color: #f8fafc; text-align: justify; line-height: 1.6;'>
-                    Dalam kasus deforestasi tingkat nasional, setiap provinsi memiliki karakteristik dasar lingkungan yang berbeda (efek acak) yang tidak bisa disamaratakan oleh model regresi biasa standar. MERF mengisolasi efek kontekstual wilayah ini sehingga tingkat akurasi prediksi (R²) meningkat tajam secara lokal.
+                    Setiap provinsi memiliki karakteristik dasar lingkungan yang berbeda (efek acak) yang tidak bisa disamaratakan oleh model regresi biasa standar. MERF mengisolasi efek kontekstual wilayah ini sehingga tingkat akurasi prediksi meningkat tajam secara lokal.
                 </p>
             </div>
             """, unsafe_allow_html=True)
