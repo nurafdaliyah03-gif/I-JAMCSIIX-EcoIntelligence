@@ -391,9 +391,9 @@ else:
             )
             st.plotly_chart(fig_line, use_container_width=True)
 
-    # --- HALAMAN PENELITIAN JAMCSICX ---
+    # --- HALAMAN PENELITIAN ---
     elif st.session_state.page == "Penelitian":
-        # POIN 1: Mengubah judul utama sesuai permintaan
+        # POIN 1: Mengubah judul utama halaman info penelitian
         st.markdown("<h2 style='text-align:center; color:#facc15; font-weight: 800;'>📖 Info Penelitian</h2>", unsafe_allow_html=True)
         st.markdown("<br>", unsafe_allow_html=True)
         
@@ -435,7 +435,7 @@ else:
             """, unsafe_allow_html=True)
             
             with st.container():
-                # POIN 3: Persamaan dibuat seperti di gambar dan menghapus kalimat "dalam kasus Anda"
+                # POIN 3: Persamaan dibuat seperti di gambar dan menghapus kalimat pembuka tidak perlu
                 st.markdown("<div class='research-card'><h4>🧮 Persamaan Dasar Model MERF</h4>", unsafe_allow_html=True)
                 st.write("Persamaan matematis untuk model Mixed Effects Random Forest (MERF) adalah sebagai berikut:")
                 st.latex(r"Y_{ij} = f(X_{ij}) + Z_{ij}b_i + \varepsilon_{ij}")
@@ -515,7 +515,7 @@ else:
             </div>
             """, unsafe_allow_html=True)
 
-        # POIN 4: Bagian batasan dibuat sama persis dengan gambar, dengan teks poin ke-4 disesuaikan instruksi Anda
+        # POIN 4: Bagian batasan penelitian SAMA PERSIS dengan gambar, poin ke-4 diganti kalimatnya sesuai instruksi
         st.markdown("""
         <div style='background: linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%); padding: 25px; border-radius: 15px; border: 1px solid #ef4444; margin-top: 10px;'>
             <h5 style='margin: 0 0 10px 0; color: #fca5a5; font-weight: bold;'>⚠️ Batasan Penelitian & Disclaimer Model</h5>
