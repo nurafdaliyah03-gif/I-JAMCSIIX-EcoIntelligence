@@ -280,7 +280,7 @@ else:
                     • f(X_i): Fungsi non-linear fixed effects yang diestimasi menggunakan algoritma Random Forest berdasarkan matriks prediktor Xi.<br>
                     • Z_i: Matriks desain untuk komponen random effects (konstanta intercept untuk tiap provinsi).<br>
                     • b_i: Vektor penyimpangan acak untuk provinsi ke-i, dimana b_i ~ N(0, D).<br>
-                    • \varepsilon_i: Vektor error acak sisaan (residual error), dimana \varepsilon_i ~ N(0, R_i) dengan R_i = \sigma^2 I_{ni}.
+                    • ε_i: Vektor error acak sisaan (residual error), dimana ε_i~N(0,R_i) dengan R_i=σ^2 I_(n_i ).
                 </p>
                 </div>
                 """, unsafe_allow_html=True)
