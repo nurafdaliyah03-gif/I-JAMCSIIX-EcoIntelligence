@@ -271,21 +271,19 @@ else:
             """, unsafe_allow_html=True)
             
             with st.container():
-            st.markdown("<div class='research-card'><h4>🧮 Persamaan Dasar Model MERF</h4>", unsafe_allow_html=True)
-            # LaTeX: _i membuat indeks, \varepsilon memberikan simbol epsilon yang benar
-            st.latex(r"y_i = f(X_i) + Z_i b_i + \varepsilon_i")
-            
-            st.markdown("""
-            <p style='font-size: 0.85rem; color: #cbd5e1; margin-top: 10px; line-height: 1.4;'>
-                <b>Keterangan fungsi dan simbol (p. 5):</b><br>
-                • <b>y<sub>i</sub></b>: Vektor nilai variabel respon (<i>Tree Cover Loss</i>) untuk subjek provinsi ke-<i>i</i>.<br>
-                • <b>f(X<sub>i</sub>)</b>: Fungsi non-linear <i>fixed effects</i> yang diestimasi menggunakan algoritma <b>Random Forest</b> berdasarkan matriks prediktor X<sub>i</sub>.<br>
-                • <b>Z<sub>i</sub></b>: Matriks desain untuk komponen <i>random effects</i> (dalam kasus Anda, konstanta intercept untuk tiap provinsi).<br>
-                • <b>b<sub>i</sub></b>: Vektor penyimpangan acak (<i>random effects</i>) untuk provinsi ke-<i>i</i>, di mana b<sub>i</sub> ~ N(0, D).<br>
-                • <b>ε<sub>i</sub></b>: Vektor error acak sisaan (<i>residual error</i>), di mana ε<sub>i</sub> ~ N(0, R<sub>i</sub>) dengan R<sub>i</sub> = σ<sup>2</sup>I<sub>n<sub>i</sub></sub>.
-            </p>
-            </div>
-            """, unsafe_allow_html=True)
+                st.markdown("<div class='research-card'><h4>🧮 Persamaan Dasar Model MERF</h4>", unsafe_allow_html=True)
+                st.latex(r"y_i = f(X_i) + Z_ib_i + \varepsilon_i")
+                st.markdown("""
+                <p style='font-size: 0.85rem; color: #cbd5e1; margin-top: 10px; line-height: 1.4;'>
+                    <b>Keterangan fungsi dan simbol (p. 5):</b><br>
+                    • <b>y_i</b>: Vektor nilai variabel respon (<i>Tree Cover Loss</i>) untuk subjek provinsi ke-<i>i</i>.<br>
+                    • <b>f(X_i)</b>: Fungsi non-linear <i>fixed effects</i> yang diestimasi menggunakan algoritma <b>Random Forest</b> berdasarkan matriks prediktor X_i.<br>
+                    • <b>Z_i</b>: Matriks desain untuk komponen <i>random effects</i> (dalam kasus Anda, konstanta intercept untuk tiap provinsi).<br>
+                    • <b>b_i</b>: Vektor penyimpangan acak (<i>random effects</i>) untuk provinsi ke-<i>i</i>, di mana b_i ~ N(0, D).<br>
+                    • <b>ε_i</b>: Vektor error acak sisaan (<i>residual error</i>), di mana ε_i ~ N(0, R_i) dengan R_i = σ^2 I_(n_i).
+                </p>
+                </div>
+                """, unsafe_allow_html=True)
 
         st.markdown("""
         <div style='background: linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%); padding: 25px; border-radius: 15px; border: 1px solid #ef4444; margin-top: 10px;'>
