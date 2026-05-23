@@ -30,17 +30,14 @@ st.markdown("""
     }
 
     /* === FIX DROPDOWN (SELECTBOX) RE-STYLING === */
-    /* Kotak utama selectbox */
     .stSelectbox div[data-baseweb="select"] {
         background-color: #ffffff !important;
         border-radius: 10px;
     }
-    /* Memaksa teks di dalam selectbox berwarna hitam pekat agar kontras di atas warna putih */
     .stSelectbox div[data-baseweb="select"] div {
         color: #000000 !important;
         font-weight: 600 !important;
     }
-    /* Label di atas selectbox */
     .stSelectbox label p {
         color: #facc15 !important; 
         font-weight: bold !important;
@@ -48,18 +45,15 @@ st.markdown("""
     }
 
     /* === FIX FILE UPLOADER RE-STYLING === */
-    /* Label teks utama file uploader */
     [data-testid="stFileUploader"] label p {
         color: #facc15 !important;
         font-weight: bold !important;
         font-size: 1.1rem !important;
         text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
     }
-    /* Teks instruksi kecil di dalam box uploader (eg: 200MB per file) */
     [data-testid="stFileUploader"] section div div {
         color: #ffffff !important;
     }
-    /* Tombol 'Browse files' di dalam uploader */
     [data-testid="stFileUploader"] button {
         background-color: #15803d !important;
         color: #ffffff !important;
@@ -274,7 +268,7 @@ else:
             fig2.update_layout(paper_bgcolor='white')
             st.plotly_chart(fig2, use_container_width=True)
 
-    # --- HALAMAN PREDIKSI MERF (FORECAST MULTI-YEAR DINAMIS SINKRON) ---
+    # --- HALAMAN PREDIKSI MERF ---
     elif st.session_state.page == "Prediksi" and st.session_state.df is not None:
         df = st.session_state.df
         st.header("📈 Prediksi Deforestasi Multi-Tahun (MERF)")
@@ -393,13 +387,11 @@ else:
 
     # --- HALAMAN PENELITIAN ---
     elif st.session_state.page == "Penelitian":
-        # POIN 1: Mengubah judul utama halaman info penelitian
         st.markdown("<h2 style='text-align:center; color:#facc15; font-weight: 800;'>📖 Info Penelitian</h2>", unsafe_allow_html=True)
         st.markdown("<br>", unsafe_allow_html=True)
         
         rc1, rc2 = st.columns(2)
         with rc1:
-            # POIN 2: Tujuan penelitian dibuat tepat 2 poin sesuai teks yang diminta
             st.markdown("""
             <div class='research-card'>
                 <h4>🎯 Tujuan Penelitian</h4>
@@ -435,18 +427,17 @@ else:
             """, unsafe_allow_html=True)
             
             with st.container():
-                # POIN 3: Persamaan dibuat seperti di gambar dan menghapus kalimat pembuka tidak perlu
                 st.markdown("<div class='research-card'><h4>🧮 Persamaan Dasar Model MERF</h4>", unsafe_allow_html=True)
                 st.write("Persamaan matematis untuk model Mixed Effects Random Forest (MERF) adalah sebagai berikut:")
-                st.latex(r"Y_{ij} = f(X_{ij}) + Z_{ij}b_i + \varepsilon_{ij}")
+                st.latex(r"y_i = f(X_i) + Z_i b_i + \varepsilon_i")
                 st.markdown("""
                 <p style='font-size: 0.85rem; color: #cbd5e1; margin-top: 10px; line-height: 1.4;'>
-                    <b>Keterangan:</b><br>
-                    • $Y_{ij}$: Variabel dependen (Tree Cover Loss) untuk pengamatan ke-$j$ dalam kluster ke-$i$.<br>
-                    • $f(X_{ij})$: Fungsi populasi (fixed effects) yang menangkap hubungan non-linear menggunakan Random Forest.<br>
-                    • $Z_{ij}$: Matriks desain untuk efek acak (random effects).<br>
-                    • $b_i$: Vektor efek acak untuk kluster ke-$i$, diasumsikan berdistribusi normal $b_i \\sim N(0, D)$.<br>
-                    • $\\varepsilon_{ij}$: Error residual untuk pengamatan ke-$j$ dalam kluster ke-$i$, diasumsikan $\\varepsilon_{ij} \\sim N(0, \\sigma^2 I)$.
+                    <b>Keterangan fungsi dan simbol (p. 5):</b><br>
+                    • $y_i$: Vektor nilai variabel respon (<i>Tree Cover Loss</i>) untuk subjek provinsi ke-$i$.<br>
+                    • $f(X_i)$: Fungsi non-linear <i>fixed effects</i> yang diestimasi menggunakan algoritma <b>Random Forest</b> berdasarkan matriks prediktor $X_i$.<br>
+                    • $Z_i$: Matriks desain untuk komponen <i>random effects</i> (konstanta intercept untuk tiap provinsi).<br>
+                    • $b_i$: Vektor penyimpangan acak (<i>random effects</i>) untuk provinsi ke-$i$, di mana $b_i \sim N(0, D)$.<br>
+                    • $\\varepsilon_i$: Vektor <i>error</i> acak sisaan (<i>residual error</i>), di mana $\\varepsilon_i \sim N(0, R_i)$ dengan $R_i = \\sigma^2 I_{n_i}$.
                 </p>
                 </div>
                 """, unsafe_allow_html=True)
@@ -515,16 +506,17 @@ else:
             </div>
             """, unsafe_allow_html=True)
 
-        # POIN 4: Bagian batasan penelitian SAMA PERSIS dengan gambar, poin ke-4 diganti kalimatnya sesuai instruksi
+        # --- BAGIAN KETERBATASAN MODEL (SAMA PERSIS DENGAN GAMBAR ASLI) ---
         st.markdown("""
         <div style='background: linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%); padding: 25px; border-radius: 15px; border: 1px solid #ef4444; margin-top: 10px;'>
-            <h5 style='margin: 0 0 10px 0; color: #fca5a5; font-weight: bold;'>⚠️ Batasan Penelitian & Disclaimer Model</h5>
-            <ol style='margin: 0; padding-left: 20px; font-size: 0.9rem; color: #ffeeee; text-align: justify; line-height: 1.6;'>
-                <li>Model ini bergantung pada ketersediaan dan akurasi data sekunder dari BPS dan KLHK; ketidakberadaan data pada tahun tertentu atau wilayah tertentu dapat memengaruhi konsistensi prediksi.</li>
-                <li>Hasil prediksi bersifat estimasi numerik berdasarkan pola historis dan tidak menjamin kepastian mutlak di masa depan.</li>
-                <li>Model MERF mengasumsikan efek acak (random effects) bersifat linear pada tingkat kluster, sehingga pola spasial yang sangat kompleks atau non-linear pada tingkat sub-kluster mungkin tidak sepenuhnya tertangkap.</li>
-                <li>tidak memperhitungkan faktor pemicu eksternal mendadak (exogenous shocks) di luar variabel terdata,</li>
-            </ol>
+            <h5 style='margin: 0 0 15px 0; color: #fca5a5; font-weight: bold;'>⚠️ Keterbatasan Model (Limitations)</h5>
+            <ul style='margin: 0; padding-left: 20px; font-size: 0.9rem; color: #ffeeee; text-align: justify; line-height: 1.6; list-style-type: disc;'>
+                <li style='margin-bottom: 10px;'><b>Ketergantungan Data Historis:</b> Model memprediksi berdasarkan tren masa lalu, sehingga tidak bisa membaca perubahan mendadak seperti kebijakan hukum baru atau penegakan hukum di lapangan.</li>
+                <li style='margin-bottom: 10px;'><b>Optimal Jangka Pendek:</b> Estimasi paling akurat untuk masa depan terdekat. Prediksi terlalu jauh ke depan berisiko memperbesar akumulasi kesalahan (<i>error propagation</i>).</li>
+                <li style='margin-bottom: 10px;'><b>Efek Wilayah Baru:</b> Jika ada provinsi hasil pemekaran baru, model akan mengabaikan efek acak wilayah ($b_i = 0$) dan murni menggunakan prediksi rata-rata global.</li>
+                <li style='margin-bottom: 10px;'><b>Cakupan Variabel Makro:</b> Model menggunakan data agregat tahunan (skala provinsi), sehingga belum mencakup faktor mikro lokal seperti konflik lahan atau izin konsesi korporasi.</li>
+                <li style='margin-bottom: 10px;'><b>Resolusi Spasial Makro: </b> tidak memperhitungkan faktor pemicu eksternal mendadak (exogenous shocks) di luar variabel terdata</li>
+            </ul>
         </div>
         <br>
         """, unsafe_allow_html=True)
