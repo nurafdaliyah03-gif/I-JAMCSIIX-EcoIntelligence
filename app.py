@@ -415,16 +415,16 @@ else:
             
         with rc2:
             st.markdown("""
-            <div class='research-card'>
-                <h4>🤖 Metode MERF (Mixed-Effects Random Forest)</h4>
-                <p style='color: #f8fafc; text-align: justify; line-height: 1.6; margin-bottom: 10px;'>
-                    <b>Mixed-Effects Random Forest (MERF)</b> merupakan algoritma lanjut yang memadukan keunggulan non-linearitas dari <i>Random Forest</i> dengan kemampuan menangani data panel berhirarki milik <i>Linear Mixed Models</i>.
-                </p>
-                <p style='color: #f8fafc; text-align: justify; line-height: 1.6;'>
-                    Setiap provinsi memiliki karakteristik dasar lingkungan yang berbeda (efek acak) yang tidak bisa disamaratakan oleh model regresi biasa standar. MERF mengisolasi efek kontekstual wilayah ini sehingga tingkat akurasi prediksi meningkat tajam secara lokal.
-                </p>
-            </div>
-            """, unsafe_allow_html=True)
+<p style='font-size: 0.85rem; color: #cbd5e1; margin-top: 10px; line-height: 1.4;'>
+    <b>Keterangan fungsi dan simbol (p. 5):</b><br><br>
+    • <i>y<sub>i</sub></i> : Vektor nilai variabel respon (<i>Tree Cover Loss</i>) untuk subjek provinsi ke-<i>i</i>.<br><br>
+    • <i>f</i>(<b>X</b><sub><i>i</i></sub>) : Fungsi non-linear <i>fixed effects</i> yang diestimasi menggunakan algoritma <b>Random Forest</b> berdasarkan matriks prediktor <b>X</b><sub><i>i</i></sub>.<br><br>
+    • <b>Z</b><sub><i>i</i></sub> : Matriks desain untuk komponen <i>random effects</i> (dalam kasus Anda, konstanta intercept untuk tiap provinsi).<br><br>
+    • <b>b</b><sub><i>i</i></sub> : Vektor penyimpangan acak (<i>random effects</i>) untuk provinsi ke-<i>i</i>, di mana <b>b</b><sub><i>i</i></sub> ~ <i>N</i>(0, <b>D</b>).<br><br>
+    • <i>ε<sub>i</sub></i> : Vektor <i>error</i> acak sisaan (<i>residual error</i>), di mana <i>ε<sub>i</sub></i> ~ <i>N</i>(0, <b>R</b><sub><i>i</i></sub>) dengan <b>R</b><sub><i>i</i></sub> = σ²<b>I</b><sub><i>n<sub>i</sub></i></sub>.
+</p>
+</div>
+""", unsafe_allow_html=True)
             
             with st.container():
                 st.markdown("<div class='research-card'><h4>🧮 Persamaan Dasar Model MERF</h4>", unsafe_allow_html=True)
