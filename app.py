@@ -22,13 +22,17 @@ if 'cols_x' not in st.session_state:
 def set_page(name):
     st.session_state.page = name
 
-# --- 3. AUTOMATIC LOCAL LOADING (Membaca file dari folder laptopmu) ---
+# --- 3. AUTOMATIC LOCAL LOADING (FIX PATH DIREKTORI) ---
 if st.session_state.df is None:
-    # KODE SAKTI: Mencari file .csv apa saja yang ada di folder tempat app.py berada
-    lokal_csv = glob.glob("*.csv")
+    # KODE AMAN: Mengunci posisi folder tempat file app.py ini berada
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    
+    # Cari semua file berakhiran .csv yang ada di dalam folder absolut tersebut
+    path_pencarian = os.path.join(BASE_DIR, "*.csv")
+    lokal_csv = glob.glob(path_pencarian)
     
     if lokal_csv:
-        # Ambil file CSV pertama yang ditemukan di folder
+        # Ambil file CSV pertama yang terdeteksi di folder absolut
         target_file = lokal_csv[0]
         try:
             raw_df = pd.read_csv(target_file)
@@ -154,13 +158,13 @@ if st.session_state.page == "Portal":
     
     # Status data terdeteksi
     if df is not None:
-        st.markdown("<p style='text-align:center; color:#22c55e; font-weight:bold;'>🌲 Sistem Siap! Dataset Terbaca Otomatis dari Folder Lokal.</p>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align:center; color:#22c55e; font-weight:bold;'>🌲 Sistem Siap! Dataset Terbaca Otomatis.</p>", unsafe_allow_html=True)
     else:
-        st.markdown("<p style='text-align:center; color:#ef4444; font-weight:bold;'>⚠️ File CSV data tidak ditemukan di folder yang sama dengan app.py!</p>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align:center; color:#ef4444; font-weight:bold;'>⚠️ File CSV data tidak terdeteksi oleh sistem path lokal!</p>", unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # TOMBOL DISETTING SELALU AKTIF (TIDAK AKAN LOCK LAGI)
+    # TOMBOL DISETTING SELALU AKTIF
     c1, c2, c3 = st.columns(3)
     with c1:
         st.markdown("<div class='menu-card'><h1>🛰️</h1><h3>Dashboard Spasial</h3></div>", unsafe_allow_html=True)
@@ -234,7 +238,7 @@ else:
                     fig2.update_layout(paper_bgcolor='white')
                     st.plotly_chart(fig2, use_container_width=True)
         else:
-            st.error("⚠️ File CSV data belum ditaruh di folder lokal laptopmu.")
+            st.error("⚠️ Grafik gagal dimuat karena file CSV tidak terbaca di jalur absolut.")
 
     # --- HALAMAN PREDIKSI MERF ---
     elif st.session_state.page == "Prediksi":
