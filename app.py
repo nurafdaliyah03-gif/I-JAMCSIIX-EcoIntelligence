@@ -1,32 +1,28 @@
 import streamlit as st
 import pandas as pd
-import requests
 
-st.set_page_config(page_title="ForestGuard Debug", layout="wide")
+# TEMPEL LINK YANG KAMU COPY DARI TOMBOL "RAW" TADI DI SINI
+URL_DATA = "https://raw.githubusercontent.com/nurafdaliyah03-gif/I-JAMCSIIX-EcoIntelligence/refs/heads/main/data_jamsicx.csv"
 
-URL_DATA = "https://raw.githubusercontent.com/nurafdaliyah03-gif/I-JAMCSIIX-Ecolintelligence/main/data_jamsicx.csv"
+st.set_page_config(page_title="ForestGuard", layout="wide")
+st.title("🌳 ForestGuard")
 
+@st.cache_data
 def load_data():
     try:
-        # Kita cek apakah link ini bisa diakses oleh server
-        response = requests.get(URL_DATA)
-        st.write(f"Status Akses ke GitHub: {response.status_code}") # Ini akan memberi tahu kita masalahnya
-        
-        if response.status_code == 200:
-            df = pd.read_csv(URL_DATA)
-            df.columns = df.columns.str.strip()
-            return df
-        else:
-            st.error("Gagal terhubung ke file (Status bukan 200).")
-            return None
+        # Menghapus spasi yang mungkin tidak sengaja ter-copy
+        clean_url = URL_DATA.strip()
+        df = pd.read_csv(clean_url)
+        df.columns = df.columns.str.strip()
+        return df
     except Exception as e:
-        st.error(f"Error teknis: {e}")
         return None
 
 df = load_data()
 
 if df is not None:
     st.success("✅ Data berhasil dibaca!")
-    st.dataframe(df.head())
+    st.write(df.head())
 else:
-    st.error("❌ Data tetap tidak terbaca.")
+    st.error("❌ Data tidak ditemukan. Pastikan URL benar.")
+    st.write("Pastikan kamu sudah menekan tombol 'Raw' di GitHub dan meng-copy URL di address bar.")
