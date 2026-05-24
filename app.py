@@ -21,21 +21,66 @@ def set_page(name): st.session_state.page = name
 # --- 3. CSS CUSTOM ---
 st.markdown("""
 <style>
-    .stApp { background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=2000&auto=format&fit=crop'); background-size: cover; background-position: center; background-attachment: fixed; color: #ffffff; }
-    .stSelectbox div[data-baseweb="select"] { background-color: #ffffff !important; border-radius: 10px; }
-    .stSelectbox div[data-baseweb="select"] div { color: #000000 !important; font-weight: 600 !important; }
-    .stSelectbox label p { color: #facc15 !important; font-weight: bold !important; font-size: 1.05rem !important; }
-    .main-title { font-size: 5rem !important; font-family: 'Arial Black', sans-serif; background: linear-gradient(to bottom, #facc15 0%, #fbbf24 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-align: center; font-weight: 900 !important; filter: drop-shadow(0px 5px 15px rgba(0,0,0,0.9)); }
-    .menu-card { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 30px; padding: 40px; text-align: center; height: 350px; display: flex; flex-direction: column; justify-content: center; }
-    .stPlotlyChart { background-color: white !important; border-radius: 20px; padding: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-    [data-testid="stMetricValue"] { color: #ffffff !important; font-weight: 800 !important; font-size: 1.8rem !important; }
-    [data-testid="stMetricLabel"] { color: #facc15 !important; font-weight: bold !important; font-size: 0.9rem !important; }
-    div.stButton > button { background: linear-gradient(135deg, #15803d 0%, #166534 100%) !important; color: white !important; border: 1px solid #facc15 !important; border-radius: 12px; width: 100%; }
-    .research-card { background: rgba(15, 23, 42, 0.65); border: 1px solid rgba(250, 191, 36, 0.3); border-radius: 16px; padding: 25px; margin-bottom: 20px; backdrop-filter: blur(8px); }
-    .research-card h4 { color: #facc15 !important; margin-top: 0px; border-bottom: 2px solid #15803d; padding-bottom: 8px; }
-    .legend-box { background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; font-size: 0.85rem; border: 1px solid #facc15; }
+    /* Menggelapkan background agar teks lebih terbaca */
+    .stApp { 
+        background: linear-gradient(rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.85)), 
+                    url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=2000&auto=format&fit=crop'); 
+        background-size: cover; 
+        background-attachment: fixed; 
+        color: #ffffff; 
+    }
+    
+    /* Input & Selectbox */
+    .stSelectbox div[data-baseweb="select"] { background-color: #f8fafc !important; border-radius: 10px; border: 1px solid #facc15; }
+    .stSelectbox div[data-baseweb="select"] div { color: #000000 !important; font-weight: 700 !important; }
+    
+    /* Teks Judul */
+    .main-title { 
+        font-size: 5rem !important; font-family: 'Arial Black', sans-serif; 
+        background: linear-gradient(to bottom, #fef08a 0%, #facc15 100%); 
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
+        text-align: center; font-weight: 900 !important; 
+        text-shadow: 2px 2px 10px rgba(0,0,0,0.5);
+    }
+    
+    /* Kartu Menu */
+    .menu-card { 
+        background: rgba(255, 255, 255, 0.08); 
+        backdrop-filter: blur(20px); 
+        border: 1px solid rgba(250, 204, 21, 0.3); 
+        border-radius: 30px; padding: 40px; text-align: center; height: 350px;
+        transition: 0.3s;
+    }
+    .menu-card:hover { background: rgba(255, 255, 255, 0.15); border-color: #facc15; }
+    
+    /* Grafik & Tabel */
+    .stPlotlyChart { background-color: #ffffff !important; border-radius: 20px; padding: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+    
+    /* Warna Metrik */
+    [data-testid="stMetricValue"] { color: #ffffff !important; text-shadow: 1px 1px 2px #000; }
+    [data-testid="stMetricLabel"] { color: #fbbf24 !important; font-weight: bold !important; }
+    
+    /* Tombol */
+    div.stButton > button { 
+        background: #166534 !important; 
+        color: #ffffff !important; 
+        border: 1px solid #facc15 !important; 
+        border-radius: 10px; font-weight: bold;
+    }
+    div.stButton > button:hover { background: #15803d !important; border-color: #ffffff !important; }
+    
+    /* Kartu Penelitian */
+    .research-card { 
+        background: rgba(30, 41, 59, 0.7); 
+        border: 1px solid rgba(250, 204, 21, 0.2); 
+        border-radius: 16px; padding: 25px; color: #e2e8f0;
+    }
+    .research-card h4 { color: #facc15 !important; border-bottom: 2px solid #166534; padding-bottom: 8px; }
+    
+    /* Legenda */
+    .legend-box { background: rgba(0,0,0,0.4); padding: 12px; border-radius: 8px; border: 1px solid #facc15; color: #ffffff; }
 </style>
-""", unsafe_allow_html=True)
+""", unsafe_html=True)
 
 # --- 4. DATA GEOJSON ---
 @st.cache_data
