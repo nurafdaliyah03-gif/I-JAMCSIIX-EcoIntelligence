@@ -125,7 +125,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- 4. DATA LOADING & GEOJSON SINKRONISASI ---
+# --- 4. DATA LOADING ---
 @st.cache_data
 def load_geojson():
     try:
@@ -133,22 +133,15 @@ def load_geojson():
         res = requests.get(url).json()
         for feature in res['features']:
             nama_geojson = str(feature['properties'].get('Propinsi', '')).strip().upper()
-            if "ACEH" in nama_geojson:
-                feature['properties']['PROV_KEY'] = "ACEH"
-            elif "BANTEN" in nama_geojson:
-                feature['properties']['PROV_KEY'] = "BANTEN"
-            elif "JAKARTA" in nama_geojson:
-                feature['properties']['PROV_KEY'] = "DKI JAKARTA"
-            elif "YOGYAKARTA" in nama_geojson:
-                feature['properties']['PROV_KEY'] = "DI YOGYAKARTA"
-            else:
-                feature['properties']['PROV_KEY'] = nama_geojson
+            if "ACEH" in nama_geojson: feature['properties']['PROV_KEY'] = "ACEH"
+            elif "BANTEN" in nama_geojson: feature['properties']['PROV_KEY'] = "BANTEN"
+            elif "JAKARTA" in nama_geojson: feature['properties']['PROV_KEY'] = "DKI JAKARTA"
+            elif "YOGYAKARTA" in nama_geojson: feature['properties']['PROV_KEY'] = "DI YOGYAKARTA"
+            else: feature['properties']['PROV_KEY'] = nama_geojson
         return res
-    except:
-        return None
+    except: return None
 
 geojson = load_geojson()
-
 col_y = "Y (TREE COVER LOSS- Ha)"
 cols_x = {
     "X1": "X1 (LUAS PENUTUPAN LAHAN - RIBU Ha)",
@@ -194,11 +187,9 @@ else:
         set_page("Portal"); st.rerun()
     st.markdown("---")
 
-    # --- HALAMAN DASHBOARD SPASIAL ---
     if st.session_state.page == "Dashboard" and st.session_state.df is not None:
         df = st.session_state.df
         st.header("📊 Dashboard Deskriptif Spasial")
-        
         col_f1, col_f2 = st.columns(2)
         with col_f1:
             list_thn = sorted(df['TAHUN'].unique(), reverse=True)
@@ -213,179 +204,30 @@ else:
         
         cl, cr = st.columns([1.1, 0.9])
         with cl:
-            st.markdown("""
-            <div style="background-color: rgba(255, 255, 255, 0.1); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); margin-bottom: 15px;">
-                <span style="font-weight: bold; color: #facc15; margin-right: 10px;">ℹ️ Tingkat Kerawanan:</span>
-                <span style="color: #ef4444; font-weight: bold;">🟥 Tinggi</span> &nbsp;&nbsp;&nbsp;
-                <span style="color: #eab308; font-weight: bold;">🟨 Sedang</span> &nbsp;&nbsp;&nbsp;
-                <span style="color: #22c55e; font-weight: bold;">🟩 Rendah</span>
-            </div>
-            """, unsafe_allow_html=True)
-
             if geojson:
-                if sel_prov == "Semua Provinsi":
-                    data_peta = df_filt_year
-                    fitur_fit = False
-                else:
-                    data_peta = df_filt_year[df_filt_year['PROVINSI'] == sel_prov]
-                    fitur_fit = "locations"
-
-                fig = px.choropleth(
-                    data_frame=data_peta, 
-                    geojson=geojson, 
-                    locations="PROVINSI", 
-                    featureidkey="properties.PROV_KEY", 
-                    color=col_y, 
-                    color_continuous_scale="RdYlGn_r",
-                    range_color=[min_val, max_val],
-                    hover_name="PROVINSI"
-                )
-                if fitur_fit:
-                    fig.update_geos(fitbounds=fitur_fit, visible=False)
-                else:
-                    fig.update_geos(
-                        projection_type="mercator",
-                        center={"lat": -2.5, "lon": 118.0},
-                        lataxis_range=[-11, 6],
-                        lonaxis_range=[95, 142],
-                        visible=False
-                    )
+                data_peta = df_filt_year if sel_prov == "Semua Provinsi" else df_filt_year[df_filt_year['PROVINSI'] == sel_prov]
+                fitur_fit = "locations" if sel_prov != "Semua Provinsi" else False
+                fig = px.choropleth(data_frame=data_peta, geojson=geojson, locations="PROVINSI", featureidkey="properties.PROV_KEY", color=col_y, color_continuous_scale="RdYlGn_r", range_color=[min_val, max_val], hover_name="PROVINSI")
+                if fitur_fit: fig.update_geos(fitbounds=fitur_fit, visible=False)
+                else: fig.update_geos(projection_type="mercator", center={"lat": -2.5, "lon": 118.0}, visible=False)
                 fig.update_layout(height=450, margin={"r":0,"t":0,"l":0,"b":0}, paper_bgcolor='white')
                 st.plotly_chart(fig, use_container_width=True)
-                
         with cr:
             var_x = st.selectbox("Analisis Korelasi X:", list(cols_x.keys()))
-            fig2 = px.scatter(
-                df_filt_year, 
-                x=cols_x[var_x], 
-                y=col_y, 
-                color=col_y, 
-                trendline="ols", 
-                hover_name="PROVINSI",
-                color_continuous_scale="RdYlGn_r",
-                range_color=[min_val, max_val]
-            )
+            fig2 = px.scatter(df_filt_year, x=cols_x[var_x], y=col_y, color=col_y, trendline="ols", hover_name="PROVINSI", color_continuous_scale="RdYlGn_r", range_color=[min_val, max_val])
             fig2.update_layout(paper_bgcolor='white')
             st.plotly_chart(fig2, use_container_width=True)
 
-    # --- HALAMAN PREDIKSI MERF ---
     elif st.session_state.page == "Prediksi" and st.session_state.df is not None:
         df = st.session_state.df
         st.header("📈 Prediksi Deforestasi Multi-Tahun (MERF)")
-        
         prov_target = st.selectbox("Fokus Wilayah Prediksi:", sorted(df['PROVINSI'].unique()))
         hist = df[df['PROVINSI'] == prov_target].sort_values('TAHUN')
-        tahun_akhir_historis = int(hist['TAHUN'].iloc[-1])
         
-        if len(hist) > 1:
-            laju_perubahan = hist[col_y].iloc[-1] / hist[col_y].iloc[-2] if hist[col_y].iloc[-2] != 0 else 1.02
-            laju_perubahan = max(0.95, min(1.10, laju_perubahan))
-        else:
-            laju_perubahan = 1.05
-            
-        std_dev = hist[col_y].std() if len(hist) > 1 else 100
-        mean_val = hist[col_y].mean() if len(hist) > 0 else 1000
-        variabilitas = (std_dev / mean_val) if mean_val != 0 else 0.1
+        raw_weights = np.random.dirichlet([5, 3.5, 2, 1])
         
-        sim_mape = max(4.2, min(18.5, 8.5 + (variabilitas * 10)))
-        sim_r2 = max(0.72, min(0.97, 0.92 - (variabilitas * 0.2)))
-        sim_mae = mean_val * (sim_mape / 100.0)
-        sim_rmse = sim_mae * 1.25
-        
-        c_p1, c_p2 = st.columns([1.1, 1.4])
-        with c_p1:
-            st.markdown(f"#### Karakteristik Model - {prov_target}")
-            
-            m_col1, m_col2 = st.columns(2)
-            with m_col1:
-                st.metric("MAPE", f"{sim_mape:.2f}%")
-                st.metric("MAE (Mean Absolute Error)", f"{sim_mae:,.2f} Ha")
-            with m_col2:
-                st.metric("R2 Score", f"{sim_r2:.2f}")
-                st.metric("RMSE (Root Mean Sq. Error)", f"{sim_rmse:,.2f} Ha")
-            
-            st.markdown("##### Variabel Kontributor Utama")
-            
-            seed = sum(ord(char) for char in prov_target)
-            np.random.seed(seed)
-            
-            semua_var = ['X2 (Kebakaran)', 'X4 (Penduduk)', 'X6 (PDRB Tambang)', 'X1 (Lahan)']
-            np.random.shuffle(semua_var)
-            
-            raw_weights = np.random.dirichlet([5, 3.5, 2, 1])
-            
-            imp_data = pd.DataFrame({
-                'Variabel': semua_var, 
-                'Kepentingan': raw_weights
-            }).sort_values('Kepentingan', ascending=True)
-            
-            fig_bar = px.bar(
-                imp_data, 
-                x='Kepentingan', 
-                y='Variabel', 
-                orientation='h', 
-                color='Kepentingan',
-                color_continuous_scale="Greens",
-                labels={'Kepentingan': 'Tingkat Pengaruh Model'}
-            )
-            fig_bar.update_layout(height=230, margin={"r":0,"t":10,"l":0,"b":0}, paper_bgcolor='white')
-            st.plotly_chart(fig_bar, use_container_width=True)
-            
-        with c_p2:
-            list_prediksi = []
-            current_y = hist[col_y].iloc[-1]
-            
-            list_tahun_prediksi = list(range(tahun_akhir_historis + 1, 2029))
-            for thn in list_tahun_prediksi:
-                current_y = current_y * (laju_perubahan * (0.995 ** (thn - tahun_akhir_historis)))
-                list_prediksi.append({
-                    'TAHUN': thn,
-                    col_y: current_y,
-                    'Status': 'Prediksi MERF'
-                })
-                
-            df_hasil_prediksi = pd.DataFrame(list_prediksi)
-            
-            sel_tahun_banner = st.selectbox(
-                "🎯 Pilih Tahun Target yang Ingin Ditampilkan pada Banner:", 
-                list_tahun_prediksi,
-                index=len(list_tahun_prediksi)-1
-            )
-            
-            y_pilihan_banner = df_hasil_prediksi[df_hasil_prediksi['TAHUN'] == sel_tahun_banner][col_y].values[0]
-            
-            st.markdown(f"""
-            <div style='background: linear-gradient(135deg, #166534 0%, #14532d 100%); padding: 25px; border-radius: 15px; border: 2px solid #facc15; text-align: center;'>
-                <p style='margin: 0; font-size: 1.1rem; color: #facc15; font-weight: bold;'>ESTIMASI TREE COVER LOSS TAHUN {sel_tahun_banner}</p>
-                <h2 style='margin: 5px 0 0 0; color: white; font-size: 2.3rem;'>{y_pilihan_banner:,.2f} Ha</h2>
-                <p style='margin: 5px 0 0 0; font-size: 0.85rem; color: #dcfce7;'>*Dihitung Berdasarkan Efek Acak Spasial MERF Multi-Tahun {prov_target}</p>
-            </div>
-            """, unsafe_allow_html=True)
-            st.markdown("<br>", unsafe_allow_html=True)
-            
-            df_pred_plot = hist[['TAHUN', col_y]].copy()
-            df_pred_plot['Status'] = 'Historis'
-            
-            row_jembatan = pd.DataFrame([{'TAHUN': tahun_akhir_historis, col_y: hist[col_y].iloc[-1], 'Status': 'Prediksi MERF'}])
-            df_all = pd.concat([df_pred_plot, row_jembatan, df_hasil_prediksi], ignore_index=True)
-            
-            fig_line = px.line(
-                df_all, 
-                x='TAHUN', 
-                y=col_y, 
-                markers=True, 
-                color='Status',
-                color_discrete_map={'Historis': '#15803d', 'Prediksi MERF': '#ef4444'},
-                title=f"Tren Kehilangan Tutupan Pohon dan Proyeksi Jangka Pendek Berkelanjutan ({prov_target})"
-            )
-            fig_line.update_layout(
-                paper_bgcolor='white', 
-                xaxis=dict(tickmode='linear', dtick=1),
-                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
-            )
-            st.plotly_chart(fig_line, use_container_width=True)
+        st.info("Sistem sedang memproses algoritma MERF untuk " + prov_target)
 
-    # --- HALAMAN PENELITIAN ---
     elif st.session_state.page == "Penelitian":
         st.markdown("<h2 style='text-align:center; color:#facc15; font-weight: 800;'>📖 Info Penelitian</h2>", unsafe_allow_html=True)
         st.markdown("<br>", unsafe_allow_html=True)
@@ -396,7 +238,7 @@ else:
             <div class='research-card'>
                 <h4>🎯 Tujuan Penelitian</h4>
                 <ul style='color: #f8fafc; padding-left: 20px; line-height: 1.6;'>
-                    <li>Menerapkan pendekatan data longitudinal dan model hibrida Mixed Effects Random Forest (MERF) untuk menangkap tren perubahan waktu sekaligus</li>
+                    <li>Menerapkan pendekatan data longitudinal dan model hibrida Mixed Effects Random Forest (MERF) untuk menangkap tren perubahan waktu sekaligus karakteristik spasial.</li>
                     <li>Membangun aplikasi web interaktif ForestGuard sebagai media visualisasi spasial-temporal (Choropleth Map) dan sistem prediksi risiko deforestasi yang praktis dan mudah dipahami oleh pemangku kebijakan serta masyarakat umum.</li>
                 </ul>
             </div>
@@ -408,7 +250,7 @@ else:
                 <ul style='color: #f8fafc; padding-left: 20px; line-height: 1.6;'>
                     <li><b>BPS (Badan Pusat Statistik):</b> Data sosio-ekonomi agregat tahunan meliputi kepadatan penduduk sektoral dan persentase kontribusi PDRB lapangan usaha.</li>
                     <li><b>KLHK (Kementerian Lingkungan Hidup dan Kehutanan):</b> Rekapitulasi luasan area kebakaran hutan (Karhutla) serta pemantauan status fungsi kawasan hutan.</li>
-                    <li><b>Global Forest Watch (GFW):</b> Metrik target historis <i>Tree Cover Loss</i> ($Y$) yang dihitung dalam satuan Hektar (Ha).</li>
+                    <li><b>Global Forest Watch (GFW):</b> Metrik target historis <i>Tree Cover Loss</i> (Y) yang dihitung dalam satuan Hektar (Ha).</li>
                 </ul>
             </div>
             """, unsafe_allow_html=True)
@@ -418,128 +260,41 @@ else:
             <div class='research-card'>
                 <h4>🤖 Metode MERF (Mixed-Effects Random Forest)</h4>
                 <p style='color: #f8fafc; text-align: justify; line-height: 1.6; margin-bottom: 10px;'>
-                    <b>Mixed-Effects Random Forest (MERF)</b> merupakan algoritma lanjut yang memadukan keunggulan non-linearitas dari <i>Random Forest</i> dengan kemampuan menangani data panel berhirarki/kluster milik <i>Linear Mixed Models</i>.
+                    <b>Mixed-Effects Random Forest (MERF)</b> merupakan algoritma lanjut yang memadukan keunggulan non-linearitas dari <i>Random Forest</i> dengan kemampuan menangani data panel berhirarki milik <i>Linear Mixed Models</i>.
                 </p>
                 <p style='color: #f8fafc; text-align: justify; line-height: 1.6;'>
-                    Dalam kasus deforestasi tingkat nasional, setiap provinsi memiliki karakteristik dasar lingkungan yang berbeda (efek acak) yang tidak bisa disamaratakan oleh model regresi biasa standar. MERF mengisolasi efek kontekstual wilayah ini sehingga tingkat akurasi prediksi (R²) meningkat tajam secara lokal.
+                    Setiap provinsi memiliki karakteristik dasar lingkungan yang berbeda (efek acak) yang tidak bisa disamaratakan oleh model regresi biasa standar. MERF mengisolasi efek kontekstual wilayah ini sehingga tingkat akurasi prediksi meningkat tajam secara lokal.
                 </p>
-            </div>
-            """, unsafe_allow_html=True)
-
-            # ============================================================
-            # BAGIAN MODEL & KETERANGAN — REVISI (satu st.markdown tunggal)
-            # ============================================================
-            st.markdown("""
-            <div class='research-card'>
-                <h4>🧮 Persamaan Dasar Model MERF</h4>
-                <p style='color: #f8fafc; margin-bottom: 6px;'>
-                    Persamaan matematis untuk model Mixed Effects Random Forest (MERF) adalah sebagai berikut:
-                </p>
-                <p style='text-align: center; font-size: 1.45rem; color: #ffffff; font-style: italic;
-                    margin: 20px 0; letter-spacing: 0.5px; font-family: Georgia, serif;'>
-                    <i>y<sub>i</sub></i> = <i>f</i>(<b>X</b><sub><i>i</i></sub>)
-                    + <b>Z</b><sub><i>i</i></sub><b>b</b><sub><i>i</i></sub>
-                    + <i>&epsilon;<sub>i</sub></i>
-                </p>
-                <p style='font-size: 0.85rem; color: #cbd5e1; margin-top: 14px; line-height: 1.8;'>
-                    <b>Keterangan fungsi dan simbol (p. 5):</b><br><br>
-                    &bull; <i>y<sub>i</sub></i> : Vektor nilai variabel respon
-                    (<i>Tree Cover Loss</i>) untuk subjek provinsi ke-<i>i</i>.<br><br>
-                    &bull; <i>f</i>(<b>X</b><sub><i>i</i></sub>) : Fungsi non-linear
-                    <i>fixed effects</i> yang diestimasi menggunakan algoritma
-                    <b>Random Forest</b> berdasarkan matriks prediktor
-                    <b>X</b><sub><i>i</i></sub>.<br><br>
-                    &bull; <b>Z</b><sub><i>i</i></sub> : Matriks desain untuk komponen
-                    <i>random effects</i> (dalam kasus Anda, konstanta intercept
-                    untuk tiap provinsi).<br><br>
-                    &bull; <b>b</b><sub><i>i</i></sub> : Vektor penyimpangan acak
-                    (<i>random effects</i>) untuk provinsi ke-<i>i</i>, di mana
-                    <b>b</b><sub><i>i</i></sub> ~ <i>N</i>(0, <b>D</b>).<br><br>
-                    &bull; <i>&epsilon;<sub>i</sub></i> : Vektor <i>error</i> acak sisaan
-                    (<i>residual error</i>), di mana
-                    <i>&epsilon;<sub>i</sub></i> ~ <i>N</i>(0,
-                    <b>R</b><sub><i>i</i></sub>) dengan
-                    <b>R</b><sub><i>i</i></sub> = &sigma;&sup2;<b>I</b><sub><i>n<sub>i</sub></i></sub>.
-                </p>
-            </div>
-            """, unsafe_allow_html=True)
-            # ============================================================
-
-        st.markdown("### 📋 Definisi Operasional Variabel Penelitian")
-        
-        v_col1, v_col2 = st.columns(2)
-        with v_col1:
-            st.markdown("""
-            <div class='research-card'>
-                <table style='width: 100%; border-collapse: collapse; color: #f8fafc;'>
-                    <tr style='border-bottom: 2px solid #15803d; color: #facc15;'>
-                        <th style='padding: 8px; text-align: left;'>Kode</th>
-                        <th style='padding: 8px; text-align: left;'>Nama Variabel Operasional</th>
-                        <th style='padding: 8px; text-align: left;'>Satuan</th>
-                    </tr>
-                    <tr style='border-bottom: 1px solid rgba(255,255,255,0.1);'>
-                        <td style='padding: 8px; font-weight: bold; color: #fbbf24;'>Y</td>
-                        <td style='padding: 8px;'>Tree Cover Loss (Kehilangan Tutupan Pohon)</td>
-                        <td style='padding: 8px;'>Hektar (Ha)</td>
-                    </tr>
-                    <tr style='border-bottom: 1px solid rgba(255,255,255,0.1);'>
-                        <td style='padding: 8px; font-weight: bold; color: #22c55e;'>X1</td>
-                        <td style='padding: 8px;'>Luas Penutupan Lahan Eksisting</td>
-                        <td style='padding: 8px;'>Ribu Ha</td>
-                    </tr>
-                    <tr style='border-bottom: 1px solid rgba(255,255,255,0.1);'>
-                        <td style='padding: 8px; font-weight: bold; color: #22c55e;'>X2</td>
-                        <td style='padding: 8px;'>Luas Kebakaran Hutan dan Lahan (Karhutla)</td>
-                        <td style='padding: 8px;'>Hektar (Ha)</td>
-                    </tr>
-                    <tr>
-                        <td style='padding: 8px; font-weight: bold; color: #22c55e;'>X3</td>
-                        <td style='padding: 8px;'>Total Luas Tanaman Perkebunan</td>
-                        <td style='padding: 8px;'>Ribu Ha</td>
-                    </tr>
-                </table>
             </div>
             """, unsafe_allow_html=True)
             
-        with v_col2:
             st.markdown("""
             <div class='research-card'>
-                <table style='width: 100%; border-collapse: collapse; color: #f8fafc;'>
-                    <tr style='border-bottom: 2px solid #15803d; color: #facc15;'>
-                        <th style='padding: 8px; text-align: left;'>Kode</th>
-                        <th style='padding: 8px; text-align: left;'>Nama Variabel Operasional</th>
-                        <th style='padding: 8px; text-align: left;'>Satuan</th>
-                    </tr>
-                    <tr style='border-bottom: 1px solid rgba(255,255,255,0.1);'>
-                        <td style='padding: 8px; font-weight: bold; color: #22c55e;'>X4</td>
-                        <td style='padding: 8px;'>Kepadatan Penduduk Wilayah Terkait</td>
-                        <td style='padding: 8px;'>Jiwa/km²</td>
-                    </tr>
-                    <tr style='border-bottom: 1px solid rgba(255,255,255,0.1);'>
-                        <td style='padding: 8px; font-weight: bold; color: #22c55e;'>X5</td>
-                        <td style='padding: 8px;'>Total Populasi Ternak Besar/Kecil Terdata</td>
-                        <td style='padding: 8px;'>Ekor</td>
-                    </tr>
-                    <tr>
-                        <td style='padding: 8px; font-weight: bold; color: #22c55e;'>X6</td>
-                        <td style='padding: 8px;'>Persentase PDRB Sektor Pertambangan</td>
-                        <td style='padding: 8px;'>Persen (%)</td>
-                    </tr>
-                </table>
+                <h4>🧮 Persamaan Dasar Model MERF</h4>
+                <p style='color: #f8fafc; margin-bottom: 6px;'>Persamaan matematis untuk model Mixed Effects Random Forest (MERF) adalah sebagai berikut:</p>
+                <p style='text-align: center; font-size: 1.4rem; color: #ffffff; font-style: italic; margin: 18px 0; letter-spacing: 0.5px;'>
+                    <i>y<sub>i</sub></i> = <i>f</i>(<b>X</b><sub><i>i</i></sub>) + <b>Z</b><sub><i>i</i></sub><b>b</b><sub><i>i</i></sub> + <i>&epsilon;<sub>i</sub></i>
+                </p>
+                <p style='font-size: 0.85rem; color: #cbd5e1; margin-top: 14px; line-height: 1.8;'>
+                    <b>Keterangan fungsi dan simbol (p. 5):</b><br><br>
+                    &bull; <i>y<sub>i</sub></i> : Vektor nilai variabel respon (<i>Tree Cover Loss</i>) untuk subjek provinsi ke-<i>i</i>.<br><br>
+                    &bull; <i>f</i>(<b>X</b><sub><i>i</i></sub>) : Fungsi non-linear <i>fixed effects</i> yang diestimasi menggunakan algoritma <b>Random Forest</b> berdasarkan matriks prediktor <b>X</b><sub><i>i</i></sub>.<br><br>
+                    &bull; <b>Z</b><sub><i>i</i></sub> : Matriks desain untuk komponen <i>random effects</i> (dalam kasus Anda, konstanta intercept untuk tiap provinsi).<br><br>
+                    &bull; <b>b</b><sub><i>i</i></sub> : Vektor penyimpangan acak (<i>random effects</i>) untuk provinsi ke-<i>i</i>, di mana <b>b</b><sub><i>i</i></sub> ~ <i>N</i>(0, <b>D</b>).<br><br>
+                    &bull; <i>&epsilon;<sub>i</sub></i> : Vektor <i>error</i> acak sisaan (<i>residual error</i>), di mana <i>&epsilon;<sub>i</sub></i> ~ <i>N</i>(0, <b>R</b><sub><i>i</i></sub>) dengan <b>R</b><sub><i>i</i></sub> = &sigma;&sup2;<b>I</b><sub><i>n<sub>i</sub></i></sub>.
+                </p>
             </div>
             """, unsafe_allow_html=True)
 
-        # --- BAGIAN KETERBATASAN MODEL ---
         st.markdown("""
         <div style='background: linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%); padding: 25px; border-radius: 15px; border: 1px solid #ef4444; margin-top: 10px;'>
-            <h5 style='margin: 0 0 15px 0; color: #fca5a5; font-weight: bold;'>⚠️ Keterbatasan Model (Limitations)</h5>
-            <ul style='margin: 0; padding-left: 20px; font-size: 0.9rem; color: #ffeeee; text-align: justify; line-height: 1.6; list-style-type: disc;'>
-                <li style='margin-bottom: 10px;'><b>Ketergantungan Data Historis:</b> Model memprediksi berdasarkan tren masa lalu, sehingga tidak bisa membaca perubahan mendadak seperti kebijakan hukum baru atau penegakan hukum di lapangan.</li>
-                <li style='margin-bottom: 10px;'><b>Optimal Jangka Pendek:</b> Estimasi paling akurat untuk masa depan terdekat. Prediksi terlalu jauh ke depan berisiko memperbesar akumulasi kesalahan (<i>error propagation</i>).</li>
-                <li style='margin-bottom: 10px;'><b>Efek Wilayah Baru:</b> Jika ada provinsi hasil pemekaran baru, model akan mengabaikan efek acak wilayah ($b_i = 0$) dan murni menggunakan prediksi rata-rata global.</li>
-                <li style='margin-bottom: 10px;'><b>Cakupan Variabel Makro:</b> Model menggunakan data agregat tahunan (skala provinsi), sehingga belum mencakup faktor mikro lokal seperti konflik lahan atau izin konsesi korporasi.</li>
-                <li style='margin-bottom: 10px;'><b>Resolusi Spasial Makro: </b> tidak memperhitungkan faktor pemicu eksternal mendadak (exogenous shocks) di luar variabel terdata</li>
+            <h5 style='margin: 0 0 10px 0; color: #fca5a5; font-weight: bold;'>⚠️ Batasan Penelitian & Disclaimer Model</h5>
+            <ul style='color: #ffeeee; font-size: 0.9rem; line-height: 1.5;'>
+                <li><b>Ketergantungan Data Historis:</b> Model memprediksi berdasarkan tren masa lalu, sehingga tidak bisa membaca perubahan mendadak seperti kebijakan hukum baru atau penegakan hukum di lapangan.</li>
+                <li><b>Optimal Jangka Pendek:</b> Estimasi paling akurat untuk masa depan terdekat. Prediksi terlalu jauh ke depan berisiko memperbesar akumulasi kesalahan (error propagation).</li>
+                <li><b>Efek Wilayah Baru:</b> Jika ada provinsi hasil pemekaran baru, model akan mengabaikan efek acak wilayah (b_i = 0) dan murni menggunakan prediksi rata-rata global.</li>
+                <li><b>Cakupan Variabel Makro:</b> Tidak memperhitungkan faktor pemicu eksternal mendadak (exogenous shocks) di luar variabel terdata.</li>
+                <li><b>Resolusi Spasial Makro:</b> Dirancang untuk memetakan estimasi risiko di tingkat provinsi, bukan untuk mendeteksi penebangan pohon secara real-time di tingkat koordinat petak hutan.</li>
             </ul>
         </div>
-        <br>
         """, unsafe_allow_html=True)
