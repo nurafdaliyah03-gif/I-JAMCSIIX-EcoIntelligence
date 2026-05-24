@@ -121,7 +121,7 @@ else:
             fig_pred = px.line(pd.concat([hist[['TAHUN', col_y, 'Status']], future]), x='TAHUN', y=col_y, color='Status', markers=True)
             st.plotly_chart(fig_pred, use_container_width=True)
 
-        elif st.session_state.page == "Penelitian":
+    elif st.session_state.page == "Penelitian":
 
 
 
