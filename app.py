@@ -77,7 +77,7 @@ st.session_state.df = get_internal_data()
 def set_page(name):
     st.session_state.page = name
 
-# --- 4. CSS CUSTOM (KEMBALI KE ASLI MILIKMU) ---
+# --- 4. CSS CUSTOM ---
 st.markdown("""
 <style>
     .stApp {
@@ -199,12 +199,13 @@ else:
             try:
                 url = "https://raw.githubusercontent.com/superpikar/indonesia-geojson/master/indonesia-province-simple.json"
                 geojson = requests.get(url).json()
+                
+                # --- PERBAIKAN UTAMA: COCOKKAN NAMA GEOJSON DENGAN DATA INTERNAL KAMU ---
                 for feature in geojson['features']:
                     nama_geojson = str(feature['properties'].get('Propinsi', '')).strip().upper()
-                    if "ACEH" in nama_geojson: feature['properties']['PROV_KEY'] = "ACEH"
-                    elif "MALUKU UTARA" in nama_geojson: feature['properties']['PROV_KEY'] = "MALUKU UTARA"
-                    elif "PAPUA BARAT" in nama_geojson: feature['properties']['PROV_KEY'] = "PAPUA BARAT"
-                    else: feature['properties']['PROV_KEY'] = nama_geojson
+                    # Menghilangkan tulisan "PROVINSI " agar menyisakan "ACEH", "MALUKU UTARA", dll.
+                    nama_bersih = nama_geojson.replace("PROVINSI ", "")
+                    feature['properties']['PROV_KEY'] = nama_bersih
             except:
                 geojson = None
 
@@ -220,14 +221,13 @@ else:
                     data_frame=data_peta, 
                     geojson=geojson, 
                     locations="PROVINSI", 
-                    featureidkey="properties.PROV_KEY", 
+                    featureidkey="properties.PROV_KEY", # Menggunakan PROV_KEY yang sudah kita bersihkan di atas
                     color=col_y, 
                     color_continuous_scale="RdYlGn_r",
                     range_color=[min_val, max_val],
                     hover_name="PROVINSI"
                 )
                 
-                # --- SATU-SATUNYA PERBAIKAN: Memunculkan Peta Bawaan dengan Benar ---
                 if fitur_fit and len(data_peta) > 0:
                     fig.update_geos(fitbounds=fitur_fit, visible=True)
                 else:
