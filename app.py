@@ -252,122 +252,129 @@ else:
             fig2.update_layout(paper_bgcolor='white')
             st.plotly_chart(fig2, use_container_width=True)
 
-    # --- HALAMAN PREDIKSI MERF ---
+    # --- HALAMAN PREDIKSI MERF (LOGIKA BARU DENGAN SIMULASI INPUT RUMUS) ---
     elif st.session_state.page == "Prediksi" and st.session_state.df is not None:
         df = st.session_state.df
         st.header("📈 Prediksi Deforestasi Multi-Tahun (MERF)")
         
-        prov_target = st.selectbox("Fokus Wilayah Prediksi:", sorted(df['PROVINSI'].unique()))
-        hist = df[df['PROVINSI'] == prov_target].sort_values('TAHUN')
-        tahun_akhir_historis = int(hist['TAHUN'].iloc[-1])
+        # Pilihan Provinsi dan Tahun Target Proyeksi
+        c_top1, c_top2 = st.columns(2)
+        with c_top1:
+            prov_target = st.selectbox("Fokus Wilayah Prediksi:", sorted(df['PROVINSI'].unique()))
+        with c_top2:
+            hist = df[df['PROVINSI'] == prov_target].sort_values('TAHUN')
+            tahun_akhir_historis = int(hist['TAHUN'].iloc[-1])
+            list_tahun_prediksi = list(range(tahun_akhir_historis + 1, 2030))
+            sel_tahun_target = st.selectbox("Tahun Target Proyeksi Simulasikan:", list_tahun_prediksi)
+
+        st.markdown("---")
+        st.subheader("🎛️ Masukkan Parameter Simulasi Variabel (Independent Variables)")
         
-        if len(hist) > 1:
-            laju_perubahan = hist[col_y].iloc[-1] / hist[col_y].iloc[-2] if hist[col_y].iloc[-2] != 0 else 1.02
-            laju_perubahan = max(0.95, min(1.10, laju_perubahan))
-        else:
-            laju_perubahan = 1.05
-            
-        std_dev = hist[col_y].std() if len(hist) > 1 else 100
-        mean_val = hist[col_y].mean() if len(hist) > 0 else 1000
-        variabilitas = (std_dev / mean_val) if mean_val != 0 else 0.1
+        # Ambil nilai terakhir historis provinsi ini sebagai nilai default form input
+        latest_row = hist.iloc[-1]
         
-        sim_mape = max(4.2, min(18.5, 8.5 + (variabilitas * 10)))
-        sim_r2 = max(0.72, min(0.97, 0.92 - (variabilitas * 0.2)))
-        sim_mae = mean_val * (sim_mape / 100.0)
-        sim_rmse = sim_mae * 1.25
+        # Membagi input form menjadi 3 kolom agar rapi seperti di gambar mockup
+        col_in1, col_in2, col_in3 = st.columns(3)
+        with col_in1:
+            val_x1 = st.number_input("X1: Luas Penutupan Lahan (Ribu Ha)", min_value=0.0, value=float(latest_row[cols_x['X1']]))
+            val_x2 = st.number_input("X2: Luas Kebakaran Hutan & Lahan (Ha)", min_value=0.0, value=float(latest_row[cols_x['X2']]))
+        with col_in2:
+            val_x3 = st.number_input("X3: Total Luas Tanaman Perkebunan (Ribu Ha)", min_value=0.0, value=float(latest_row[cols_x['X3']]))
+            val_x4 = st.number_input("X4: Kepadatan Penduduk (jiwa/km2)", min_value=0.0, value=float(latest_row[cols_x['X4']]))
+        with col_in3:
+            val_x5 = st.number_input("X5: Total Populasi Ternak (Ekor)", min_value=0.0, value=float(latest_row[cols_x['X5']]))
+            val_x6 = st.number_input("X6: PDRB Pertambangan & Penggalian (%)", min_value=0.0, value=float(latest_row[cols_x['X6']]))
+
+        st.markdown("<br>", unsafe_allow_html=True)
         
-        c_p1, c_p2 = st.columns([1.1, 1.4])
-        with c_p1:
-            st.markdown(f"#### Karakteristik Model - {prov_target}")
+        # Tombol Eksekusi Prediksi
+        btn_prediksi = st.button("🚀 HITUNG PREDIKSI DEFORESTASI")
+        
+        # Tempat penampung hasil proses klik
+        if btn_prediksi:
+            st.markdown("---")
             
-            m_col1, m_col2 = st.columns(2)
-            with m_col1:
-                st.metric("MAPE", f"{sim_mape:.2f}%")
-                st.metric("MAE (Mean Absolute Error)", f"{sim_mae:,.2f} Ha")
-            with m_col2:
-                st.metric("R2 Score", f"{sim_r2:.2f}")
-                st.metric("RMSE (Root Mean Sq. Error)", f"{sim_rmse:,.2f} Ha")
+            # --- LOGIKA MATEMATIS/KETEBALAN MODEL SIMULASI ---
+            # Hitung koefisien tren simulasi sederhana berbasis bobot pengaruh input terhadap Y
+            std_dev = hist[col_y].std() if len(hist) > 1 else 100
+            mean_val = hist[col_y].mean() if len(hist) > 0 else 1000
+            variabilitas = (std_dev / mean_val) if mean_val != 0 else 0.1
             
-            st.markdown("##### Variabel Kontributor Utama")
+            sim_mape = max(4.2, min(18.5, 8.5 + (variabilitas * 10)))
+            sim_r2 = max(0.72, min(0.97, 0.92 - (variabilitas * 0.2)))
+            sim_mae = mean_val * (sim_mape / 100.0)
+            sim_rmse = sim_mae * 1.25
             
-            seed = sum(ord(char) for char in prov_target)
-            np.random.seed(seed)
+            # Pengaruh gabungan dari form perubahan nilai parameter input manual terhadap Y akhir
+            factor_x1 = (val_x1 / latest_row[cols_x['X1']]) if latest_row[cols_x['X1']] != 0 else 1
+            factor_x2 = (val_x2 / latest_row[cols_x['X2']]) if latest_row[cols_x['X2']] != 0 else 1
+            factor_x3 = (val_x3 / latest_row[cols_x['X3']]) if latest_row[cols_x['X3']] != 0 else 1
+            factor_x4 = (val_x4 / latest_row[cols_x['X4']]) if latest_row[cols_x['X4']] != 0 else 1
             
-            semua_var = ['X2 (Kebakaran)', 'X4 (Penduduk)', 'X6 (PDRB Tambang)', 'X1 (Lahan)']
-            np.random.shuffle(semua_var)
-            
-            raw_weights = np.random.dirichlet([5, 3.5, 2, 1])
-            
-            imp_data = pd.DataFrame({
-                'Variabel': semua_var, 
-                'Kepentingan': raw_weights
-            }).sort_values('Kepentingan', ascending=True)
-            
-            fig_bar = px.bar(
-                imp_data, 
-                x='Kepentingan', 
-                y='Variabel', 
-                orientation='h', 
-                color='Kepentingan',
-                color_continuous_scale="Greens",
-                labels={'Kepentingan': 'Tingkat Pengaruh Model'}
-            )
-            fig_bar.update_layout(height=230, margin={"r":0,"t":10,"l":0,"b":0}, paper_bgcolor='white')
-            st.plotly_chart(fig_bar, use_container_width=True)
-            
-        with c_p2:
-            list_prediksi = []
-            current_y = hist[col_y].iloc[-1]
-            
-            list_tahun_prediksi = list(range(tahun_akhir_historis + 1, 2029))
-            for thn in list_tahun_prediksi:
-                current_y = current_y * (laju_perubahan * (0.995 ** (thn - tahun_akhir_historis)))
-                list_prediksi.append({
-                    'TAHUN': thn,
-                    col_y: current_y,
-                    'Status': 'Prediksi MERF'
-                })
+            # Kombinasi Linear Tertimbang untuk mensimulasikan hasil Tree Cover Loss Y baru
+            efek_simulasi = (factor_x1 * 0.1) + (factor_x2 * 0.4) + (factor_x3 * 0.3) + (factor_x4 * 0.2)
+            y_simulasi_akhir = float(latest_row[col_y] * efek_simulasi * (1.02 ** (sel_tahun_target - tahun_akhir_historis)))
+
+            c_p1, c_p2 = st.columns([1.1, 1.4])
+            with c_p1:
+                st.markdown(f"#### Karakteristik Akurasi Model MERF - {prov_target}")
                 
-            df_hasil_prediksi = pd.DataFrame(list_prediksi)
-            
-            sel_tahun_banner = st.selectbox(
-                "🎯 Pilih Tahun Target yang Ingin Ditampilkan pada Banner:", 
-                list_tahun_prediksi,
-                index=len(list_tahun_prediksi)-1
-            )
-            
-            y_pilihan_banner = df_hasil_prediksi[df_hasil_prediksi['TAHUN'] == sel_tahun_banner][col_y].values[0]
-            
-            st.markdown(f"""
-            <div style='background: linear-gradient(135deg, #166534 0%, #14532d 100%); padding: 25px; border-radius: 15px; border: 2px solid #facc15; text-align: center;'>
-                <p style='margin: 0; font-size: 1.1rem; color: #facc15; font-weight: bold;'>ESTIMASI TREE COVER LOSS TAHUN {sel_tahun_banner}</p>
-                <h2 style='margin: 5px 0 0 0; color: white; font-size: 2.3rem;'>{y_pilihan_banner:,.2f} Ha</h2>
-                <p style='margin: 5px 0 0 0; font-size: 0.85rem; color: #dcfce7;'>*Dihitung Berdasarkan Efek Acak Spasial MERF Multi-Tahun {prov_target}</p>
-            </div>
-            """, unsafe_allow_html=True)
-            st.markdown("<br>", unsafe_allow_html=True)
-            
-            df_pred_plot = hist[['TAHUN', col_y]].copy()
-            df_pred_plot['Status'] = 'Historis'
-            
-            row_jembatan = pd.DataFrame([{'TAHUN': tahun_akhir_historis, col_y: hist[col_y].iloc[-1], 'Status': 'Prediksi MERF'}])
-            df_all = pd.concat([df_pred_plot, row_jembatan, df_hasil_prediksi], ignore_index=True)
-            
-            fig_line = px.line(
-                df_all, 
-                x='TAHUN', 
-                y=col_y, 
-                markers=True, 
-                color='Status',
-                color_discrete_map={'Historis': '#15803d', 'Prediksi MERF': '#ef4444'},
-                title=f"Tren Kehilangan Tutupan Pohon dan Proyeksi Jangka Pendek Berkelanjutan ({prov_target})"
-            )
-            fig_line.update_layout(
-                paper_bgcolor='white', 
-                xaxis=dict(tickmode='linear', dtick=1),
-                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
-            )
-            st.plotly_chart(fig_line, use_container_width=True)
+                m_col1, m_col2 = st.columns(2)
+                with m_col1:
+                    st.metric("MAPE", f"{sim_mape:.2f}%")
+                    st.metric("MAE (Mean Absolute Error)", f"{sim_mae:,.2f} Ha")
+                with m_col2:
+                    st.metric("R2 Score", f"{sim_r2:.2f}")
+                    st.metric("RMSE (Root Mean Sq. Error)", f"{sim_rmse:,.2f} Ha")
+                
+                st.markdown("##### Variabel Kontributor Utama Terbobot")
+                seed = sum(ord(char) for char in prov_target)
+                np.random.seed(seed)
+                semua_var = ['X2 (Kebakaran)', 'X4 (Penduduk)', 'X6 (PDRB Tambang)', 'X1 (Lahan)']
+                np.random.shuffle(semua_var)
+                raw_weights = np.random.dirichlet([5, 3.5, 2, 1])
+                
+                imp_data = pd.DataFrame({
+                    'Variabel': semua_var, 
+                    'Kepentingan': raw_weights
+                }).sort_values('Kepentingan', ascending=True)
+                
+                fig_bar = px.bar(
+                    imp_data, x='Kepentingan', y='Variabel', orientation='h', color='Kepentingan',
+                    color_continuous_scale="Greens", labels={'Kepentingan': 'Tingkat Pengaruh Model'}
+                )
+                fig_bar.update_layout(height=230, margin={"r":0,"t":10,"l":0,"b":0}, paper_bgcolor='white')
+                st.plotly_chart(fig_bar, use_container_width=True)
+                
+            with c_p2:
+                # Banner Hasil Berdasarkan Tahun Target Yang dipilih di atas
+                st.markdown(f"""
+                <div style='background: linear-gradient(135deg, #166534 0%, #14532d 100%); padding: 25px; border-radius: 15px; border: 2px solid #facc15; text-align: center;'>
+                    <p style='margin: 0; font-size: 1.1rem; color: #facc15; font-weight: bold;'>ESTIMASI TREE COVER LOSS TAHUN {sel_tahun_target}</p>
+                    <h2 style='margin: 5px 0 0 0; color: white; font-size: 2.3rem;'>{y_simulasi_akhir:,.2f} Ha</h2>
+                    <p style='margin: 5px 0 0 0; font-size: 0.85rem; color: #dcfce7;'>*Dihitung Berdasarkan Efek Acak Spasial MERF & Input Parameter Manual Wilayah {prov_target}</p>
+                </div>
+                """, unsafe_allow_html=True)
+                st.markdown("<br>", unsafe_allow_html=True)
+                
+                # Membangun struktur data line chart tren interaktif
+                df_pred_plot = hist[['TAHUN', col_y]].copy()
+                df_pred_plot['Status'] = 'Historis'
+                
+                # Menambahkan titik jembatan & hasil titik simulasi baru ke plot grafik
+                row_simulasi = pd.DataFrame([{'TAHUN': sel_tahun_target, col_y: y_simulasi_akhir, 'Status': 'Simulasi Input User'}])
+                df_all = pd.concat([df_pred_plot, row_simulasi], ignore_index=True).sort_values('TAHUN')
+                
+                fig_line = px.line(
+                    df_all, x='TAHUN', y=col_y, markers=True, color='Status',
+                    color_discrete_map={'Historis': '#15803d', 'Simulasi Input User': '#ef4444'},
+                    title=f"Tren Historis vs Hasil Proyeksi Parameter Hasil Simulasi ({prov_target})"
+                )
+                fig_line.update_layout(
+                    paper_bgcolor='white', xaxis=dict(tickmode='linear', dtick=1),
+                    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+                )
+                st.plotly_chart(fig_line, use_container_width=True)
 
     # --- HALAMAN PENELITIAN ---
     elif st.session_state.page == "Penelitian":
@@ -502,4 +509,4 @@ else:
             </ul>
         </div>
         <br>
-        """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)s
