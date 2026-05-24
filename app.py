@@ -17,7 +17,8 @@ csv_filename = "data_jamsicx.csv"
 if 'df' not in st.session_state or st.session_state.df is None:
     if os.path.exists(csv_filename):
         raw_df = pd.read_csv(csv_filename)
-        raw_df.columns = raw_df.columns.str.strip()
+        # Trik Sakti: Bersihkan spasi ganda di nama kolom agar tidak KeyError lagi!
+        raw_df.columns = raw_df.columns.str.strip().str.replace(r'\s+', ' ', regex=True)
         if 'PROVINSI' in raw_df.columns:
             raw_df['PROVINSI'] = raw_df['PROVINSI'].astype(str).str.strip().str.upper()
         st.session_state.df = raw_df
@@ -145,6 +146,7 @@ def load_geojson():
 geojson = load_geojson()
 
 col_y = "Y (TREE COVER LOSS- Ha)"
+# Nama kunci dictionary dipastikan sudah pas dengan kolom CSV yang dibersihkan spasi gandanya
 cols_x = {
     "X1": "X1 (LUAS PENUTUPAN LAHAN - RIBU Ha)",
     "X2": "X2 (LUAS KEBAKARAN HUTAN DAN LAHAN - Ha)",
@@ -252,12 +254,11 @@ else:
             fig2.update_layout(paper_bgcolor='white')
             st.plotly_chart(fig2, use_container_width=True)
 
-    # --- HALAMAN PREDIKSI MERF (LOGIKA BARU DENGAN SIMULASI INPUT RUMUS) ---
+    # --- HALAMAN PREDIKSI MERF ---
     elif st.session_state.page == "Prediksi" and st.session_state.df is not None:
         df = st.session_state.df
         st.header("📈 Prediksi Deforestasi Multi-Tahun (MERF)")
         
-        # Pilihan Provinsi dan Tahun Target Proyeksi
         c_top1, c_top2 = st.columns(2)
         with c_top1:
             prov_target = st.selectbox("Fokus Wilayah Prediksi:", sorted(df['PROVINSI'].unique()))
@@ -270,10 +271,8 @@ else:
         st.markdown("---")
         st.subheader("🎛️ Masukkan Parameter Simulasi Variabel (Independent Variables)")
         
-        # Ambil nilai terakhir historis provinsi ini sebagai nilai default form input
         latest_row = hist.iloc[-1]
         
-        # Membagi input form menjadi 3 kolom agar rapi seperti di gambar mockup
         col_in1, col_in2, col_in3 = st.columns(3)
         with col_in1:
             val_x1 = st.number_input("X1: Luas Penutupan Lahan (Ribu Ha)", min_value=0.0, value=float(latest_row[cols_x['X1']]))
@@ -286,16 +285,11 @@ else:
             val_x6 = st.number_input("X6: PDRB Pertambangan & Penggalian (%)", min_value=0.0, value=float(latest_row[cols_x['X6']]))
 
         st.markdown("<br>", unsafe_allow_html=True)
-        
-        # Tombol Eksekusi Prediksi
         btn_prediksi = st.button("🚀 HITUNG PREDIKSI DEFORESTASI")
         
-        # Tempat penampung hasil proses klik
         if btn_prediksi:
             st.markdown("---")
             
-            # --- LOGIKA MATEMATIS/KETEBALAN MODEL SIMULASI ---
-            # Hitung koefisien tren simulasi sederhana berbasis bobot pengaruh input terhadap Y
             std_dev = hist[col_y].std() if len(hist) > 1 else 100
             mean_val = hist[col_y].mean() if len(hist) > 0 else 1000
             variabilitas = (std_dev / mean_val) if mean_val != 0 else 0.1
@@ -305,13 +299,11 @@ else:
             sim_mae = mean_val * (sim_mape / 100.0)
             sim_rmse = sim_mae * 1.25
             
-            # Pengaruh gabungan dari form perubahan nilai parameter input manual terhadap Y akhir
             factor_x1 = (val_x1 / latest_row[cols_x['X1']]) if latest_row[cols_x['X1']] != 0 else 1
             factor_x2 = (val_x2 / latest_row[cols_x['X2']]) if latest_row[cols_x['X2']] != 0 else 1
             factor_x3 = (val_x3 / latest_row[cols_x['X3']]) if latest_row[cols_x['X3']] != 0 else 1
             factor_x4 = (val_x4 / latest_row[cols_x['X4']]) if latest_row[cols_x['X4']] != 0 else 1
             
-            # Kombinasi Linear Tertimbang untuk mensimulasikan hasil Tree Cover Loss Y baru
             efek_simulasi = (factor_x1 * 0.1) + (factor_x2 * 0.4) + (factor_x3 * 0.3) + (factor_x4 * 0.2)
             y_simulasi_akhir = float(latest_row[col_y] * efek_simulasi * (1.02 ** (sel_tahun_target - tahun_akhir_historis)))
 
@@ -347,7 +339,6 @@ else:
                 st.plotly_chart(fig_bar, use_container_width=True)
                 
             with c_p2:
-                # Banner Hasil Berdasarkan Tahun Target Yang dipilih di atas
                 st.markdown(f"""
                 <div style='background: linear-gradient(135deg, #166534 0%, #14532d 100%); padding: 25px; border-radius: 15px; border: 2px solid #facc15; text-align: center;'>
                     <p style='margin: 0; font-size: 1.1rem; color: #facc15; font-weight: bold;'>ESTIMASI TREE COVER LOSS TAHUN {sel_tahun_target}</p>
@@ -357,11 +348,9 @@ else:
                 """, unsafe_allow_html=True)
                 st.markdown("<br>", unsafe_allow_html=True)
                 
-                # Membangun struktur data line chart tren interaktif
                 df_pred_plot = hist[['TAHUN', col_y]].copy()
                 df_pred_plot['Status'] = 'Historis'
                 
-                # Menambahkan titik jembatan & hasil titik simulasi baru ke plot grafik
                 row_simulasi = pd.DataFrame([{'TAHUN': sel_tahun_target, col_y: y_simulasi_akhir, 'Status': 'Simulasi Input User'}])
                 df_all = pd.concat([df_pred_plot, row_simulasi], ignore_index=True).sort_values('TAHUN')
                 
@@ -397,7 +386,7 @@ else:
             <div class='research-card'>
                 <h4>📊 Sumber Data Penelitian</h4>
                 <ul style='color: #f8fafc; padding-left: 20px; line-height: 1.6;'>
-                    <li><b>BPS (Badan Pusat Statistik):</b> Data sosio-ekonomi agregat tahunan meliputi kepadatan penduduk sektoral dan persentase kontribusi PDRB lapangan usaha.</li>
+                    <li><b>BPS (Badan Pusat Statistik):</b> Data sosio-ekonomi agregat tahunan meliputi kepadatan penduduk sektoral and persentase kontribusi PDRB lapangan usaha.</li>
                     <li><b>KLHK (Kementerian Lingkungan Hidup dan Kehutanan):</b> Rekapitulasi luasan area kebakaran hutan (Karhutla) serta pemantauan status fungsi kawasan hutan.</li>
                     <li><b>Global Forest Watch (GFW):</b> Metrik target historis <i>Tree Cover Loss</i> ($Y$) yang dihitung dalam satuan Hektar (Ha).</li>
                 </ul>
@@ -509,4 +498,4 @@ else:
             </ul>
         </div>
         <br>
-        """, unsafe_allow_html=True)s
+        """, unsafe_allow_html=True)
