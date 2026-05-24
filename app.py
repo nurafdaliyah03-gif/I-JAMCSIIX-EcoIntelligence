@@ -77,104 +77,61 @@ st.session_state.df = get_internal_data()
 def set_page(name):
     st.session_state.page = name
 
-# --- 4. CSS CUSTOM (THEME GLASSMORPHISM NIGHT FOREST) ---
+# --- 4. CSS CUSTOM (KEMBALI KE ASLI MILIKMU) ---
 st.markdown("""
 <style>
-    /* Background Imersif Aplikasi */
     .stApp {
-        background: linear-gradient(rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0.72)), 
+        background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), 
                     url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=2000&auto=format&fit=crop');
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
-        color: #ffffff;
+        color: white;
     }
-
-    /* Modifikasi Dropdown / Selectbox Input */
-    .stSelectbox div[data-baseweb="select"] {
-        background-color: #ffffff !important;
-        border-radius: 10px;
-    }
-    .stSelectbox div[data-baseweb="select"] div {
-        color: #000000 !important;
-        font-weight: 600 !important;
-    }
-    .stSelectbox label p {
-        color: #facc15 !important; 
-        font-weight: bold !important;
-        font-size: 1.05rem !important;
-    }
-
-    /* Judul Besar Utama di Portal */
     .main-title {
-        font-size: 5rem !important;
+        font-size: 4.5rem !important;
         font-family: 'Arial Black', sans-serif;
         background: linear-gradient(to bottom, #facc15 0%, #fbbf24 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         text-align: center;
         font-weight: 900 !important;
-        filter: drop-shadow(0px 5px 15px rgba(0,0,0,0.9));
-        margin-bottom: 0px;
     }
-
-    /* Kotak Menu Utama (Glassmorphism Card) */
     .menu-card {
-        background: rgba(255, 255, 255, 0.08);
-        backdrop-filter: blur(15px);
-        border: 1px solid rgba(255, 255, 255, 0.18);
-        border-radius: 30px;
-        padding: 40px;
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        padding: 30px;
         text-align: center;
-        height: 320px;
+        height: 280px;
         display: flex;
         flex-direction: column;
         justify-content: center;
     }
-    
-    /* Frame Wadah Chart Transparan */
     .stPlotlyChart { 
-        background-color: rgba(255, 255, 255, 0.05) !important; 
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 20px; 
-        padding: 15px; 
-        box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        background-color: rgba(255, 255, 255, 0.03) !important; 
+        border-radius: 15px; 
+        padding: 10px; 
     }
-
-    /* Styling Teks Indikator Nilai / Metrik */
-    [data-testid="stMetricValue"] { color: #ffffff !important; font-weight: 800 !important; font-size: 1.8rem !important; }
-    [data-testid="stMetricLabel"] { color: #facc15 !important; font-weight: bold !important; font-size: 0.9rem !important; }
-
-    /* Desain Tombol Navigasi Hijau Hutan */
+    [data-testid="stMetricValue"] { color: white !important; }
+    [data-testid="stMetricLabel"] { color: #facc15 !important; }
     div.stButton > button {
-        background: linear-gradient(135deg, #15803d 0%, #166534 100%) !important;
+        background-color: #15803d !important;
         color: white !important;
         border: 1px solid #facc15 !important;
-        border-radius: 12px;
-        width: 100%;
-        font-weight: bold !important;
+        border-radius: 10px;
     }
-
-    /* Kotak Informasi Penelitian (Info Cards) */
     .research-card {
-        background: rgba(15, 23, 42, 0.65);
-        border: 1px solid rgba(250, 191, 36, 0.3);
-        border-radius: 16px;
-        padding: 25px;
-        margin-bottom: 20px;
-        backdrop-filter: blur(8px);
-    }
-    .research-card h4 {
-        color: #facc15 !important;
-        margin-top: 0px;
-        border-bottom: 2px solid #15803d;
-        padding-bottom: 8px;
+        background: rgba(0, 0, 0, 0.4);
+        border: 1px solid rgba(250, 191, 36, 0.2);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 15px;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# Nama dan Label Kolom Data Panel
 col_y = "Y (TREE COVER LOSS- Ha)"
 cols_x = {
     "X1": "X1 (LUAS PENUTUPAN LAHAN - RIBU Ha)",
@@ -188,17 +145,18 @@ cols_x = {
 # --- 5. LOGIKA NAVIGASI HALAMAN ---
 if st.session_state.page == "Portal":
     st.markdown("<br><br><h1 class='main-title'>🌳 ForestGuard</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align:center; color:#dcfce7; letter-spacing:3px; font-weight:bold; margin-bottom:60px;'>SISTEM MONITORING DEFORESTASI DINAMIS MERF</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align:center; color:#dcfce7; letter-spacing:2px;'>SISTEM MONITORING DEFORESTASI DINAMIS MERF</p>", unsafe_allow_html=True)
+    st.markdown("<br><br>", unsafe_allow_html=True)
     
     c1, c2, c3 = st.columns(3)
     with c1:
-        st.markdown("<div class='menu-card'><h1>🛰️</h1><h3>Dashboard Spasial</h3><p style='font-size:0.85rem; color:#cbd5e1;'>Visualisasi sebaran spasial temporal kehilangan tutupan pohon.</p></div>", unsafe_allow_html=True)
+        st.markdown("<div class='menu-card'><h1>🛰️</h1><h3>Dashboard Spasial</h3><p style='font-size:0.9rem; color:#cbd5e1;'>Analisis spasial deskriptif data panel tutupan lahan.</p></div>", unsafe_allow_html=True)
         if st.button("Buka Dashboard"): set_page("Dashboard"); st.rerun()
     with c2:
-        st.markdown("<div class='menu-card'><h1>🧪</h1><h3>Prediksi MERF</h3><p style='font-size:0.85rem; color:#cbd5e1;'>Simulasi proyeksi angka deforestasi multi-tahun tiap wilayah.</p></div>", unsafe_allow_html=True)
+        st.markdown("<div class='menu-card'><h1>🧪</h1><h3>Prediksi MERF</h3><p style='font-size:0.9rem; color:#cbd5e1;'>Simulasi proyeksi angka deforestasi multi-tahun.</p></div>", unsafe_allow_html=True)
         if st.button("Mulai Prediksi"): set_page("Prediksi"); st.rerun()
     with c3:
-        st.markdown("<div class='menu-card'><h1>📖</h1><h3>Info Penelitian</h3><p style='font-size:0.85rem; color:#cbd5e1;'>Informasi metodologi hibrida, rumus dasar, dan operasional variabel.</p></div>", unsafe_allow_html=True)
+        st.markdown("<div class='menu-card'><h1>📖</h1><h3>Info Penelitian</h3><p style='font-size:0.9rem; color:#cbd5e1;'>Informasi variabel, rumusan, dan batasan model.</p></div>", unsafe_allow_html=True)
         if st.button("Lihat Penelitian"): set_page("Penelitian"); st.rerun()
 
 else:
@@ -232,11 +190,9 @@ else:
         cl, cr = st.columns([1.1, 0.9])
         with cl:
             st.markdown("""
-            <div style="background-color: rgba(255, 255, 255, 0.1); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); margin-bottom: 15px;">
-                <span style="font-weight: bold; color: #facc15; margin-right: 10px;">ℹ️ Tingkat Kerawanan Deforestasi:</span>
-                <span style="color: #ef4444; font-weight: bold;">🟥 Tinggi</span> &nbsp;&nbsp;&nbsp;
-                <span style="color: #eab308; font-weight: bold;">🟨 Sedang</span> &nbsp;&nbsp;&nbsp;
-                <span style="color: #22c55e; font-weight: bold;">🟩 Rendah</span>
+            <div style="background-color: rgba(255, 255, 255, 0.05); padding: 10px; border-radius: 10px; margin-bottom: 10px;">
+                <span style="color: #facc15; font-weight: bold;">Kerawanan Deforestasi:</span>
+                <span style="color: #ef4444;">🟥 Tinggi</span> | <span style="color: #eab308;">🟨 Sedang</span> | <span style="color: #22c55e;">🟩 Rendah</span>
             </div>
             """, unsafe_allow_html=True)
 
@@ -271,82 +227,34 @@ else:
                     hover_name="PROVINSI"
                 )
                 
-                # --- PERBAIKAN EMAS: Kembalikan Batas Negara & Set Latar Belakang Peta yang Jelas ---
+                # --- SATU-SATUNYA PERBAIKAN: Memunculkan Peta Bawaan dengan Benar ---
                 if fitur_fit and len(data_peta) > 0:
-                    fig.update_geos(
-                        fitbounds=fitur_fit, 
-                        visible=True, 
-                        showcountries=True,
-                        countrycolor="rgba(255,255,255,0.4)",
-                        showland=True, 
-                        landcolor="rgba(255,255,255,0.07)", # Mengisi daratan kosong agar tidak hitam mati
-                        showocean=True, 
-                        oceancolor="rgba(15,23,42,0.4)"     # Memberikan warna samudra biru gelap transparan
-                    )
+                    fig.update_geos(fitbounds=fitur_fit, visible=True)
                 else:
                     fig.update_geos(
                         projection_type="mercator",
                         center={"lat": -1.5, "lon": 120.0},
-                        lataxis_range=[-8, 5],
+                        lataxis_range=[-10, 6],
                         lonaxis_range=[95, 141],
-                        visible=True,
-                        showcountries=True,
-                        countrycolor="rgba(255,255,255,0.4)",
-                        showland=True, 
-                        landcolor="rgba(255,255,255,0.07)",
-                        showocean=True, 
-                        oceancolor="rgba(15,23,42,0.4)"
+                        visible=True
                     )
                 
                 fig.update_layout(
                     height=450, 
-                    margin={"r":10,"t":20,"l":10,"b":10}, 
-                    paper_bgcolor='rgba(0,0,0,0)', 
-                    plot_bgcolor='rgba(0,0,0,0)',
-                    font=dict(color="white")
+                    margin={"r":0,"t":20,"l":0,"b":0}
                 )
                 st.plotly_chart(fig, use_container_width=True)
             else:
-                st.info("Visualisasi berbasis spasial internal siap diakses.")
+                st.info("Visualisasi berbasis spasial siap diakses.")
                 
         with cr:
             var_x = st.selectbox("Analisis Korelasi X:", list(cols_x.keys()))
-            
             if len(df_filt_year) > 1:
-                fig2 = px.scatter(
-                    df_filt_year, 
-                    x=cols_x[var_x], 
-                    y=col_y, 
-                    color=col_y, 
-                    trendline="ols", 
-                    hover_name="PROVINSI",
-                    color_continuous_scale="RdYlGn_r",
-                    range_color=[min_val, max_val]
-                )
-                fig2.update_layout(
-                    paper_bgcolor='rgba(0,0,0,0)', 
-                    plot_bgcolor='rgba(0,0,0,0)',
-                    font=dict(color="white")
-                )
-                st.plotly_chart(fig2, use_container_width=True)
-            elif len(df_filt_year) == 1:
-                fig2 = px.scatter(
-                    df_filt_year, 
-                    x=cols_x[var_x], 
-                    y=col_y, 
-                    color=col_y, 
-                    hover_name="PROVINSI",
-                    color_continuous_scale="RdYlGn_r",
-                    range_color=[min_val, max_val]
-                )
-                fig2.update_layout(
-                    paper_bgcolor='rgba(0,0,0,0)', 
-                    plot_bgcolor='rgba(0,0,0,0)',
-                    font=dict(color="white")
-                )
+                fig2 = px.scatter(df_filt_year, x=cols_x[var_x], y=col_y, color=col_y, trendline="ols", hover_name="PROVINSI", color_continuous_scale="RdYlGn_r", range_color=[min_val, max_val])
                 st.plotly_chart(fig2, use_container_width=True)
             else:
-                st.warning("Tidak ada kecocokan data untuk visualisasi pada tahun terpilih.")
+                fig2 = px.scatter(df_filt_year, x=cols_x[var_x], y=col_y, color=col_y, hover_name="PROVINSI", color_continuous_scale="RdYlGn_r", range_color=[min_val, max_val])
+                st.plotly_chart(fig2, use_container_width=True)
 
     # ====================================
     # --- HALAMAN PREDIKSI MODEL MERF ---
@@ -377,241 +285,71 @@ else:
         c_p1, c_p2 = st.columns([1.1, 1.4])
         with c_p1:
             st.markdown(f"#### Karakteristik Akurasi Model - {prov_target}")
-            
             m_col1, m_col2 = st.columns(2)
             with m_col1:
                 st.metric("MAPE", f"{sim_mape:.2f}%")
-                st.metric("MAE (Mean Absolute Error)", f"{sim_mae:,.2f} Ha")
+                st.metric("MAE", f"{sim_mae:,.2f} Ha")
             with m_col2:
                 st.metric("R2 Score", f"{sim_r2:.2f}")
-                st.metric("RMSE (Root Mean Sq. Error)", f"{sim_rmse:,.2f} Ha")
+                st.metric("RMSE", f"{sim_rmse:,.2f} Ha")
             
-            st.markdown("##### Variabel Kontributor Utama (Feature Importance)")
+            st.markdown("##### Variabel Kontributor Utama")
             seed = sum(ord(char) for char in prov_target)
             np.random.seed(seed)
-            
             semua_var = ['X2 (Kebakaran)', 'X4 (Penduduk)', 'X6 (PDRB Tambang)', 'X1 (Lahan)']
             np.random.shuffle(semua_var)
             raw_weights = np.random.dirichlet([4.8, 3.2, 1.8, 1.1])
-            
-            imp_data = pd.DataFrame({
-                'Variabel': semua_var, 
-                'Kepentingan': raw_weights
-            }).sort_values('Kepentingan', ascending=True)
-            
-            fig_bar = px.bar(
-                imp_data, 
-                x='Kepentingan', 
-                y='Variabel', 
-                orientation='h', 
-                color='Kepentingan',
-                color_continuous_scale="Greens",
-                labels={'Kepentingan': 'Tingkat Pengaruh Model'}
-            )
-            fig_bar.update_layout(
-                height=230, 
-                margin={"r":0,"t":10,"l":0,"b":0}, 
-                paper_bgcolor='rgba(0,0,0,0)',
-                plot_bgcolor='rgba(0,0,0,0)',
-                font=dict(color="white")
-            )
+            imp_data = pd.DataFrame({'Variabel': semua_var, 'Kepentingan': raw_weights}).sort_values('Kepentingan', ascending=True)
+            fig_bar = px.bar(imp_data, x='Kepentingan', y='Variabel', orientation='h', color='Kepentingan', color_continuous_scale="Greens")
+            fig_bar.update_layout(height=230, margin={"r":0,"t":10,"l":0,"b":0})
             st.plotly_chart(fig_bar, use_container_width=True)
             
         with c_p2:
             list_prediksi = []
             current_y = hist[col_y].iloc[-1]
-            
             list_tahun_prediksi = list(range(tahun_akhir_historis + 1, 2031))
             for thn in list_tahun_prediksi:
                 current_y = current_y * (laju_perubahan * (0.992 ** (thn - tahun_akhir_historis)))
-                list_prediksi.append({
-                    'TAHUN': thn,
-                    col_y: current_y,
-                    'Status': 'Prediksi MERF'
-                })
+                list_prediksi.append({'TAHUN': thn, col_y: current_y, 'Status': 'Prediksi MERF'})
                 
             df_hasil_prediksi = pd.DataFrame(list_prediksi)
-            sel_tahun_banner = st.selectbox(
-                "🎯 Pilih Tahun Target Proyeksi:", 
-                list_tahun_prediksi,
-                index=len(list_tahun_prediksi)-1
-            )
-            
+            sel_tahun_banner = st.selectbox("🎯 Pilih Tahun Target Proyeksi:", list_tahun_prediksi, index=len(list_tahun_prediksi)-1)
             y_pilihan_banner = df_hasil_prediksi[df_hasil_prediksi['TAHUN'] == sel_tahun_banner][col_y].values[0]
             
             st.markdown(f"""
-            <div style='background: linear-gradient(135deg, #166534 0%, #14532d 100%); padding: 25px; border-radius: 15px; border: 2px solid #facc15; text-align: center;'>
-                <p style='margin: 0; font-size: 1.1rem; color: #facc15; font-weight: bold;'>ESTIMASI TREE COVER LOSS TAHUN {sel_tahun_banner}</p>
-                <h2 style='margin: 5px 0 0 0; color: white; font-size: 2.3rem;'>{y_pilihan_banner:,.2f} Ha</h2>
-                <p style='margin: 5px 0 0 0; font-size: 0.85rem; color: #dcfce7;'>*Dihitung Berdasarkan Efek Acak Spasial MERF Multi-Tahun {prov_target}</p>
+            <div style='background-color: rgba(21, 128, 61, 0.3); padding: 20px; border-radius: 10px; border: 1px solid #facc15; text-align: center;'>
+                <p style='margin: 0; color: #facc15; font-weight: bold;'>ESTIMASI TREE COVER LOSS TAHUN {sel_tahun_banner}</p>
+                <h2 style='margin: 5px 0 0 0;'>{y_pilihan_banner:,.2f} Ha</h2>
             </div>
             """, unsafe_allow_html=True)
             st.markdown("<br>", unsafe_allow_html=True)
             
             df_pred_plot = hist[['TAHUN', col_y]].copy()
             df_pred_plot['Status'] = 'Historis'
-            
             row_jembatan = pd.DataFrame([{'TAHUN': tahun_akhir_historis, col_y: hist[col_y].iloc[-1], 'Status': 'Prediksi MERF'}])
             df_all = pd.concat([df_pred_plot, row_jembatan, df_hasil_prediksi], ignore_index=True)
             
-            fig_line = px.line(
-                df_all, 
-                x='TAHUN', 
-                y=col_y, 
-                markers=True, 
-                color='Status',
-                color_discrete_map={'Historis': '#15803d', 'Prediksi MERF': '#ef4444'},
-                title=f"Tren Kehilangan Tutupan Pohon & Proyeksi Berkelanjutan ({prov_target})"
-            )
-            fig_line.update_layout(
-                paper_bgcolor='rgba(0,0,0,0)',
-                plot_bgcolor='rgba(0,0,0,0)',
-                font=dict(color="white"),
-                xaxis=dict(tickmode='linear', dtick=1),
-                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
-            )
+            fig_line = px.line(df_all, x='TAHUN', y=col_y, markers=True, color='Status', color_discrete_map={'Historis': '#15803d', 'Prediksi MERF': '#ef4444'})
+            fig_line.update_layout(xaxis=dict(tickmode='linear', dtick=1))
             st.plotly_chart(fig_line, use_container_width=True)
 
     # ==========================================
     # --- HALAMAN INFORMASI TEORITIS PENELITIAN ---
     # ==========================================
     elif st.session_state.page == "Penelitian":
-        st.markdown("<h2 style='text-align:center; color:#facc15; font-weight: 800;'>📖 Info Penelitian</h2>", unsafe_allow_html=True)
-        st.markdown("<br>", unsafe_allow_html=True)
-        
+        st.markdown("<h2 style='text-align:center; color:#facc15;'>📖 Info Penelitian</h2>", unsafe_allow_html=True)
         rc1, rc2 = st.columns(2)
         with rc1:
             st.markdown("""
             <div class='research-card'>
                 <h4>🎯 Tujuan Penelitian</h4>
-                <ul style='color: #f8fafc; padding-left: 20px; line-height: 1.6;'>
-                    <li>Menerapkan pendekatan data longitudinal dan model hibrida Mixed Effects Random Forest (MERF) untuk menangkap tren perubahan waktu sekaligus.</li>
-                    <li>Membangun aplikasi web interaktif ForestGuard sebagai media visualisasi spasial-temporal (Choropleth Map) dan sistem prediksi risiko deforestasi yang praktis dan mudah dipahami oleh pemangku kebijakan serta masyarakat umum.</li>
-                </ul>
+                <p>Menerapkan pendekatan data longitudinal dan model Mixed Effects Random Forest (MERF) untuk memetakan risiko kehilangan tutupan pohon berbasis sistem informasi spasial-temporal.</p>
             </div>
             """, unsafe_allow_html=True)
-            
-            st.markdown("""
-            <div class='research-card'>
-                <h4>📊 Sumber Data Penelitian</h4>
-                <ul style='color: #f8fafc; padding-left: 20px; line-height: 1.6;'>
-                    <li><b>BPS (Badan Pusat Statistik):</b> Data sosio-ekonomi agregat tahunan meliputi kepadatan penduduk sektoral dan persentase kontribusi PDRB lapangan usaha.</li>
-                    <li><b>KLHK (Kementerian Lingkungan Hidup dan Kehutanan):</b> Rekapitulasi luasan area kebakaran hutan (Karhutla) serta pemantauan status fungsi kawasan hutan.</li>
-                    <li><b>Global Forest Watch (GFW):</b> Metrik target historis <i>Tree Cover Loss</i> ($Y$) yang dihitung dalam satuan Hektar (Ha).</li>
-                </ul>
-            </div>
-            """, unsafe_allow_html=True)
-            
         with rc2:
             st.markdown("""
             <div class='research-card'>
-                <h4>🤖 Metode MERF (Mixed-Effects Random Forest)</h4>
-                <p style='color: #f8fafc; text-align: justify; line-height: 1.6; margin-bottom: 10px;'>
-                    <b>Mixed-Effects Random Forest (MERF)</b> merupakan sebuah algoritma lanjut yang memadukan keunggulan non-linearitas dari <i>Random Forest</i> dengan kemampuan menangani data panel berhirarki/kluster milik <i>Linear Mixed Models</i>.
-                </p>
-                <p style='color: #f8fafc; text-align: justify; line-height: 1.6;'>
-                    Dalam kasus deforestasi tingkat nasional, setiap provinsi memiliki karakteristik dasar lingkungan yang berbeda (efek acak) yang tidak bisa disamaratakan oleh model regresi biasa standar. MERF mengisolasi efek kontekstual wilayah ini sehingga tingkat akurasi prediksi (R²) meningkat tajam secara lokal.
-                </p>
+                <h4>🤖 Metode MERF</h4>
+                <p>Mixed-Effects Random Forest (MERF) memadukan fleksibilitas non-linearitas Random Forest dengan kemampuan akomodasi struktur data panel berkelompok milik Linear Mixed Models.</p>
             </div>
             """, unsafe_allow_html=True)
-            
-            st.markdown("""
-            <div class='research-card'>
-                <h4>🧮 Persamaan Dasar Model MERF</h4>
-                <p style='color: #f8fafc; margin-bottom: 6px;'>
-                    Persamaan matematis untuk model Mixed Effects Random Forest (MERF) adalah sebagai berikut:
-                </p>
-                <p style='text-align: center; font-size: 1.45rem; color: #ffffff; font-style: italic;
-                    margin: 20px 0; letter-spacing: 0.5px; font-family: Georgia, serif;'>
-                    <i>y<sub>i</sub></i> = <i>f</i>(<b>X</b><sub><i>i</i></sub>)
-                    + <b>Z</b><sub><i>i</i></sub><b>b</b><sub><i>i</i></sub>
-                    + <i>&epsilon;<sub>i</sub></i>
-                </p>
-                <p style='font-size: 0.85rem; color: #cbd5e1; margin-top: 14px; line-height: 1.8;'>
-                    <b>Keterangan fungsi dan simbol (p. 5):</b><br><br>
-                    &bull; <i>y<sub>i</sub></i> : Vektor nilai variabel respon (<i>Tree Cover Loss</i>) untuk subjek provinsi ke-<i>i</i>.<br><br>
-                    &bull; <i>f</i>(<b>X</b><sub><i>i</i></sub>) : Fungsi non-linear <i>fixed effects</i> yang diestimasi menggunakan algoritma <b>Random Forest</b> berdasarkan matriks prediktor <b>X</b><sub><i>i</i></sub>.<br><br>
-                    &bull; <b>Z</b><sub><i>i</i></sub> : Matriks desain untuk komponen <i>random effects</i> (konstanta intercept untuk tiap provinsi).<br><br>
-                    &bull; <b>b</b><sub><i>i</i></sub> : Vektor penyimpangan acak (<i>random effects</i>) untuk provinsi ke-<i>i</i>, di mana <b>b</b><sub><i>i</i></sub> ~ <i>N</i>(0, <b>D</b>).<br><br>
-                    &bull; <i>&epsilon;<sub>i</sub></i> : Vektor <i>error</i> acak sisaan (<i>residual error</i>), di mana <i>&epsilon;<sub>i</sub></i> ~ <i>N</i>(0, <b>R</b><sub><i>i</i></sub>) dengan <b>R</b><sub><i>i</i></sub> = &sigma;&sup2;<b>I</b><sub><i>n<sub>i</sub></i></sub>.
-                </p>
-            </div>
-            """, unsafe_allow_html=True)
-
-        st.markdown("### 📋 Definisi Operasional Variabel Penelitian")
-        
-        v_col1, v_col2 = st.columns(2)
-        with v_col1:
-            st.markdown("""
-            <div class='research-card'>
-                <table style='width: 100%; border-collapse: collapse; color: #f8fafc;'>
-                    <tr style='border-bottom: 2px solid #15803d; color: #facc15;'>
-                        <th style='padding: 8px; text-align: left;'>Kode</th>
-                        <th style='padding: 8px; text-align: left;'>Nama Variabel Operasional</th>
-                        <th style='padding: 8px; text-align: left;'>Satuan</th>
-                    </tr>
-                    <tr style='border-bottom: 1px solid rgba(255,255,255,0.1);'>
-                        <td style='padding: 8px; font-weight: bold; color: #fbbf24;'>Y</td>
-                        <td style='padding: 8px;'>Tree Cover Loss (Kehilangan Tutupan Pohon)</td>
-                        <td style='padding: 8px;'>Hektar (Ha)</td>
-                    </tr>
-                    <tr style='border-bottom: 1px solid rgba(255,255,255,0.1);'>
-                        <td style='padding: 8px; font-weight: bold; color: #22c55e;'>X1</td>
-                        <td style='padding: 8px;'>Luas Penutupan Lahan Eksisting</td>
-                        <td style='padding: 8px;'>Ribu Ha</td>
-                    </tr>
-                    <tr style='border-bottom: 1px solid rgba(255,255,255,0.1);'>
-                        <td style='padding: 8px; font-weight: bold; color: #22c55e;'>X2</td>
-                        <td style='padding: 8px;'>Luas Kebakaran Hutan dan Lahan (Karhutla)</td>
-                        <td style='padding: 8px;'>Hektar (Ha)</td>
-                    </tr>
-                    <tr>
-                        <td style='padding: 8px; font-weight: bold; color: #22c55e;'>X3</td>
-                        <td style='padding: 8px;'>Total Luas Tanaman Perkebunan</td>
-                        <td style='padding: 8px;'>Ribu Ha</td>
-                    </tr>
-                </table>
-            </div>
-            """, unsafe_allow_html=True)
-            
-        with v_col2:
-            st.markdown("""
-            <div class='research-card'>
-                <table style='width: 100%; border-collapse: collapse; color: #f8fafc;'>
-                    <tr style='border-bottom: 2px solid #15803d; color: #facc15;'>
-                        <th style='padding: 8px; text-align: left;'>Kode</th>
-                        <th style='padding: 8px; text-align: left;'>Nama Variabel Operasional</th>
-                        <th style='padding: 8px; text-align: left;'>Satuan</th>
-                    </tr>
-                    <tr style='border-bottom: 1px solid rgba(255,255,255,0.1);'>
-                        <td style='padding: 8px; font-weight: bold; color: #22c55e;'>X4</td>
-                        <td style='padding: 8px;'>Kepadatan Penduduk Wilayah Terkait</td>
-                        <td style='padding: 8px;'>Jiwa/km²</td>
-                    </tr>
-                    <tr style='border-bottom: 1px solid rgba(255,255,255,0.1);'>
-                        <td style='padding: 8px; font-weight: bold; color: #22c55e;'>X5</td>
-                        <td style='padding: 8px;'>Total Populasi Ternak Besar/Kecil Terdata</td>
-                        <td style='padding: 8px;'>Ekor</td>
-                    </tr>
-                    <tr>
-                        <td style='padding: 8px; font-weight: bold; color: #22c55e;'>X6</td>
-                        <td style='padding: 8px;'>Persentase PDRB Sektor Pertambangan</td>
-                        <td style='padding: 8px;'>Persen (%)</td>
-                    </tr>
-                </table>
-            </div>
-            """, unsafe_allow_html=True)
-
-        st.markdown("""
-        <div style='background: linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%); padding: 25px; border-radius: 15px; border: 1px solid #ef4444; margin-top: 10px;'>
-            <h5 style='margin: 0 0 15px 0; color: #fca5a5; font-weight: bold;'>⚠️ Keterbatasan Model (Limitations)</h5>
-            <ul style='margin: 0; padding-left: 20px; font-size: 0.9rem; color: #ffeeee; text-align: justify; line-height: 1.6; list-style-type: disc;'>
-                <li style='margin-bottom: 10px;'><b>Ketergantungan Data Historis:</b> Model memprediksi berdasarkan tren masa lalu, sehingga tidak bisa membaca perubahan mendadak seperti kebijakan hukum baru atau penegakan hukum di lapangan.</li>
-                <li style='margin-bottom: 10px;'><b>Optimal Jangka Pendek:</b> Estimasi paling akurat untuk masa depan terdekat. Prediksi terlalu jauh ke depan berisiko memperbesar akumulasi kesalahan (<i>error propagation</i>).</li>
-                <li style='margin-bottom: 10px;'><b>Efek Wilayah Baru:</b> Jika ada provinsi hasil pemekaran baru, model akan mengabaikan efek acak wilayah ($b_i = 0$) dan murni menggunakan prediksi rata-rata global.</li>
-                <li style='margin-bottom: 10px;'><b>Cakupan Variabel Makro:</b> Model menggunakan data agregat tahunan (skala provinsi), sehingga belum mencakup faktor mikro lokal seperti konflik lahan atau izin konsesi korporasi.</li>
-                <li style='margin-bottom: 10px;'><b>Resolusi Spasial Makro:</b> Tidak memperhitungkan faktor pemicu eksternal mendadak (<i>exogenous shocks</i>) di luar variabel terdata.</li>
-            </ul>
-        </div>
-        <br>
-        """, unsafe_allow_html=True)
