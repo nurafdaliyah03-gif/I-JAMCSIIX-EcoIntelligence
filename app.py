@@ -92,7 +92,7 @@ else:
             fig2.update_layout(paper_bgcolor='white')
             st.plotly_chart(fig2, use_container_width=True)
 
-    elif st.session_state.page == "Prediksi":
+elif st.session_state.page == "Prediksi":
         st.markdown("<h3 style='color: #facc15; font-weight: bold;'>🌍 FORESTGUARD: ESTIMASI RISIKO DEFORESTASI & MONITORING JANGKA PENDEK</h3>", unsafe_allow_html=True)
         with st.expander("📥 TAMBAH DATA AKTUAL (UPDATE TAHUNAN)"):
             uploaded_file = st.file_uploader("Upload CSV Data:", type="csv")
@@ -103,25 +103,38 @@ else:
 
         df = st.session_state.df
         last_yr = df['TAHUN'].max()
-        prov_target = st.selectbox("Pilih Wilayah untuk Grafik Tren:", sorted(df['PROVINSI'].unique()))
+        
+        # --- PENGGUNAAN SATU SELECTBOX UNTUK KEDUANYA ---
+        target_prov = st.selectbox("Pilih Wilayah untuk Analisis:", sorted(df['PROVINSI'].unique()))
         st.markdown("---")
         
         cl, cr = st.columns([1, 1.3])
         with cl:
-            st.markdown(f"<h4 style='color: #facc15;'>📄 TABEL ESTIMASI ({last_yr+1} - {last_yr+3})</h4>", unsafe_allow_html=True)
+            st.markdown(f"<h4 style='color: #facc15;'>📄 TABEL ESTIMASI ({target_prov})</h4>", unsafe_allow_html=True)
+            
+            # Filter data hanya untuk provinsi yang dipilih
+            last_val = df[df['PROVINSI'] == target_prov].iloc[-1][col_y]
             national_preds = []
-            for p in sorted(df['PROVINSI'].unique()):
-                last_val = df[df['PROVINSI'] == p].iloc[-1][col_y]
-                for i in range(1, 4):
-                    national_preds.append({"Provinsi": p, "Tahun": last_yr+i, "Estimasi Loss (Ha)": round(last_val * (1.03 ** i), 2)})
-            st.dataframe(pd.DataFrame(national_preds).head(15), use_container_width=True, hide_index=True)
+            for i in range(1, 4):
+                national_preds.append({
+                    "Tahun": last_yr + i, 
+                    "Estimasi Loss (Ha)": round(last_val * (1.03 ** i), 2)
+                })
+            st.dataframe(pd.DataFrame(national_preds), use_container_width=True, hide_index=True)
 
         with cr:
             st.markdown(f"<h4 style='color: #facc15;'>📊 TREN KEHILANGAN TUTUPAN POHON</h4>", unsafe_allow_html=True)
-            hist = df[df['PROVINSI'] == prov_target].sort_values('TAHUN').copy()
+            hist = df[df['PROVINSI'] == target_prov].sort_values('TAHUN').copy()
             hist['Status'] = 'Data Aktual'
             future = pd.DataFrame({'TAHUN': [last_yr+1, last_yr+2, last_yr+3], col_y: [hist[col_y].iloc[-1] * (1.03**i) for i in range(1, 4)], 'Status': 'Prediksi'})
             
+            # Titik jembatan agar garis tidak terputus
+            last_actual = hist.iloc[[-1]].copy()
+            last_actual['Status'] = 'Prediksi'
+            df_plot = pd.concat([hist[['TAHUN', col_y, 'Status']], last_actual, future])
+            
+            fig_pred = px.line(df_plot, x='TAHUN', y=col_y, color='Status', markers=True, color_discrete_map={'Data Aktual': '#22c55e', 'Prediksi': '#ef4444'})
+            st.plotly_chart(fig_pred, use_container_width=True)            
             # --- PERBAIKAN GRAFIK (Menyambungkan Garis) ---
             last_actual = hist.iloc[[-1]].copy()
             last_actual['Status'] = 'Prediksi'
