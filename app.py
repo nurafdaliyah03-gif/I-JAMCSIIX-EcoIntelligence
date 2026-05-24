@@ -200,7 +200,7 @@ else:
         set_page("Portal"); st.rerun()
     st.markdown("---")
 
-    # --- HALAMAN DASHBOARD SPASIAL ---
+    # --- HALAMAN DASHBOARD SPASIAL (VERSI PERBAIKAN PETA) ---
     if st.session_state.page == "Dashboard":
         df = st.session_state.df
         st.header("📊 Dashboard Deskriptif Spasial")
@@ -262,39 +262,70 @@ else:
                     range_color=[min_val, max_val],
                     hover_name="PROVINSI"
                 )
+                
+                # --- PERBAIKAN UTAMA: Set Transparansi & Warna Font Peta ---
                 if fitur_fit and len(data_peta) > 0:
-                    fig.update_geos(fitbounds=fitur_fit, visible=False)
+                    fig.update_geos(fitbounds=fitur_fit, visible=False, bgcolor='rgba(0,0,0,0)')
                 else:
                     fig.update_geos(
                         projection_type="mercator",
                         center={"lat": -1.5, "lon": 120.0},
                         lataxis_range=[-10, 6],
                         lonaxis_range=[95, 141],
-                        visible=False
+                        visible=False,
+                        bgcolor='rgba(0,0,0,0)'
                     )
-                fig.update_layout(height=450, margin={"r":0,"t":0,"l":0,"b":0}, paper_bgcolor='white')
+                
+                # Membuka background agar transparan mengikuti style glassmorphism aplikasi
+                fig.update_layout(
+                    height=450, 
+                    margin={"r":0,"t":20,"l":0,"b":0}, 
+                    paper_bgcolor='rgba(0,0,0,0)', 
+                    plot_bgcolor='rgba(0,0,0,0)',
+                    font=dict(color="white")
+                )
                 st.plotly_chart(fig, use_container_width=True)
             else:
                 st.info("Peta Choropleth siap ditampilkan. Berhasil memetakan visualisasi berbasis data spasial internal.")
                 
         with cr:
             var_x = st.selectbox("Analisis Korelasi X:", list(cols_x.keys()))
-            if len(df_filt_year) > 0:
+            if len(df_filt_year) > 1:
                 fig2 = px.scatter(
                     df_filt_year, 
                     x=cols_x[var_x], 
                     y=col_y, 
                     color=col_y, 
-                    trendline="ols" if len(df_filt_year) > 1 else None, 
+                    trendline="ols", 
                     hover_name="PROVINSI",
                     color_continuous_scale="RdYlGn_r",
                     range_color=[min_val, max_val]
                 )
-                fig2.update_layout(paper_bgcolor='white')
+                # Set transparan juga untuk grafik korelasi
+                fig2.update_layout(
+                    paper_bgcolor='rgba(0,0,0,0)', 
+                    plot_bgcolor='rgba(0,0,0,0)',
+                    font=dict(color="white")
+                )
+                st.plotly_chart(fig2, use_container_width=True)
+            elif len(df_filt_year) == 1:
+                fig2 = px.scatter(
+                    df_filt_year, 
+                    x=cols_x[var_x], 
+                    y=col_y, 
+                    color=col_y, 
+                    hover_name="PROVINSI",
+                    color_continuous_scale="RdYlGn_r",
+                    range_color=[min_val, max_val]
+                )
+                fig2.update_layout(
+                    paper_bgcolor='rgba(0,0,0,0)', 
+                    plot_bgcolor='rgba(0,0,0,0)',
+                    font=dict(color="white")
+                )
                 st.plotly_chart(fig2, use_container_width=True)
             else:
                 st.warning("Tidak ada kecocokan data untuk kombinasi korelasi variabel pada tahun ini.")
-
     # --- HALAMAN PREDIKSI MERF ---
     elif st.session_state.page == "Prediksi":
         df = st.session_state.df
