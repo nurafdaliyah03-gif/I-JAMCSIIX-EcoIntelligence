@@ -69,7 +69,6 @@ else:
     if st.button("⬅️ KEMBALI KE PORTAL"): set_page("Portal"); st.rerun()
     st.markdown("---")
 
-    # --- DASHBOARD ---
     if st.session_state.page == "Dashboard":
         df = st.session_state.df
         st.header("📊 Dashboard Deskriptif Spasial")
@@ -91,11 +90,8 @@ else:
             fig2.update_layout(paper_bgcolor='white')
             st.plotly_chart(fig2, use_container_width=True)
 
-    # --- PREDIKSI ---
     elif st.session_state.page == "Prediksi":
         st.markdown("<h3 style='color: #facc15; font-weight: bold;'>🌍 FORESTGUARD: ESTIMASI RISIKO DEFORESTASI & MONITORING JANGKA PENDEK</h3>", unsafe_allow_html=True)
-        
-        # Area Upload Data
         with st.expander("📥 TAMBAH DATA AKTUAL (UPDATE TAHUNAN)"):
             uploaded_file = st.file_uploader("Upload CSV Data:", type="csv")
             if uploaded_file and st.button("Update Data & Grafik"):
@@ -127,11 +123,27 @@ else:
             fig_pred = px.line(df_plot, x='TAHUN', y=col_y, color='Status', markers=True, color_discrete_map={'Data Aktual': '#22c55e', 'Prediksi': '#ef4444'})
             st.plotly_chart(fig_pred, use_container_width=True)
 
-    # --- PENELITIAN ---
     elif st.session_state.page == "Penelitian":
-        st.markdown("<h2 style='text-align:center; color:#facc15; font-weight: 800;'>📖 Info Penelitian</h2>", unsafe_allow_html=True)
-        rc1, rc2 = st.columns(2)
-        with rc1:
-            st.markdown("<div class='research-card'><h4>🎯 Tujuan Penelitian</h4><p>Membangun aplikasi ForestGuard untuk visualisasi dan prediksi risiko deforestasi berbasis model MERF.</p></div>", unsafe_allow_html=True)
-        with rc2:
-            st.markdown("<div class='research-card'><h4>🤖 Metode MERF</h4><p>Menggabungkan Random Forest untuk efek non-linear dan Mixed-Effects untuk karakteristik spasial provinsi.</p></div>", unsafe_allow_html=True)
+        st.markdown("<h2 style='text-align:center; color:#facc15; font-weight: 800;'>📖 Info Lengkap Penelitian</h2>", unsafe_allow_html=True)
+        st.markdown("""
+        <div class='research-card'>
+            <h4>1. Abstrak Penelitian</h4>
+            <p>Penelitian ini berfokus pada pengembangan sistem <b>ForestGuard</b>, sebuah kerangka kerja berbasis <i>Machine Learning</i> untuk memantau dan memprediksi risiko deforestasi di Indonesia. Dengan memanfaatkan model <b>Mixed-Effects Random Forest (MERF)</b>, penelitian ini mampu mengintegrasikan pengaruh variabel spasial dan non-spasial guna menghasilkan prediksi yang akurat terhadap kehilangan tutupan pohon.</p>
+        </div>
+        <div class='research-card'>
+            <h4>2. Metodologi (MERF)</h4>
+            <p>Model MERF yang diterapkan merupakan gabungan dari algoritma <i>Random Forest</i> untuk memodelkan hubungan non-linear yang kompleks dan <i>Mixed-Effects</i> untuk menangani karakteristik spesifik setiap provinsi. Pendekatan ini efektif untuk mengurangi bias yang timbul akibat perbedaan geografis antar wilayah.</p>
+        </div>
+        <div class='research-card'>
+            <h4>3. Variabel Utama Penelitian</h4>
+            <ul>
+                <li><b>Y:</b> Kehilangan Tutupan Pohon (Tree Cover Loss) dalam satuan Hektar.</li>
+                <li><b>X1 - X3:</b> Indikator penggunaan lahan (Luas penutupan, kebakaran hutan, dan luas perkebunan).</li>
+                <li><b>X4 - X6:</b> Indikator sosial-ekonomi (Kepadatan penduduk, populasi ternak, dan PDRB sektor pertambangan).</li>
+            </ul>
+        </div>
+        <div class='research-card'>
+            <h4>4. Kontribusi & Manfaat</h4>
+            <p>Sistem ini dirancang untuk mendukung pengambilan kebijakan berbasis data <i>(Data-Driven Decision Making)</i>. Pihak otoritas terkait dapat menggunakan simulasi yang dihasilkan untuk mengidentifikasi "hotspot" deforestasi dan mengalokasikan sumber daya konservasi secara lebih efisien dan tepat sasaran.</p>
+        </div>
+        """, unsafe_allow_html=True)
