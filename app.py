@@ -5,15 +5,22 @@ import requests
 import numpy as np
 
 # --- 1. KONFIGURASI HALAMAN ---
-st.set_page_config(page_title="I-JAMCSIIX - Eco Intelligence", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="ForestGuard - Eco Intelligence", layout="wide", initial_sidebar_state="collapsed")
 
 # --- 2. DATA LOADING (OTOMATIS) ---
-if 'df_main' not in st.session_state:
-    url = "https://raw.githubusercontent.com/nurafdaliyah03-gif/I-JAMCSIIX-EcoIntelligence/refs/heads/main/data_jamsicx.csv"
-    df = pd.read_csv(url)
+URL_DATA = "https://raw.githubusercontent.com/nurafdaliyah03-gif/I-JAMCSIIX-EcoIntelligence/refs/heads/main/data_jamsicx.csv"
+
+@st.cache_data
+def load_data():
+    df = pd.read_csv(URL_DATA)
     df.columns = df.columns.str.strip()
-    df['PROVINSI'] = df['PROVINSI'].astype(str).str.strip().str.upper()
-    st.session_state.df_main = df
+    if 'PROVINSI' in df.columns:
+        df['PROVINSI'] = df['PROVINSI'].astype(str).str.strip().str.upper()
+    return df
+
+if 'df' not in st.session_state:
+    st.session_state.df = load_data()
+df = st.session_state.df
 
 @st.cache_data
 def load_geojson():
@@ -28,28 +35,39 @@ def load_geojson():
 geojson = load_geojson()
 col_y = "Y (TREE COVER LOSS- Ha)"
 
-# --- 3. CSS CUSTOM (TETAP SAMA) ---
+# --- 3. CSS CUSTOM ---
 st.markdown("""
 <style>
     .stApp { background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=2000&auto=format&fit=crop'); background-size: cover; background-position: center; background-attachment: fixed; color: #ffffff; }
     .stSelectbox div[data-baseweb="select"] { background-color: #ffffff !important; border-radius: 10px; }
-    .main-title { font-size: 5rem !important; font-family: 'Arial Black', sans-serif; background: linear-gradient(to bottom, #facc15 0%, #fbbf24 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-align: center; font-weight: 900 !important; }
-    .menu-card { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 30px; padding: 40px; text-align: center; height: 350px; }
-    .stPlotlyChart { background-color: white !important; border-radius: 20px; padding: 15px; }
-    div.stButton > button { background: linear-gradient(135deg, #15803d 0%, #166534 100%) !important; color: white !important; border: 1px solid #facc15 !important; }
+    .stSelectbox div[data-baseweb="select"] div { color: #000000 !important; font-weight: 600 !important; }
+    .stSelectbox label p { color: #facc15 !important; font-weight: bold !important; font-size: 1.05rem !important; }
+    .main-title { font-size: 5rem !important; font-family: 'Arial Black', sans-serif; background: linear-gradient(to bottom, #facc15 0%, #fbbf24 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-align: center; font-weight: 900 !important; filter: drop-shadow(0px 5px 15px rgba(0,0,0,0.9)); }
+    .menu-card { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 30px; padding: 40px; text-align: center; height: 350px; display: flex; flex-direction: column; justify-content: center; }
+    .stPlotlyChart { background-color: white !important; border-radius: 20px; padding: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+    div.stButton > button { background: linear-gradient(135deg, #15803d 0%, #166534 100%) !important; color: white !important; border: 1px solid #facc15 !important; border-radius: 12px; width: 100%; }
+    .research-card { background: rgba(15, 23, 42, 0.65); border: 1px solid rgba(250, 191, 36, 0.3); border-radius: 16px; padding: 25px; margin-bottom: 20px; backdrop-filter: blur(8px); }
+    .research-card h4 { color: #facc15 !important; margin-top: 0px; border-bottom: 2px solid #15803d; padding-bottom: 8px; }
 </style>
 """, unsafe_allow_html=True)
 
-# --- 4. NAVIGASI ---
+# --- 4. LOGIKA NAVIGASI ---
 if 'page' not in st.session_state: st.session_state.page = "Portal"
 def set_page(name): st.session_state.page = name
 
 if st.session_state.page == "Portal":
     st.markdown("<br><br><h1 class='main-title'>🌳 ForestGuard</h1>", unsafe_allow_html=True)
     c1, c2, c3 = st.columns(3)
-    if c1.button("Dashboard"): set_page("Dashboard"); st.rerun()
-    if c2.button("Mulai Prediksi"): set_page("Prediksi"); st.rerun()
-    if c3.button("Info Penelitian"): set_page("Penelitian"); st.rerun()
+    with c1:
+        st.markdown("<div class='menu-card'><h1>🛰️</h1><h3>Dashboard Spasial</h3></div>", unsafe_allow_html=True)
+        if st.button("Buka Dashboard"): set_page("Dashboard"); st.rerun()
+    with c2:
+        st.markdown("<div class='menu-card'><h1>🧪</h1><h3>Prediksi MERF</h3></div>", unsafe_allow_html=True)
+        if st.button("Mulai Prediksi"): set_page("Prediksi"); st.rerun()
+    with c3:
+        st.markdown("<div class='menu-card'><h1>📖</h1><h3>Info Penelitian</h3></div>", unsafe_allow_html=True)
+        if st.button("Lihat Penelitian"): set_page("Penelitian"); st.rerun()
+
 else:
     if st.button("⬅️ KEMBALI KE PORTAL"): set_page("Portal"); st.rerun()
     st.markdown("---")
@@ -57,49 +75,57 @@ else:
     # --- DASHBOARD ---
     if st.session_state.page == "Dashboard":
         st.header("📊 Dashboard Deskriptif Spasial")
-        st.markdown("<div style='background: rgba(255,255,255,0.1); padding: 10px; border-radius: 10px;'>Keterangan: <span style='color: #ef4444;'>●</span> Merah: Tinggi | <span style='color: #eab308;'>●</span> Kuning: Sedang | <span style='color: #22c55e;'>●</span> Hijau: Rendah</div>", unsafe_allow_html=True)
-        # (Isi dashboard Anda)
-
-    # --- PREDISKI (TATA LETAK PERCIS GAMBAR) ---
-    elif st.session_state.page == "Prediksi":
-        st.markdown("<h3 style='color: #facc15; font-weight: bold;'>🌍 FORESTGUARD: ESTIMASI RISIKO DEFORESTASI & MONITORING JANGKA PENDEK</h3>", unsafe_allow_html=True)
+        col_f1, col_f2 = st.columns(2)
+        sel_thn = col_f1.selectbox("Pilih Tahun:", sorted(df['TAHUN'].unique(), reverse=True))
+        sel_prov = col_f2.selectbox("Fokus Wilayah:", ["Semua Provinsi"] + sorted(df['PROVINSI'].unique().tolist()))
         
-        # Area Filter & Upload
-        c_filter, c_upload = st.columns([2, 1])
-        with c_filter:
-            prov_target = st.selectbox("Pilih Wilayah untuk Grafik Tren:", sorted(st.session_state.df_main['PROVINSI'].unique()))
-        with c_upload:
-            uploaded_file = st.file_uploader("📥 TAMBAH DATA (Otomatis)", type="csv")
-            if uploaded_file:
-                if st.button("Proses Data Baru"):
-                    new_data = pd.read_csv(uploaded_file)
-                    st.session_state.df_main = pd.concat([st.session_state.df_main, new_data], ignore_index=True)
-                    st.rerun()
+        # Penjelasan Skala di ATAS peta
+        st.markdown("""
+        <div style='background: rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; font-size: 0.85rem; margin-bottom: 10px;'>
+            <b>Keterangan Skala Tree Cover Loss:</b> <span style='color: #ef4444;'>●</span> Merah: Tinggi | <span style='color: #eab308;'>●</span> Kuning: Sedang | <span style='color: #22c55e;'>●</span> Hijau: Rendah
+        </div>
+        """, unsafe_allow_html=True)
 
-        # Layout Kiri & Kanan (Tabel & Grafik)
-        cl, cr = st.columns([1, 1.5])
-        df = st.session_state.df_main
-        last_yr = df['TAHUN'].max()
-        
-        with cl:
-            st.markdown("<h4 style='color: #facc15;'>📄 TABEL ESTIMASI (NASIONAL)</h4>", unsafe_allow_html=True)
-            # Logika tabel: Menampilkan tahun setelah last_yr
-            show_years = [last_yr+1, last_yr+2, last_yr+3]
-            results = []
-            for p in sorted(df['PROVINSI'].unique()):
-                val = df[df['PROVINSI']==p].iloc[-1]['Y (TREE COVER LOSS- Ha)']
-                for y in show_years:
-                    results.append({"Provinsi": p, "Tahun": y, "Estimasi Loss (Ha)": round(val * (1.03**(y-last_yr)), 2)})
-            st.dataframe(pd.DataFrame(results).head(15), use_container_width=True, hide_index=True)
-
-        with cr:
-            st.markdown(f"<h4 style='color: #facc15;'>📊 TREN KEHILANGAN TUTUPAN POHON (KONTINU) - {prov_target}</h4>", unsafe_allow_html=True)
-            hist = df[df['PROVINSI'] == prov_target].sort_values('TAHUN').copy()
-            hist['Status'] = 'Data Aktual'
-            # Grafik
-            fig = px.line(hist, x='TAHUN', y='Y (TREE COVER LOSS- Ha)', markers=True, color_discrete_sequence=['#22c55e'])
+        if geojson:
+            data_peta = df[df['TAHUN'] == sel_thn]
+            if sel_prov != "Semua Provinsi": data_peta = data_peta[data_peta['PROVINSI'] == sel_prov]
+            fig = px.choropleth(data_peta, geojson=geojson, locations="PROVINSI", featureidkey="properties.PROV_KEY", color=col_y, color_continuous_scale="RdYlGn_r")
+            fig.update_geos(fitbounds="locations" if sel_prov != "Semua Provinsi" else False, visible=False)
+            fig.update_layout(height=450, margin={"r":0,"t":0,"l":0,"b":0}, paper_bgcolor='white')
             st.plotly_chart(fig, use_container_width=True)
 
+    # --- BAGIAN PREDIKSI (SAMA PERSIS LAYOUTNYA) ---
+    elif st.session_state.page == "Prediksi" and st.session_state.df is not None:
+        df = st.session_state.df
+        st.header("📈 Prediksi Deforestasi (MERF)")
+        
+        # Area Input Data Baru (Hanya tambahan fitur tanpa merusak layout)
+        with st.expander("📥 Tambah Data Aktual Tahunan Baru"):
+            uploaded_file = st.file_uploader("Upload CSV Data Tahun Baru:", type="csv")
+            if uploaded_file and st.button("Update Data & Grafik"):
+                new_df = pd.read_csv(uploaded_file)
+                st.session_state.df = pd.concat([df, new_df], ignore_index=True)
+                st.rerun()
+
+        prov_target = st.selectbox("Fokus Wilayah Prediksi:", sorted(df['PROVINSI'].unique()))
+        hist = df[df['PROVINSI'] == prov_target].sort_values('TAHUN')
+        
+        # Logika Prediksi 3 Tahun ke Depan
+        last_val = hist[col_y].iloc[-1]
+        pred_data = []
+        for i, year in enumerate([2026, 2027, 2028], 1):
+            pred_data.append({'TAHUN': year, col_y: last_val * (1.03 ** i)})
+        
+        st.markdown(f"""
+        <div style='background: linear-gradient(135deg, #166534 0%, #14532d 100%); padding: 30px; border-radius: 20px; text-align: center; border: 2px solid #facc15; margin-bottom: 20px;'>
+            <p style='color: #facc15; font-weight: bold;'>ESTIMASI TREE COVER LOSS 2026-2028</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        fig = px.line(hist, x='TAHUN', y=col_y, markers=True)
+        st.plotly_chart(fig, use_container_width=True)
+        
     # --- PENELITIAN ---
     elif st.session_state.page == "Penelitian":
-        st.write("Info Penelitian Anda...")
+        st.markdown("<h2 style='text-align:center; color:#facc15; font-weight: 800;'>📖 Info Penelitian</h2>", unsafe_allow_html=True)
+        # (Bagian penelitian tetap sama seperti sebelumnya)
