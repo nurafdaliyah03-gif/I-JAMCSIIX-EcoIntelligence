@@ -33,6 +33,7 @@ st.markdown("""
     div.stButton > button { background: linear-gradient(135deg, #15803d 0%, #166534 100%) !important; color: white !important; border: 1px solid #facc15 !important; border-radius: 12px; width: 100%; }
     .research-card { background: rgba(15, 23, 42, 0.65); border: 1px solid rgba(250, 191, 36, 0.3); border-radius: 16px; padding: 25px; margin-bottom: 20px; backdrop-filter: blur(8px); }
     .research-card h4 { color: #facc15 !important; margin-top: 0px; border-bottom: 2px solid #15803d; padding-bottom: 8px; }
+    .legend-box { background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; font-size: 0.85rem; border: 1px solid #facc15; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -72,6 +73,14 @@ else:
     if st.session_state.page == "Dashboard":
         df = st.session_state.df
         st.header("📊 Dashboard Deskriptif Spasial")
+        
+        # Legenda Kriteria
+        st.markdown("""
+        <div class='legend-box'>
+            <b>Legenda Tingkat Kehilangan Tutupan Pohon:</b> 🟢 Rendah (Hijau) ➔ 🟡 Sedang (Kuning) ➔ 🔴 Tinggi (Merah)
+        </div>
+        """, unsafe_allow_html=True)
+        
         col_f1, col_f2 = st.columns(2)
         sel_thn = col_f1.selectbox("Pilih Tahun:", sorted(df['TAHUN'].unique(), reverse=True))
         sel_prov = col_f2.selectbox("Fokus Wilayah (Zoom Provinsi):", ["Semua Provinsi"] + sorted(df['PROVINSI'].unique().tolist()))
@@ -123,7 +132,6 @@ else:
             fig_pred = px.line(df_plot, x='TAHUN', y=col_y, color='Status', markers=True, color_discrete_map={'Data Aktual': '#22c55e', 'Prediksi': '#ef4444'})
             st.plotly_chart(fig_pred, use_container_width=True)
 
-# --- PENELITIAN (DILENGKAPI SESUAI PERMINTAAN) ---
     elif st.session_state.page == "Penelitian":
         st.markdown("<h2 style='text-align:center; color:#facc15; font-weight: 800;'>📖 Info Penelitian</h2>", unsafe_allow_html=True)
         st.markdown("<br>", unsafe_allow_html=True)
