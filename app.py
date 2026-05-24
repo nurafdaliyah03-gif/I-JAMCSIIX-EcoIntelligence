@@ -5,11 +5,7 @@ import requests
 import numpy as np
 
 # --- 1. KONFIGURASI HALAMAN ---
-st.set_page_config(
-    page_title="I-JAMCSIIX - Eco Intelligence", 
-    layout="wide", 
-    initial_sidebar_state="collapsed"
-)
+st.set_page_config(page_title="I-JAMCSIIX - Eco Intelligence", layout="wide", initial_sidebar_state="collapsed")
 
 # --- 2. SESSION STATE ---
 if 'page' not in st.session_state:
@@ -18,7 +14,7 @@ if 'page' not in st.session_state:
 def set_page(name):
     st.session_state.page = name
 
-# --- 3. DATA LOADING (OTOMATIS TERTANAM - TANPA UPLOAD DATA LAGI) ---
+# --- 3. DATA LOADING (OTOMATIS TERTANAM) ---
 @st.cache_data
 def get_internal_data():
     data = {
@@ -74,13 +70,12 @@ def get_internal_data():
         ]
     }
     df_res = pd.DataFrame(data)
-    # Standarisasi string nama provinsi agar selalu bersih dan bersesuaian dengan geojson
     df_res['PROVINSI'] = df_res['PROVINSI'].astype(str).str.strip().str.upper()
     return df_res
 
 df_internal = get_internal_data()
 
-# --- 4. GEOJSON SINKRONISASI ---
+# --- 4. GEOJSON SINKRONISASI (KEMBALI KE SEMULA) ---
 @st.cache_data
 def load_geojson():
     try:
@@ -88,16 +83,16 @@ def load_geojson():
         res = requests.get(url).json()
         for feature in res['features']:
             nama_geojson = str(feature['properties'].get('Propinsi', '')).strip().upper()
-            # Menghilangkan kata 'PROVINSI ' agar tersisa 'ACEH', 'MALUKU UTARA', dll.
-            nama_bersih = nama_geojson.replace("PROVINSI ", "")
-            if "BANTEN" in nama_bersih:
+            if "ACEH" in nama_geojson:
+                feature['properties']['PROV_KEY'] = "ACEH"
+            elif "BANTEN" in nama_geojson:
                 feature['properties']['PROV_KEY'] = "BANTEN"
-            elif "JAKARTA" in nama_bersih:
+            elif "JAKARTA" in nama_geojson:
                 feature['properties']['PROV_KEY'] = "DKI JAKARTA"
-            elif "YOGYAKARTA" in nama_bersih:
+            elif "YOGYAKARTA" in nama_geojson:
                 feature['properties']['PROV_KEY'] = "DI YOGYAKARTA"
             else:
-                feature['properties']['PROV_KEY'] = nama_bersih
+                feature['properties']['PROV_KEY'] = nama_geojson
         return res
     except:
         return None
@@ -114,10 +109,9 @@ cols_x = {
     "X6": "X6 (PDRB PERTAMBANGAN DAN PENGGALIAN PERSEN)"
 }
 
-# --- 5. CSS CUSTOM (FIX KONTRAS WARNA & READABILITY) ---
+# --- 5. CSS CUSTOM ---
 st.markdown("""
 <style>
-    /* Background Imersif */
     .stApp {
         background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), 
                     url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=2000&auto=format&fit=crop');
@@ -127,7 +121,6 @@ st.markdown("""
         color: #ffffff;
     }
 
-    /* === FIX DROPDOWN (SELECTBOX) RE-STYLING === */
     .stSelectbox div[data-baseweb="select"] {
         background-color: #ffffff !important;
         border-radius: 10px;
@@ -142,7 +135,6 @@ st.markdown("""
         font-size: 1.05rem !important;
     }
 
-    /* Judul Utama */
     .main-title {
         font-size: 5rem !important;
         font-family: 'Arial Black', sans-serif;
@@ -154,7 +146,6 @@ st.markdown("""
         filter: drop-shadow(0px 5px 15px rgba(0,0,0,0.9));
     }
 
-    /* Glassmorphism Card */
     .menu-card {
         background: rgba(255, 255, 255, 0.1);
         backdrop-filter: blur(15px);
@@ -168,7 +159,6 @@ st.markdown("""
         justify-content: center;
     }
 
-    /* White Background untuk Chart agar Teks Grafik Jelas */
     .stPlotlyChart { 
         background-color: white !important; 
         border-radius: 20px; 
@@ -176,11 +166,9 @@ st.markdown("""
         box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
 
-    /* Metrik */
     [data-testid="stMetricValue"] { color: #ffffff !important; font-weight: 800 !important; font-size: 1.8rem !important; }
     [data-testid="stMetricLabel"] { color: #facc15 !important; font-weight: bold !important; font-size: 0.9rem !important; }
 
-    /* Tombol Navigasi Umum */
     div.stButton > button {
         background: linear-gradient(135deg, #15803d 0%, #166534 100%) !important;
         color: white !important;
@@ -189,7 +177,6 @@ st.markdown("""
         width: 100%;
     }
 
-    /* Info Research Cards Styling */
     .research-card {
         background: rgba(15, 23, 42, 0.65);
         border: 1px solid rgba(250, 191, 36, 0.3);
@@ -207,7 +194,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- 6. LOGIKA NAVIGASI HALAMAN ---
+# --- 6. LOGIKA NAVIGASI ---
 if st.session_state.page == "Portal":
     st.markdown("<br><br><h1 class='main-title'>🌳 ForestGuard</h1>", unsafe_allow_html=True)
     st.markdown("<p style='text-align:center; color:#dcfce7; letter-spacing:2px;'>SISTEM MONITORING DEFORESTASI DINAMIS</p>", unsafe_allow_html=True)
@@ -220,13 +207,11 @@ if st.session_state.page == "Portal":
         if st.button("Buka Dashboard"): 
             set_page("Dashboard")
             st.rerun()
-            
     with c2:
         st.markdown("<div class='menu-card'><h1>🧪</h1><h3>Prediksi MERF</h3></div>", unsafe_allow_html=True)
         if st.button("Mulai Prediksi"): 
             set_page("Prediksi")
             st.rerun()
-            
     with c3:
         st.markdown("<div class='menu-card'><h1>📖</h1><h3>Info Penelitian</h3></div>", unsafe_allow_html=True)
         if st.button("Lihat Penelitian"): 
