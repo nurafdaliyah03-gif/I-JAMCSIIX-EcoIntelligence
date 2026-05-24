@@ -86,23 +86,25 @@ else:
         sel_thn = col_f1.selectbox("Pilih Tahun:", sorted(df['TAHUN'].unique(), reverse=True))
         sel_prov = col_f2.selectbox("Fokus Wilayah (Zoom Provinsi):", ["Semua Provinsi"] + sorted(df['PROVINSI'].unique().tolist()))
         df_filt_year = df[df['TAHUN'] == sel_thn]
-        
-        # Penentuan range untuk legend
-        min_v = float(df_filt_year[col_y].min())
-        max_v = float(df_filt_year[col_y].max())
-        
         cl, cr = st.columns([1.1, 0.9])
         with cl:
             if geojson:
                 data_peta = df_filt_year if sel_prov == "Semua Provinsi" else df_filt_year[df_filt_year['PROVINSI'] == sel_prov]
-                fig = px.choropleth(data_peta, geojson=geojson, locations="PROVINSI", featureidkey="properties.PROV_KEY", 
-                                    color=col_y, color_continuous_scale="RdYlGn_r", range_color=[min_v, max_v])
+                fig = px.choropleth(data_peta, geojson=geojson, locations="PROVINSI", featureidkey="properties.PROV_KEY", color=col_y, color_continuous_scale="RdYlGn_r")
                 fig.update_geos(fitbounds="locations" if sel_prov != "Semua Provinsi" else False, visible=False)
                 fig.update_layout(height=450, margin={"r":0,"t":0,"l":0,"b":0}, paper_bgcolor='white')
                 st.plotly_chart(fig, use_container_width=True)
+                
+                st.markdown("""
+                <div style='background: rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; font-size: 0.85rem;'>
+                    <b>Keterangan Skala Tree Cover Loss:</b><br>
+                    <span style='color: #ef4444;'>●</span> Merah: Tinggi | <span style='color: #eab308;'>●</span> Kuning: Sedang | <span style='color: #22c55e;'>●</span> Hijau: Rendah
+                </div>
+                """, unsafe_allow_html=True)
+                
         with cr:
             var_x = st.selectbox("Analisis Korelasi X:", list(cols_x.keys()))
-            fig2 = px.scatter(df_filt_year, x=cols_x[var_x], y=col_y, color=col_y, color_continuous_scale="RdYlGn_r", range_color=[min_v, max_v], trendline="ols")
+            fig2 = px.scatter(df_filt_year, x=cols_x[var_x], y=col_y, color=col_y, color_continuous_scale="RdYlGn_r", trendline="ols")
             fig2.update_layout(paper_bgcolor='white')
             st.plotly_chart(fig2, use_container_width=True)
 
