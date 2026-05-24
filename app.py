@@ -3,15 +3,26 @@ import pandas as pd
 import plotly.express as px
 import requests
 import numpy as np
+import os
 
 # --- 1. KONFIGURASI HALAMAN ---
 st.set_page_config(page_title="I-JAMCSIIX - Eco Intelligence", layout="wide", initial_sidebar_state="collapsed")
 
-# --- 2. SESSION STATE ---
+# --- 2. SESSION STATE & AUTOMATIC DATA LOADING ---
 if 'page' not in st.session_state:
     st.session_state.page = "Portal"
-if 'df' not in st.session_state:
-    st.session_state.df = None
+
+# Membaca data langsung tanpa fitur unggah (Sistem Otomatis)
+csv_filename = "data_jamsicx.csv"
+if 'df' not in st.session_state or st.session_state.df is None:
+    if os.path.exists(csv_filename):
+        raw_df = pd.read_csv(csv_filename)
+        raw_df.columns = raw_df.columns.str.strip()
+        if 'PROVINSI' in raw_df.columns:
+            raw_df['PROVINSI'] = raw_df['PROVINSI'].astype(str).str.strip().str.upper()
+        st.session_state.df = raw_df
+    else:
+        st.session_state.df = None
 
 def set_page(name):
     st.session_state.page = name
@@ -42,22 +53,6 @@ st.markdown("""
         color: #facc15 !important; 
         font-weight: bold !important;
         font-size: 1.05rem !important;
-    }
-
-    /* === FIX FILE UPLOADER RE-STYLING === */
-    [data-testid="stFileUploader"] label p {
-        color: #facc15 !important;
-        font-weight: bold !important;
-        font-size: 1.1rem !important;
-        text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
-    }
-    [data-testid="stFileUploader"] section div div {
-        color: #ffffff !important;
-    }
-    [data-testid="stFileUploader"] button {
-        background-color: #15803d !important;
-        color: #ffffff !important;
-        border: 1px solid #facc15 !important;
     }
 
     /* Judul Utama */
@@ -164,16 +159,11 @@ if st.session_state.page == "Portal":
     st.markdown("<br><br><h1 class='main-title'>🌳 ForestGuard</h1>", unsafe_allow_html=True)
     st.markdown("<p style='text-align:center; color:#dcfce7; letter-spacing:2px;'>SISTEM MONITORING DEFORESTASI DINAMIS</p>", unsafe_allow_html=True)
     
-    c_up1, c_up2, c_up3 = st.columns([1, 2, 1])
-    with c_up2:
-        up_file = st.file_uploader("📥 Unggah Dataset Deforestasi (CSV)", type=["csv"])
-        if up_file is not None:
-            raw_df = pd.read_csv(up_file)
-            raw_df.columns = raw_df.columns.str.strip()
-            if 'PROVINSI' in raw_df.columns:
-                raw_df['PROVINSI'] = raw_df['PROVINSI'].astype(str).str.strip().str.upper()
-            st.session_state.df = raw_df
-            st.success("🌲 Data Terintegrasi Sempurna!")
+    # Notifikasi status pembacaan data internal
+    if st.session_state.df is not None:
+        st.markdown("<p style='text-align:center; color:#22c55e; font-weight:bold;'>🌲 Dataset `data_jamsicx.csv` Terintegrasi Otomatis!</p>", unsafe_allow_html=True)
+    else:
+        st.markdown(f"<p style='text-align:center; color:#ef4444; font-weight:bold;'>⚠️ File `{csv_filename}` tidak ditemukan di folder project!</p>", unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
     c1, c2, c3 = st.columns(3)
@@ -506,7 +496,6 @@ else:
             </div>
             """, unsafe_allow_html=True)
 
-        # --- BAGIAN KETERBATASAN MODEL (SAMA PERSIS DENGAN GAMBAR ASLI) ---
         st.markdown("""
         <div style='background: linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%); padding: 25px; border-radius: 15px; border: 1px solid #ef4444; margin-top: 10px;'>
             <h5 style='margin: 0 0 15px 0; color: #fca5a5; font-weight: bold;'>⚠️ Keterbatasan Model (Limitations)</h5>
