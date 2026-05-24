@@ -77,7 +77,7 @@ st.session_state.df = get_internal_data()
 def set_page(name):
     st.session_state.page = name
 
-# --- 4. CSS CUSTOM (THEMA GLASSMORPHISM NIGHT FOREST) ---
+# --- 4. CSS CUSTOM (THEME GLASSMORPHISM NIGHT FOREST) ---
 st.markdown("""
 <style>
     /* Background Imersif Aplikasi */
@@ -134,9 +134,9 @@ st.markdown("""
     
     /* Frame Wadah Chart Transparan */
     .stPlotlyChart { 
-        background-color: rgba(255, 255, 255, 0.04) !important; 
+        background-color: rgba(255, 255, 255, 0.05) !important; 
         backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.12);
         border-radius: 20px; 
         padding: 15px; 
         box-shadow: 0 10px 30px rgba(0,0,0,0.4);
@@ -190,9 +190,7 @@ if st.session_state.page == "Portal":
     st.markdown("<br><br><h1 class='main-title'>🌳 ForestGuard</h1>", unsafe_allow_html=True)
     st.markdown("<p style='text-align:center; color:#dcfce7; letter-spacing:3px; font-weight:bold; margin-bottom:60px;'>SISTEM MONITORING DEFORESTASI DINAMIS MERF</p>", unsafe_allow_html=True)
     
-    # 3 Menu Utama Aplikasi Tanpa Status Banner Sistem yang Mengganggu
     c1, c2, c3 = st.columns(3)
-    
     with c1:
         st.markdown("<div class='menu-card'><h1>🛰️</h1><h3>Dashboard Spasial</h3><p style='font-size:0.85rem; color:#cbd5e1;'>Visualisasi sebaran spasial temporal kehilangan tutupan pohon.</p></div>", unsafe_allow_html=True)
         if st.button("Buka Dashboard"): set_page("Dashboard"); st.rerun()
@@ -204,7 +202,6 @@ if st.session_state.page == "Portal":
         if st.button("Lihat Penelitian"): set_page("Penelitian"); st.rerun()
 
 else:
-    # Tombol Kembali Universal
     if st.button("⬅️ KEMBALI KE PORTAL"):
         set_page("Portal"); st.rerun()
     st.markdown("---")
@@ -243,7 +240,6 @@ else:
             </div>
             """, unsafe_allow_html=True)
 
-            # Pengunduhan GeoJSON Peta Provinsi Indonesia Secara Dinamis
             try:
                 url = "https://raw.githubusercontent.com/superpikar/indonesia-geojson/master/indonesia-province-simple.json"
                 geojson = requests.get(url).json()
@@ -275,22 +271,36 @@ else:
                     hover_name="PROVINSI"
                 )
                 
-                # Pengaturan Layout Peta Agar Transparan (Menghilangkan Background Putih)
+                # --- PERBAIKAN EMAS: Kembalikan Batas Negara & Set Latar Belakang Peta yang Jelas ---
                 if fitur_fit and len(data_peta) > 0:
-                    fig.update_geos(fitbounds=fitur_fit, visible=False, bgcolor='rgba(0,0,0,0)')
+                    fig.update_geos(
+                        fitbounds=fitur_fit, 
+                        visible=True, 
+                        showcountries=True,
+                        countrycolor="rgba(255,255,255,0.4)",
+                        showland=True, 
+                        landcolor="rgba(255,255,255,0.07)", # Mengisi daratan kosong agar tidak hitam mati
+                        showocean=True, 
+                        oceancolor="rgba(15,23,42,0.4)"     # Memberikan warna samudra biru gelap transparan
+                    )
                 else:
                     fig.update_geos(
                         projection_type="mercator",
                         center={"lat": -1.5, "lon": 120.0},
-                        lataxis_range=[-10, 6],
+                        lataxis_range=[-8, 5],
                         lonaxis_range=[95, 141],
-                        visible=False,
-                        bgcolor='rgba(0,0,0,0)'
+                        visible=True,
+                        showcountries=True,
+                        countrycolor="rgba(255,255,255,0.4)",
+                        showland=True, 
+                        landcolor="rgba(255,255,255,0.07)",
+                        showocean=True, 
+                        oceancolor="rgba(15,23,42,0.4)"
                     )
                 
                 fig.update_layout(
                     height=450, 
-                    margin={"r":0,"t":20,"l":0,"b":0}, 
+                    margin={"r":10,"t":20,"l":10,"b":10}, 
                     paper_bgcolor='rgba(0,0,0,0)', 
                     plot_bgcolor='rgba(0,0,0,0)',
                     font=dict(color="white")
@@ -300,7 +310,6 @@ else:
                 st.info("Visualisasi berbasis spasial internal siap diakses.")
                 
         with cr:
-            # Dropdown Pemilihan Variabel Prediktor Bebas (X)
             var_x = st.selectbox("Analisis Korelasi X:", list(cols_x.keys()))
             
             if len(df_filt_year) > 1:
@@ -350,7 +359,6 @@ else:
         hist = df[df['PROVINSI'] == prov_target].sort_values('TAHUN')
         tahun_akhir_historis = int(hist['TAHUN'].iloc[-1])
         
-        # Logika Evaluasi Akurasi Kontekstual Berdasarkan Karakteristik Data Panel Wilayah
         if len(hist) > 1:
             laju_perubahan = hist[col_y].iloc[-1] / hist[col_y].iloc[-2] if hist[col_y].iloc[-2] != 0 else 1.02
             laju_perubahan = max(0.92, min(1.08, laju_perubahan))
@@ -521,22 +529,11 @@ else:
                 </p>
                 <p style='font-size: 0.85rem; color: #cbd5e1; margin-top: 14px; line-height: 1.8;'>
                     <b>Keterangan fungsi dan simbol (p. 5):</b><br><br>
-                    &bull; <i>y<sub>i</sub></i> : Vektor nilai variabel respon
-                    (<i>Tree Cover Loss</i>) untuk subjek provinsi ke-<i>i</i>.<br><br>
-                    &bull; <i>f</i>(<b>X</b><sub><i>i</i></sub>) : Fungsi non-linear
-                    <i>fixed effects</i> yang diestimasi menggunakan algoritma
-                    <b>Random Forest</b> berdasarkan matriks prediktor
-                    <b>X</b><sub><i>i</i></sub>.<br><br>
-                    &bull; <b>Z</b><sub><i>i</i></sub> : Matriks desain untuk komponen
-                    <i>random effects</i> (konstanta intercept untuk tiap provinsi).<br><br>
-                    &bull; <b>b</b><sub><i>i</i></sub> : Vektor penyimpangan acak
-                    (<i>random effects</i>) untuk provinsi ke-<i>i</i>, di mana
-                    <b>b</b><sub><i>i</i></sub> ~ <i>N</i>(0, <b>D</b>).<br><br>
-                    &bull; <i>&epsilon;<sub>i</sub></i> : Vektor <i>error</i> acak sisaan
-                    (<i>residual error</i>), di mana
-                    <i>&epsilon;<sub>i</sub></i> ~ <i>N</i>(0,
-                    <b>R</b><sub><i>i</i></sub>) dengan
-                    <b>R</b><sub><i>i</i></sub> = &sigma;&sup2;<b>I</b><sub><i>n<sub>i</sub></i></sub>.
+                    &bull; <i>y<sub>i</sub></i> : Vektor nilai variabel respon (<i>Tree Cover Loss</i>) untuk subjek provinsi ke-<i>i</i>.<br><br>
+                    &bull; <i>f</i>(<b>X</b><sub><i>i</i></sub>) : Fungsi non-linear <i>fixed effects</i> yang diestimasi menggunakan algoritma <b>Random Forest</b> berdasarkan matriks prediktor <b>X</b><sub><i>i</i></sub>.<br><br>
+                    &bull; <b>Z</b><sub><i>i</i></sub> : Matriks desain untuk komponen <i>random effects</i> (konstanta intercept untuk tiap provinsi).<br><br>
+                    &bull; <b>b</b><sub><i>i</i></sub> : Vektor penyimpangan acak (<i>random effects</i>) untuk provinsi ke-<i>i</i>, di mana <b>b</b><sub><i>i</i></sub> ~ <i>N</i>(0, <b>D</b>).<br><br>
+                    &bull; <i>&epsilon;<sub>i</sub></i> : Vektor <i>error</i> acak sisaan (<i>residual error</i>), di mana <i>&epsilon;<sub>i</sub></i> ~ <i>N</i>(0, <b>R</b><sub><i>i</i></sub>) dengan <b>R</b><sub><i>i</i></sub> = &sigma;&sup2;<b>I</b><sub><i>n<sub>i</sub></i></sub>.
                 </p>
             </div>
             """, unsafe_allow_html=True)
@@ -605,7 +602,6 @@ else:
             </div>
             """, unsafe_allow_html=True)
 
-        # Bagian Batasan / Keterbatasan Pemodelan Risiko
         st.markdown("""
         <div style='background: linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%); padding: 25px; border-radius: 15px; border: 1px solid #ef4444; margin-top: 10px;'>
             <h5 style='margin: 0 0 15px 0; color: #fca5a5; font-weight: bold;'>⚠️ Keterbatasan Model (Limitations)</h5>
