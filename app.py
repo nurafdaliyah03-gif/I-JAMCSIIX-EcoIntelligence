@@ -14,9 +14,17 @@ if 'df' not in st.session_state:
     df = pd.read_csv(url)
     df.columns = df.columns.str.strip()
     df['PROVINSI'] = df['PROVINSI'].astype(str).str.strip().str.upper()
+    
+    # --- TAMBAHKAN INI DI SINI ---
+    # Standardisasi nama agar cocok dengan GeoJSON
+    df['PROVINSI'] = df['PROVINSI'].replace({
+        "KEPULAUAN RIAU": "KEP. RIAU",
+        "DAERAH ISTIMEWA YOGYAKARTA": "DI YOGYAKARTA",
+        "DKI JAKARTA": "DKI JAKARTA",
+        "BANGKA BELITUNG": "KEP. BANGKA BELITUNG"
+    })
+    
     st.session_state.df = df
-
-def set_page(name): st.session_state.page = name
 
 # --- 3. CSS CUSTOM ---
 st.markdown("""
@@ -45,12 +53,16 @@ def load_geojson():
         res = requests.get(url).json()
         for feature in res['features']:
             nama = str(feature['properties'].get('Propinsi', '')).strip().upper()
-            feature['properties']['PROV_KEY'] = "DI YOGYAKARTA" if "YOGYAKARTA" in nama else ("DKI JAKARTA" if "JAKARTA" in nama else nama)
+            
+            # Memaksa agar key GeoJSON selalu seragam
+            if "YOGYAKARTA" in nama: feature['properties']['PROV_KEY'] = "DI YOGYAKARTA"
+            elif "JAKARTA" in nama: feature['properties']['PROV_KEY'] = "DKI JAKARTA"
+            elif "KEPULAUAN RIAU" in nama: feature['properties']['PROV_KEY'] = "KEP. RIAU"
+            elif "BANGKA BELITUNG" in nama: feature['properties']['PROV_KEY'] = "KEP. BANGKA BELITUNG"
+            else: feature['properties']['PROV_KEY'] = nama
+            
         return res
     except: return None
-geojson = load_geojson()
-col_y = "Y (TREE COVER LOSS- Ha)"
-cols_x = {"X1": "X1 (LUAS PENUTUPAN LAHAN - RIBU Ha)", "X2": "X2 (LUAS KEBAKARAN HUTAN DAN LAHAN - Ha)", "X3": "X3 (TOTAL LUAS TANAMAN PERKEBUNAN - RIBU Ha)", "X4": "X4 (KEPADATAN PENDUDUK - jiwa/km2)", "X5": "X5 (TOTAL POPULASI TERNAK - EKOR)", "X6": "X6 (PDRB PERTAMBANGAN DAN PENGGALIAN PERSEN)"}
 
 # --- 5. LOGIKA NAVIGASI ---
 if st.session_state.page == "Portal":
