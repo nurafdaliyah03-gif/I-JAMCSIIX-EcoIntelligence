@@ -158,8 +158,14 @@ cols_x = {
 if st.session_state.page == "Portal":
     st.markdown("<br><br><h1 class='main-title'>🌳 ForestGuard</h1>", unsafe_allow_html=True)
     st.markdown("<p style='text-align:center; color:#dcfce7; letter-spacing:2px;'>SISTEM MONITORING DEFORESTASI DINAMIS</p>", unsafe_allow_html=True)
-    st.markdown("<br>", unsafe_allow_html=True)
     
+    # Notifikasi status pembacaan data internal
+    if st.session_state.df is not None:
+        st.markdown("<p style='text-align:center; color:#22c55e; font-weight:bold;'>🌲 Dataset `data_jamsicx.csv` Terintegrasi Otomatis!</p>", unsafe_allow_html=True)
+    else:
+        st.markdown(f"<p style='text-align:center; color:#ef4444; font-weight:bold;'>⚠️ File `{csv_filename}` tidak ditemukan di folder project!</p>", unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
     c1, c2, c3 = st.columns(3)
     is_locked = st.session_state.df is None
 
