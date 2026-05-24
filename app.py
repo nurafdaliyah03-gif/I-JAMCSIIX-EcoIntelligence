@@ -12,45 +12,59 @@ st.set_page_config(page_title="I-JAMCSIIX - Eco Intelligence", layout="wide", in
 if 'page' not in st.session_state:
     st.session_state.page = "Portal"
 
-# Nama kolom internal (pendek & bersih agar bebas dari KeyError)
-col_y = "Y"
-cols_x = {
-    "X1": "X1",
-    "X2": "X2",
-    "X3": "X3",
-    "X4": "X4",
-    "X5": "X5",
-    "X6": "X6"
-}
-
 csv_filename = "data_jamsicx.csv"
+
+# Variabel global untuk menyimpan nama kolom asli hasil deteksi otomatis
+if 'col_y' not in st.session_state:
+    st.session_state.col_y = None
+if 'cols_x' not in st.session_state:
+    st.session_state.cols_x = {}
+
 if 'df' not in st.session_state or st.session_state.df is None:
     if os.path.exists(csv_filename):
         raw_df = pd.read_csv(csv_filename)
         
-        # SAKTI: Paksa mapping ulang nama kolom berdasar urutan POSISI kolom di CSV, 
-        # Jadi tidak peduli seberapa berantakan spasinya, dijamin 100% aman!
-        mapping_kolom = {
-            raw_df.columns[1]: 'PROVINSI',
-            raw_df.columns[2]: 'TAHUN',
-            raw_df.columns[3]: 'X1',
-            raw_df.columns[4]: 'X2',
-            raw_df.columns[5]: 'X3',
-            raw_df.columns[6]: 'X4',
-            raw_df.columns[7]: 'X5',
-            raw_df.columns[8]: 'X6',
-            raw_df.columns[9]: 'Y'
-        }
-        raw_df = raw_df.rename(columns=mapping_kolom)
+        # Bersihkan spasi di ujung-ujung nama kolom bawaan CSV
+        raw_df.columns = raw_df.columns.str.strip()
         
+        # DETEKSI OTOMATIS: Cari kolom berdasarkan kata kuncinya (Anti Gagal Spasi)
+        detected_x = {}
+        detected_y = None
+        
+        for col in raw_df.columns:
+            col_upper = col.upper()
+            if col_upper.startswith("X1"):
+                detected_x["X1"] = col
+            elif col_upper.startswith("X2"):
+                detected_x["X2"] = col
+            elif col_upper.startswith("X3"):
+                detected_x["X3"] = col
+            elif col_upper.startswith("X4"):
+                detected_x["X4"] = col
+            elif col_upper.startswith("X5"):
+                detected_x["X5"] = col
+            elif col_upper.startswith("X6"):
+                detected_x["X6"] = col
+            elif col_upper.startswith("Y"):
+                detected_y = col
+                
+        st.session_state.col_y = detected_y
+        st.session_state.cols_x = detected_x
+        
+        # Rapikan data Provinsi
         if 'PROVINSI' in raw_df.columns:
             raw_df['PROVINSI'] = raw_df['PROVINSI'].astype(str).str.strip().str.upper()
+            
         st.session_state.df = raw_df
     else:
         st.session_state.df = None
 
 def set_page(name):
     st.session_state.page = name
+
+# Ambil referensi nama kolom dari session state
+col_y = st.session_state.col_y
+cols_x = st.session_state.cols_x
 
 # --- 3. CSS CUSTOM (FIX KONTRAS WARNA & READABILITY) ---
 st.markdown("""
@@ -176,7 +190,7 @@ if st.session_state.page == "Portal":
     st.markdown("<br>", unsafe_allow_html=True)
     
     c1, c2, c3 = st.columns(3)
-    is_locked = st.session_state.df is None
+    is_locked = st.session_state.df is None or col_y is None
 
     with c1:
         st.markdown("<div class='menu-card'><h1>🛰️</h1><h3>Dashboard Spasial</h3></div>", unsafe_allow_html=True)
@@ -238,7 +252,7 @@ else:
                     color_continuous_scale="RdYlGn_r",
                     range_color=[min_val, max_val],
                     hover_name="PROVINSI",
-                    labels={col_y: "Y (TREE COVER LOSS - Ha)"}
+                    labels={col_y: "Y (Tree Cover Loss)"}
                 )
                 if fitur_fit:
                     fig.update_geos(fitbounds=fitur_fit, visible=False)
@@ -254,16 +268,7 @@ else:
                 st.plotly_chart(fig, use_container_width=True)
                 
         with cr:
-            # Teks tampilan label dropdown tetap rapi untuk user
-            label_display = {
-                "X1": "X1 (LUAS PENUTUPAN LAHAN - RIBU Ha)",
-                "X2": "X2 (LUAS KEBAKARAN HUTAN DAN LAHAN - Ha)",
-                "X3": "X3 (TOTAL LUAS TANAMAN PERKEBUNAN - RIBU Ha)",
-                "X4": "X4 (KEPADATAN PENDUDUK - jiwa/km2)",
-                "X5": "X5 (TOTAL POPULASI TERNAK - EKOR)",
-                "X6": "X6 (PDRB PERTAMBANGAN DAN PENGGALIAN PERSEN)"
-            }
-            var_x = st.selectbox("Analisis Korelasi X:", list(cols_x.keys()), format_func=lambda x: label_display[x])
+            var_x = st.selectbox("Analisis Korelasi X:", list(cols_x.keys()), format_func=lambda x: cols_x[x])
             fig2 = px.scatter(
                 df_filt_year, 
                 x=cols_x[var_x], 
@@ -273,12 +278,12 @@ else:
                 hover_name="PROVINSI",
                 color_continuous_scale="RdYlGn_r",
                 range_color=[min_val, max_val],
-                labels={col_y: "Y (TREE COVER LOSS - Ha)", cols_x[var_x]: label_display[var_x]}
+                labels={col_y: "Y (Tree Cover Loss)", cols_x[var_x]: cols_x[var_x]}
             )
             fig2.update_layout(paper_bgcolor='white')
             st.plotly_chart(fig2, use_container_width=True)
 
-    # --- HALAMAN PREDIKSI MERF (DENGAN SIMULASI FORM INPUT BARU & BEBAS KEYERROR) ---
+    # --- HALAMAN PREDIKSI MERF ---
     elif st.session_state.page == "Prediksi" and st.session_state.df is not None:
         df = st.session_state.df
         st.header("📈 Prediksi Deforestasi Multi-Tahun (MERF)")
@@ -299,14 +304,14 @@ else:
         
         col_in1, col_in2, col_in3 = st.columns(3)
         with col_in1:
-            val_x1 = st.number_input("X1: Luas Penutupan Lahan (Ribu Ha)", min_value=0.0, value=float(latest_row[cols_x['X1']]))
-            val_x2 = st.number_input("X2: Luas Kebakaran Hutan & Lahan (Ha)", min_value=0.0, value=float(latest_row[cols_x['X2']]))
+            val_x1 = st.number_input(f"{cols_x['X1']}", min_value=0.0, value=float(latest_row[cols_x['X1']]))
+            val_x2 = st.number_input(f"{cols_x['X2']}", min_value=0.0, value=float(latest_row[cols_x['X2']]))
         with col_in2:
-            val_x3 = st.number_input("X3: Total Luas Tanaman Perkebunan (Ribu Ha)", min_value=0.0, value=float(latest_row[cols_x['X3']]))
-            val_x4 = st.number_input("X4: Kepadatan Penduduk (jiwa/km2)", min_value=0.0, value=float(latest_row[cols_x['X4']]))
+            val_x3 = st.number_input(f"{cols_x['X3']}", min_value=0.0, value=float(latest_row[cols_x['X3']]))
+            val_x4 = st.number_input(f"{cols_x['X4']}", min_value=0.0, value=float(latest_row[cols_x['X4']]))
         with col_in3:
-            val_x5 = st.number_input("X5: Total Populasi Ternak (Ekor)", min_value=0.0, value=float(latest_row[cols_x['X5']]))
-            val_x6 = st.number_input("X6: PDRB Pertambangan & Penggalian (%)", min_value=0.0, value=float(latest_row[cols_x['X6']]))
+            val_x5 = st.number_input(f"{cols_x['X5']}", min_value=0.0, value=float(latest_row[cols_x['X5']]))
+            val_x6 = st.number_input(f"{cols_x['X6']}", min_value=0.0, value=float(latest_row[cols_x['X6']]))
 
         st.markdown("<br>", unsafe_allow_html=True)
         btn_prediksi = st.button("🚀 HITUNG PREDIKSI DEFORESTASI")
@@ -451,61 +456,61 @@ else:
         
         v_col1, v_col2 = st.columns(2)
         with v_col1:
-            st.markdown("""
+            st.markdown(f"""
             <div class='research-card'>
                 <table style='width: 100%; border-collapse: collapse; color: #f8fafc;'>
                     <tr style='border-bottom: 2px solid #15803d; color: #facc15;'>
                         <th style='padding: 8px; text-align: left;'>Kode</th>
                         <th style='padding: 8px; text-align: left;'>Nama Variabel Operasional</th>
-                        <th style='padding: 8px; text-align: left;'>Satuan</th>
+                        <th style='padding: 8px; text-align: left;'>Nama Kolom Asli CSV</th>
                     </tr>
                     <tr style='border-bottom: 1px solid rgba(255,255,255,0.1);'>
                         <td style='padding: 8px; font-weight: bold; color: #fbbf24;'>Y</td>
-                        <td style='padding: 8px;'>Tree Cover Loss (Kehilangan Tutupan Pohon)</td>
-                        <td style='padding: 8px;'>Hektar (Ha)</td>
+                        <td style='padding: 8px;'>Tree Cover Loss</td>
+                        <td style='padding: 8px; font-style: italic; font-size:0.8rem;'>{col_y}</td>
                     </tr>
                     <tr style='border-bottom: 1px solid rgba(255,255,255,0.1);'>
                         <td style='padding: 8px; font-weight: bold; color: #22c55e;'>X1</td>
-                        <td style='padding: 8px;'>Luas Penutupan Lahan Eksisting</td>
-                        <td style='padding: 8px;'>Ribu Ha</td>
+                        <td style='padding: 8px;'>Luas Penutupan Lahan</td>
+                        <td style='padding: 8px; font-style: italic; font-size:0.8rem;'>{cols_x.get('X1', 'X1')}</td>
                     </tr>
                     <tr style='border-bottom: 1px solid rgba(255,255,255,0.1);'>
                         <td style='padding: 8px; font-weight: bold; color: #22c55e;'>X2</td>
-                        <td style='padding: 8px;'>Luas Kebakaran Hutan dan Lahan (Karhutla)</td>
-                        <td style='padding: 8px;'>Hektar (Ha)</td>
+                        <td style='padding: 8px;'>Luas Kebakaran Hutan</td>
+                        <td style='padding: 8px; font-style: italic; font-size:0.8rem;'>{cols_x.get('X2', 'X2')}</td>
                     </tr>
                     <tr>
                         <td style='padding: 8px; font-weight: bold; color: #22c55e;'>X3</td>
                         <td style='padding: 8px;'>Total Luas Tanaman Perkebunan</td>
-                        <td style='padding: 8px;'>Ribu Ha</td>
+                        <td style='padding: 8px; font-style: italic; font-size:0.8rem;'>{cols_x.get('X3', 'X3')}</td>
                     </tr>
                 </table>
             </div>
             """, unsafe_allow_html=True)
             
         with v_col2:
-            st.markdown("""
+            st.markdown(f"""
             <div class='research-card'>
                 <table style='width: 100%; border-collapse: collapse; color: #f8fafc;'>
                     <tr style='border-bottom: 2px solid #15803d; color: #facc15;'>
                         <th style='padding: 8px; text-align: left;'>Kode</th>
                         <th style='padding: 8px; text-align: left;'>Nama Variabel Operasional</th>
-                        <th style='padding: 8px; text-align: left;'>Satuan</th>
+                        <th style='padding: 8px; text-align: left;'>Nama Kolom Asli CSV</th>
                     </tr>
                     <tr style='border-bottom: 1px solid rgba(255,255,255,0.1);'>
                         <td style='padding: 8px; font-weight: bold; color: #22c55e;'>X4</td>
-                        <td style='padding: 8px;'>Kepadatan Penduduk Wilayah Terkait</td>
-                        <td style='padding: 8px;'>Jiwa/km²</td>
+                        <td style='padding: 8px;'>Kepadatan Penduduk Wilayah</td>
+                        <td style='padding: 8px; font-style: italic; font-size:0.8rem;'>{cols_x.get('X4', 'X4')}</td>
                     </tr>
                     <tr style='border-bottom: 1px solid rgba(255,255,255,0.1);'>
                         <td style='padding: 8px; font-weight: bold; color: #22c55e;'>X5</td>
-                        <td style='padding: 8px;'>Total Populasi Ternak Besar/Kecil Terdata</td>
-                        <td style='padding: 8px;'>Ekor</td>
+                        <td style='padding: 8px;'>Total Populasi Ternak</td>
+                        <td style='padding: 8px; font-style: italic; font-size:0.8rem;'>{cols_x.get('X5', 'X5')}</td>
                     </tr>
                     <tr>
                         <td style='padding: 8px; font-weight: bold; color: #22c55e;'>X6</td>
-                        <td style='padding: 8px;'>Persentase PDRB Sektor Pertambangan</td>
-                        <td style='padding: 8px;'>Persen (%)</td>
+                        <td style='padding: 8px;'>Persentase PDRB Pertambangan</td>
+                        <td style='padding: 8px; font-style: italic; font-size:0.8rem;'>{cols_x.get('X6', 'X6')}</td>
                     </tr>
                 </table>
             </div>
