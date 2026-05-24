@@ -5,15 +5,37 @@ import requests
 import numpy as np
 
 # --- 1. KONFIGURASI HALAMAN ---
-st.set_page_config(page_title="I-JAMCSIIX - Eco Intelligence", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="ForestGuard - Eco Intelligence", layout="wide", initial_sidebar_state="collapsed")
 
-# --- 2. SESSION STATE ---
-if 'page' not in st.session_state: st.session_state.page = "Portal"
-if 'df' not in st.session_state: st.session_state.df = None
+# --- 2. DATA LOADING (OTOMATIS) ---
+URL_DATA = "https://raw.githubusercontent.com/nurafdaliyah03-gif/I-JAMCSIIX-EcoIntelligence/refs/heads/main/data_jamsicx.csv"
 
-def set_page(name): st.session_state.page = name
+@st.cache_data
+def load_data():
+    df = pd.read_csv(URL_DATA)
+    df.columns = df.columns.str.strip()
+    if 'PROVINSI' in df.columns:
+        df['PROVINSI'] = df['PROVINSI'].astype(str).str.strip().str.upper()
+    return df
 
-# --- 3. CSS CUSTOM ---
+if 'df' not in st.session_state:
+    st.session_state.df = load_data()
+df = st.session_state.df
+
+@st.cache_data
+def load_geojson():
+    try:
+        url = "https://raw.githubusercontent.com/superpikar/indonesia-geojson/master/indonesia-province-simple.json"
+        res = requests.get(url).json()
+        for feature in res['features']:
+            nama = str(feature['properties'].get('Propinsi', '')).strip().upper()
+            feature['properties']['PROV_KEY'] = "DI YOGYAKARTA" if "YOGYAKARTA" in nama else ("DKI JAKARTA" if "JAKARTA" in nama else nama)
+        return res
+    except: return None
+geojson = load_geojson()
+col_y = "Y (TREE COVER LOSS- Ha)"
+
+# --- 3. CSS CUSTOM (TETAP SAMA) ---
 st.markdown("""
 <style>
     .stApp { background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=2000&auto=format&fit=crop'); background-size: cover; background-position: center; background-attachment: fixed; color: #ffffff; }
@@ -31,37 +53,11 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- 4. DATA LOADING OTOMATIS ---
-@st.cache_data
-def load_data():
-    url = "https://raw.githubusercontent.com/nurafdaliyah03-gif/I-JAMCSIIX-EcoIntelligence/refs/heads/main/data_jamsicx.csv"
-    df = pd.read_csv(url)
-    df.columns = df.columns.str.strip()
-    if 'PROVINSI' in df.columns:
-        df['PROVINSI'] = df['PROVINSI'].astype(str).str.strip().str.upper()
-    return df
+# --- 4. LOGIKA NAVIGASI ---
+if 'page' not in st.session_state: st.session_state.page = "Portal"
 
-st.session_state.df = load_data()
+def set_page(name): st.session_state.page = name
 
-@st.cache_data
-def load_geojson():
-    try:
-        url = "https://raw.githubusercontent.com/superpikar/indonesia-geojson/master/indonesia-province-simple.json"
-        res = requests.get(url).json()
-        for feature in res['features']:
-            nama_geojson = str(feature['properties'].get('Propinsi', '')).strip().upper()
-            if "ACEH" in nama_geojson: feature['properties']['PROV_KEY'] = "ACEH"
-            elif "BANTEN" in nama_geojson: feature['properties']['PROV_KEY'] = "BANTEN"
-            elif "JAKARTA" in nama_geojson: feature['properties']['PROV_KEY'] = "DKI JAKARTA"
-            elif "YOGYAKARTA" in nama_geojson: feature['properties']['PROV_KEY'] = "DI YOGYAKARTA"
-            else: feature['properties']['PROV_KEY'] = nama_geojson
-        return res
-    except: return None
-geojson = load_geojson()
-col_y = "Y (TREE COVER LOSS- Ha)"
-cols_x = {"X1": "X1 (LUAS PENUTUPAN LAHAN - RIBU Ha)", "X2": "X2 (LUAS KEBAKARAN HUTAN DAN LAHAN - Ha)", "X3": "X3 (TOTAL LUAS TANAMAN PERKEBUNAN - RIBU Ha)", "X4": "X4 (KEPADATAN PENDUDUK - jiwa/km2)", "X5": "X5 (TOTAL POPULASI TERNAK - EKOR)", "X6": "X6 (PDRB PERTAMBANGAN DAN PENGGALIAN PERSEN)"}
-
-# --- 5. LOGIKA NAVIGASI ---
 if st.session_state.page == "Portal":
     st.markdown("<br><br><h1 class='main-title'>🌳 ForestGuard</h1>", unsafe_allow_html=True)
     c1, c2, c3 = st.columns(3)
@@ -74,117 +70,72 @@ if st.session_state.page == "Portal":
     with c3:
         st.markdown("<div class='menu-card'><h1>📖</h1><h3>Info Penelitian</h3></div>", unsafe_allow_html=True)
         if st.button("Lihat Penelitian"): set_page("Penelitian"); st.rerun()
+
 else:
     if st.button("⬅️ KEMBALI KE PORTAL"): set_page("Portal"); st.rerun()
     st.markdown("---")
 
-    # --- DASHBOARD ---
-    if st.session_state.page == "Dashboard" and st.session_state.df is not None:
-        df = st.session_state.df
-        st.header("📊 Dashboard Deskriptif Spasial")
-        col_f1, col_f2 = st.columns(2)
-        sel_thn = col_f1.selectbox("Pilih Tahun:", sorted(df['TAHUN'].unique(), reverse=True))
-        sel_prov = col_f2.selectbox("Fokus Wilayah (Zoom Provinsi):", ["Semua Provinsi"] + sorted(df['PROVINSI'].unique().tolist()))
-        df_filt_year = df[df['TAHUN'] == sel_thn]
-        cl, cr = st.columns([1.1, 0.9])
+    # --- HALAMAN PREDISKI (MODEL SESUAI GAMBAR) ---
+    if st.session_state.page == "Prediksi":
+        # Bagian Atas: Judul & Filter
+        st.markdown("<h3 style='color: #facc15; font-weight: bold;'>🌍 FORESTGUARD: ESTIMASI RISIKO DEFORESTASI & MONITORING JANGKA PENDEK</h3>", unsafe_allow_html=True)
+        
+        col_f1, col_f2 = st.columns([2, 1])
+        with col_f1:
+            prov_target = st.selectbox("Pilih Wilayah untuk Grafik Tren:", sorted(df['PROVINSI'].unique()))
+        with col_f2:
+            st.markdown("<br>", unsafe_allow_html=True)
+            st.button("📥 TAMBAH DATA (Otomatis)")
+
+        st.markdown("---")
+        
+        # Bagian Bawah: Dua Kolom
+        cl, cr = st.columns([1, 1.3])
+        
         with cl:
-            # KETERANGAN WARNA DI ATAS PETA
-            st.markdown("""
-            <div style='background: rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; font-size: 0.85rem; margin-bottom: 10px;'>
-                <b>Keterangan Skala Tree Cover Loss:</b><br>
-                <span style='color: #ef4444;'>●</span> Merah: Tinggi | <span style='color: #eab308;'>●</span> Kuning: Sedang | <span style='color: #22c55e;'>●</span> Hijau: Rendah
-            </div>
-            """, unsafe_allow_html=True)
+            st.markdown("<h4 style='color: #facc15;'>📄 TABEL ESTIMASI 3 TAHUN (NASIONAL)</h4>", unsafe_allow_html=True)
             
-            if geojson:
-                data_peta = df_filt_year if sel_prov == "Semua Provinsi" else df_filt_year[df_filt_year['PROVINSI'] == sel_prov]
-                fig = px.choropleth(data_peta, geojson=geojson, locations="PROVINSI", featureidkey="properties.PROV_KEY", color=col_y, color_continuous_scale="RdYlGn_r")
-                fig.update_geos(fitbounds="locations" if sel_prov != "Semua Provinsi" else False, visible=False)
-                fig.update_layout(height=450, margin={"r":0,"t":0,"l":0,"b":0}, paper_bgcolor='white')
-                st.plotly_chart(fig, use_container_width=True)
-                
+            # Simulasi Tabel Estimasi Nasional 3 Tahun kedepan
+            all_provinces = sorted(df['PROVINSI'].unique())
+            national_preds = []
+            for p in all_provinces:
+                last_val = df[df['PROVINSI'] == p][col_y].iloc[-1]
+                for thn in [2025, 2026, 2027]:
+                    # Simulasi kenaikan 3% pertahun
+                    pred_val = last_val * (1.03 ** (thn - 2024))
+                    national_preds.append({"Provinsi": p, "Tahun": thn, "Estimasi Loss (Ha)": round(pred_val, 2)})
+            
+            df_nat = pd.DataFrame(national_preds).head(15) # Ambil 15 teratas
+            st.dataframe(df_nat, use_container_width=True, hide_index=True)
+            st.markdown("<p style='font-size:0.7rem; color: #cbd5e1;'>[dst...]</p>", unsafe_allow_html=True)
+
         with cr:
-            var_x = st.selectbox("Analisis Korelasi X:", list(cols_x.keys()))
-            fig2 = px.scatter(df_filt_year, x=cols_x[var_x], y=col_y, color=col_y, color_continuous_scale="RdYlGn_r", trendline="ols")
-            fig2.update_layout(paper_bgcolor='white')
-            st.plotly_chart(fig2, use_container_width=True)
-
-    # --- PREDIKSI ---
-    elif st.session_state.page == "Prediksi" and st.session_state.df is not None:
-        df = st.session_state.df
-        st.header("📈 Prediksi Deforestasi (MERF)")
-        prov_target = st.selectbox("Fokus Wilayah Prediksi:", sorted(df['PROVINSI'].unique()))
-        hist = df[df['PROVINSI'] == prov_target].sort_values('TAHUN')
-        pred_2030 = hist[col_y].iloc[-1] * (1.03 ** 6)
-        st.markdown(f"""
-        <div style='background: linear-gradient(135deg, #166534 0%, #14532d 100%); padding: 30px; border-radius: 20px; text-align: center; border: 2px solid #facc15; margin-bottom: 20px;'>
-            <p style='color: #facc15; font-weight: bold;'>ESTIMASI TREE COVER LOSS 2030</p>
-            <h1 style='color: white; font-size: 3rem;'>{pred_2030:,.2f} Ha</h1>
-        </div>
-        """, unsafe_allow_html=True)
-        fig = px.line(hist, x='TAHUN', y=col_y, markers=True)
-        st.plotly_chart(fig, use_container_width=True)
-
-    # --- INFO PENELITIAN ---
-    elif st.session_state.page == "Penelitian":
-        st.markdown("<h2 style='text-align:center; color:#facc15; font-weight: 800;'>📖 Info Penelitian</h2>", unsafe_allow_html=True)
-        st.markdown("<br>", unsafe_allow_html=True)
-        rc1, rc2 = st.columns(2)
-        with rc1:
-            st.markdown("""
-            <div class='research-card'>
-                <h4>🎯 Tujuan Penelitian</h4>
-                <ul style='color: #f8fafc; padding-left: 20px; line-height: 1.6;'>
-                    <li>Menerapkan pendekatan data longitudinal dan model hibrida Mixed Effects Random Forest (MERF) untuk menangkap tren perubahan waktu sekaligus karakteristik spasial.</li>
-                    <li>Membangun aplikasi web interaktif ForestGuard sebagai media visualisasi spasial-temporal (Choropleth Map) dan sistem prediksi risiko deforestasi yang praktis dan mudah dipahami oleh pemangku kebijakan serta masyarakat umum.</li>
-                </ul>
-            </div>
-            """, unsafe_allow_html=True)
-            st.markdown("""
-            <div class='research-card'>
-                <h4>📊 Sumber Data Penelitian</h4>
-                <ul style='color: #f8fafc; padding-left: 20px; line-height: 1.6;'>
-                    <li><b>BPS (Badan Pusat Statistik):</b> Data sosio-ekonomi agregat tahunan meliputi kepadatan penduduk sektoral dan persentase kontribusi PDRB lapangan usaha.</li>
-                    <li><b>KLHK (Kementerian Lingkungan Hidup dan Kehutanan):</b> Rekapitulasi luasan area kebakaran hutan (Karhutla) serta pemantauan status fungsi kawasan hutan.</li>
-                    <li><b>Global Forest Watch (GFW):</b> Metrik target historis <i>Tree Cover Loss</i> (Y) yang dihitung dalam satuan Hektar (Ha).</li>
-                </ul>
-            </div>
-            """, unsafe_allow_html=True)
-        with rc2:
-            st.markdown("""
-            <div class='research-card'>
-                <h4>🤖 Metode MERF (Mixed-Effects Random Forest)</h4>
-                <p style='color: #f8fafc; text-align: justify; line-height: 1.6;'>
-                    <b>Mixed-Effects Random Forest (MERF)</b> merupakan algoritma lanjut yang memadukan keunggulan non-linearitas dari <i>Random Forest</i> dengan kemampuan menangani data panel berhirarki milik <i>Linear Mixed Models</i>.
-                </p>
-                <p style='color: #f8fafc; text-align: justify; line-height: 1.6;'>
-                    Setiap provinsi memiliki karakteristik dasar lingkungan yang berbeda (efek acak) yang tidak bisa disamaratakan oleh model regresi biasa standar. MERF mengisolasi efek kontekstual wilayah ini sehingga tingkat akurasi prediksi meningkat tajam secara lokal.
-                </p>
-            </div>
-            """, unsafe_allow_html=True)
-            with st.container():
-                st.markdown("<div class='research-card'><h4>🧮 Persamaan Dasar Model MERF</h4>", unsafe_allow_html=True)
-                st.latex(r"y_i = f(X_i) + Z_ib_i + \varepsilon_i")
-                st.markdown("""
-                <p style='font-size: 0.85rem; color: #cbd5e1; margin-top: 10px; line-height: 1.4;'>
-                    <b>Keterangan:</b><br>
-                    • y_i: Vektor nilai variabel respon (Tree Cover Loss) untuk subjek provinsi ke-i.<br>
-                    • f(X_i): Fungsi non-linear fixed effects yang diestimasi menggunakan algoritma Random Forest berdasarkan matriks prediktor Xi.<br>
-                    • Z_i: Matriks desain untuk komponen random effects (konstanta intercept untuk tiap provinsi).<br>
-                    • b_i: Vektor penyimpangan acak untuk provinsi ke-i, dimana b_i ~ N(0, D).<br>
-                    • ε_i: Vektor error acak sisaan (residual error), dimana ε_i~N(0,R_i) dengan R_i=σ^2 I_(n_i).
-                </p>
-                </div>
-                """, unsafe_allow_html=True)
-        st.markdown("""
-        <div style='background: linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%); padding: 25px; border-radius: 15px; border: 1px solid #ef4444; margin-top: 10px;'>
-            <h5 style='margin: 0 0 10px 0; color: #fca5a5; font-weight: bold;'>⚠️ Batasan Penelitian & Disclaimer Model</h5>
-            <ul style='color: #ffeeee; font-size: 0.9rem; line-height: 1.5;'>
-                <li><b>Ketergantungan Data Historis:</b> Model memprediksi berdasarkan tren masa lalu, sehingga tidak bisa membaca perubahan mendadak seperti kebijakan hukum baru atau penegakan hukum di lapangan.</li>
-                <li><b>Optimal Jangka Pendek:</b> Estimasi paling akurat untuk masa depan terdekat. Prediksi terlalu jauh ke depan berisiko memperbesar akumulasi kesalahan (error propagation).</li>
-                <li><b>Efek Wilayah Baru:</b> Jika ada provinsi hasil pemekaran baru, model akan mengabaikan efek acak wilayah (b_i = 0) dan murni menggunakan prediksi rata-rata global.</li>
-                <li><b>Cakupan Variabel Makro:</b> Tidak memperhitungkan faktor pemicu eksternal mendadak (exogenous shocks) di luar variabel terdata.</li>
-                <li><b>Resolusi Spasial Makro:</b> Dirancang untuk memetakan estimasi risiko di tingkat provinsi, bukan untuk mendeteksi penebangan pohon secara real-time di tingkat koordinat petak hutan.</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
+            st.markdown(f"<h4 style='color: #facc15;'>📊 TREN KEHILANGAN TUTUPAN POHON (KONTINU) - {prov_target}</h4>", unsafe_allow_html=True)
+            
+            hist = df[df['PROVINSI'] == prov_target].sort_values('TAHUN')
+            last_val_prov = hist[col_y].iloc[-1]
+            
+            # Buat Data Gabungan (Historis + Prediksi)
+            future_years = [2025, 2026, 2027]
+            future_vals = [last_val_prov * (1.03 ** (th - 2024)) for th in future_years]
+            
+            df_hist = hist[['TAHUN', col_y]].copy()
+            df_hist['Status'] = 'Data Aktual (2015-2024)'
+            
+            df_future = pd.DataFrame({'TAHUN': future_years, col_y: future_vals, 'Status': 'Hasil Prediksi (2025-2027)'})
+            
+            # Titik jembatan agar garis menyambung
+            bridge = pd.DataFrame({'TAHUN': [2024], col_y: [last_val_prov], 'Status': 'Hasil Prediksi (2025-2027)'})
+            
+            df_plot = pd.concat([df_hist, bridge, df_future])
+            
+            fig_pred = px.line(df_plot, x='TAHUN', y=col_y, color='Status', markers=True,
+                               color_discrete_map={'Data Aktual (2015-2024)': '#22c55e', 'Hasil Prediksi (2025-2027)': '#ef4444'})
+            
+            fig_pred.update_layout(
+                paper_bgcolor='white', 
+                legend=dict(orientation="h", yanchor="bottom", y=-0.3, xanchor="center", x=0.5),
+                xaxis=dict(tickmode='linear', dtick=1),
+                yaxis=dict(title="Loss (Ha)")
+            )
+            st.plotly_chart(fig_pred, use_container_width=True)
