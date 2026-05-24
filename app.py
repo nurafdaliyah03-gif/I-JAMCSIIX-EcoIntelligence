@@ -5,7 +5,11 @@ import requests
 import numpy as np
 
 # --- 1. KONFIGURASI HALAMAN ---
-st.set_page_config(page_title="I-JAMCSIIX - Eco Intelligence", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(
+    page_title="I-JAMCSIIX - Eco Intelligence", 
+    layout="wide", 
+    initial_sidebar_state="collapsed"
+)
 
 # --- 2. DATA INTERNAL (100% LENGKAP DARI DATA_JAMSICX.CSV) ---
 @st.cache_data
@@ -64,7 +68,7 @@ def get_internal_data():
     }
     return pd.DataFrame(data)
 
-# --- 3. SESSION STATE ---
+# --- 3. SESSION STATE & INISIALISASI DATA ---
 if 'page' not in st.session_state:
     st.session_state.page = "Portal"
 
@@ -73,10 +77,10 @@ st.session_state.df = get_internal_data()
 def set_page(name):
     st.session_state.page = name
 
-# --- 4. CSS CUSTOM (NIGHT FOREST STYLE) ---
+# --- 4. CSS CUSTOM (THEMA GLASSMORPHISM NIGHT FOREST) ---
 st.markdown("""
 <style>
-    /* Background Imersif */
+    /* Background Imersif Aplikasi */
     .stApp {
         background: linear-gradient(rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0.72)), 
                     url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=2000&auto=format&fit=crop');
@@ -86,7 +90,7 @@ st.markdown("""
         color: #ffffff;
     }
 
-    /* DROPDOWN RE-STYLING */
+    /* Modifikasi Dropdown / Selectbox Input */
     .stSelectbox div[data-baseweb="select"] {
         background-color: #ffffff !important;
         border-radius: 10px;
@@ -101,7 +105,7 @@ st.markdown("""
         font-size: 1.05rem !important;
     }
 
-    /* Judul Utama */
+    /* Judul Besar Utama di Portal */
     .main-title {
         font-size: 5rem !important;
         font-family: 'Arial Black', sans-serif;
@@ -114,7 +118,7 @@ st.markdown("""
         margin-bottom: 0px;
     }
 
-    /* Glassmorphism Card Menu */
+    /* Kotak Menu Utama (Glassmorphism Card) */
     .menu-card {
         background: rgba(255, 255, 255, 0.08);
         backdrop-filter: blur(15px);
@@ -128,19 +132,21 @@ st.markdown("""
         justify-content: center;
     }
     
-    /* White Background Chart */
+    /* Frame Wadah Chart Transparan */
     .stPlotlyChart { 
-        background-color: white !important; 
+        background-color: rgba(255, 255, 255, 0.04) !important; 
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 20px; 
         padding: 15px; 
-        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.4);
     }
 
-    /* Metrik */
+    /* Styling Teks Indikator Nilai / Metrik */
     [data-testid="stMetricValue"] { color: #ffffff !important; font-weight: 800 !important; font-size: 1.8rem !important; }
     [data-testid="stMetricLabel"] { color: #facc15 !important; font-weight: bold !important; font-size: 0.9rem !important; }
 
-    /* Tombol Navigasi */
+    /* Desain Tombol Navigasi Hijau Hutan */
     div.stButton > button {
         background: linear-gradient(135deg, #15803d 0%, #166534 100%) !important;
         color: white !important;
@@ -150,7 +156,7 @@ st.markdown("""
         font-weight: bold !important;
     }
 
-    /* Info Research Cards */
+    /* Kotak Informasi Penelitian (Info Cards) */
     .research-card {
         background: rgba(15, 23, 42, 0.65);
         border: 1px solid rgba(250, 191, 36, 0.3);
@@ -168,6 +174,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# Nama dan Label Kolom Data Panel
 col_y = "Y (TREE COVER LOSS- Ha)"
 cols_x = {
     "X1": "X1 (LUAS PENUTUPAN LAHAN - RIBU Ha)",
@@ -183,6 +190,7 @@ if st.session_state.page == "Portal":
     st.markdown("<br><br><h1 class='main-title'>🌳 ForestGuard</h1>", unsafe_allow_html=True)
     st.markdown("<p style='text-align:center; color:#dcfce7; letter-spacing:3px; font-weight:bold; margin-bottom:60px;'>SISTEM MONITORING DEFORESTASI DINAMIS MERF</p>", unsafe_allow_html=True)
     
+    # 3 Menu Utama Aplikasi Tanpa Status Banner Sistem yang Mengganggu
     c1, c2, c3 = st.columns(3)
     
     with c1:
@@ -196,11 +204,14 @@ if st.session_state.page == "Portal":
         if st.button("Lihat Penelitian"): set_page("Penelitian"); st.rerun()
 
 else:
+    # Tombol Kembali Universal
     if st.button("⬅️ KEMBALI KE PORTAL"):
         set_page("Portal"); st.rerun()
     st.markdown("---")
 
-    # --- HALAMAN DASHBOARD SPASIAL (VERSI PERBAIKAN PETA) ---
+    # ==========================================
+    # --- HALAMAN DASHBOARD DESKRIPTIF SPASIAL ---
+    # ==========================================
     if st.session_state.page == "Dashboard":
         df = st.session_state.df
         st.header("📊 Dashboard Deskriptif Spasial")
@@ -208,7 +219,7 @@ else:
         col_f1, col_f2 = st.columns(2)
         with col_f1:
             list_thn = sorted(df['TAHUN'].unique(), reverse=True)
-            sel_thn = st.selectbox("Pilih Tahun:", list_thn)
+            sel_thn = st.selectbox("Pilih Tahun Data Panel:", list_thn)
         with col_f2:
             list_prov = ["Semua Provinsi"] + sorted(df['PROVINSI'].unique().tolist())
             sel_prov = st.selectbox("Fokus Wilayah (Zoom Provinsi):", list_prov)
@@ -232,6 +243,7 @@ else:
             </div>
             """, unsafe_allow_html=True)
 
+            # Pengunduhan GeoJSON Peta Provinsi Indonesia Secara Dinamis
             try:
                 url = "https://raw.githubusercontent.com/superpikar/indonesia-geojson/master/indonesia-province-simple.json"
                 geojson = requests.get(url).json()
@@ -263,7 +275,7 @@ else:
                     hover_name="PROVINSI"
                 )
                 
-                # --- PERBAIKAN UTAMA: Set Transparansi & Warna Font Peta ---
+                # Pengaturan Layout Peta Agar Transparan (Menghilangkan Background Putih)
                 if fitur_fit and len(data_peta) > 0:
                     fig.update_geos(fitbounds=fitur_fit, visible=False, bgcolor='rgba(0,0,0,0)')
                 else:
@@ -276,7 +288,6 @@ else:
                         bgcolor='rgba(0,0,0,0)'
                     )
                 
-                # Membuka background agar transparan mengikuti style glassmorphism aplikasi
                 fig.update_layout(
                     height=450, 
                     margin={"r":0,"t":20,"l":0,"b":0}, 
@@ -286,10 +297,12 @@ else:
                 )
                 st.plotly_chart(fig, use_container_width=True)
             else:
-                st.info("Peta Choropleth siap ditampilkan. Berhasil memetakan visualisasi berbasis data spasial internal.")
+                st.info("Visualisasi berbasis spasial internal siap diakses.")
                 
         with cr:
+            # Dropdown Pemilihan Variabel Prediktor Bebas (X)
             var_x = st.selectbox("Analisis Korelasi X:", list(cols_x.keys()))
+            
             if len(df_filt_year) > 1:
                 fig2 = px.scatter(
                     df_filt_year, 
@@ -301,7 +314,6 @@ else:
                     color_continuous_scale="RdYlGn_r",
                     range_color=[min_val, max_val]
                 )
-                # Set transparan juga untuk grafik korelasi
                 fig2.update_layout(
                     paper_bgcolor='rgba(0,0,0,0)', 
                     plot_bgcolor='rgba(0,0,0,0)',
@@ -325,8 +337,11 @@ else:
                 )
                 st.plotly_chart(fig2, use_container_width=True)
             else:
-                st.warning("Tidak ada kecocokan data untuk kombinasi korelasi variabel pada tahun ini.")
-    # --- HALAMAN PREDIKSI MERF ---
+                st.warning("Tidak ada kecocokan data untuk visualisasi pada tahun terpilih.")
+
+    # ====================================
+    # --- HALAMAN PREDIKSI MODEL MERF ---
+    # ====================================
     elif st.session_state.page == "Prediksi":
         df = st.session_state.df
         st.header("📈 Prediksi Deforestasi Multi-Tahun (MERF)")
@@ -335,6 +350,7 @@ else:
         hist = df[df['PROVINSI'] == prov_target].sort_values('TAHUN')
         tahun_akhir_historis = int(hist['TAHUN'].iloc[-1])
         
+        # Logika Evaluasi Akurasi Kontekstual Berdasarkan Karakteristik Data Panel Wilayah
         if len(hist) > 1:
             laju_perubahan = hist[col_y].iloc[-1] / hist[col_y].iloc[-2] if hist[col_y].iloc[-2] != 0 else 1.02
             laju_perubahan = max(0.92, min(1.08, laju_perubahan))
@@ -384,14 +400,20 @@ else:
                 color_continuous_scale="Greens",
                 labels={'Kepentingan': 'Tingkat Pengaruh Model'}
             )
-            fig_bar.update_layout(height=230, margin={"r":0,"t":10,"l":0,"b":0}, paper_bgcolor='white')
+            fig_bar.update_layout(
+                height=230, 
+                margin={"r":0,"t":10,"l":0,"b":0}, 
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)',
+                font=dict(color="white")
+            )
             st.plotly_chart(fig_bar, use_container_width=True)
             
         with c_p2:
             list_prediksi = []
             current_y = hist[col_y].iloc[-1]
             
-            list_tahun_prediksi = list(range(tahun_akhir_historis + 1, 2030))
+            list_tahun_prediksi = list(range(tahun_akhir_historis + 1, 2031))
             for thn in list_tahun_prediksi:
                 current_y = current_y * (laju_perubahan * (0.992 ** (thn - tahun_akhir_historis)))
                 list_prediksi.append({
@@ -434,13 +456,17 @@ else:
                 title=f"Tren Kehilangan Tutupan Pohon & Proyeksi Berkelanjutan ({prov_target})"
             )
             fig_line.update_layout(
-                paper_bgcolor='white', 
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)',
+                font=dict(color="white"),
                 xaxis=dict(tickmode='linear', dtick=1),
                 legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
             )
             st.plotly_chart(fig_line, use_container_width=True)
 
-    # --- HALAMAN PENELITIAN ---
+    # ==========================================
+    # --- HALAMAN INFORMASI TEORITIS PENELITIAN ---
+    # ==========================================
     elif st.session_state.page == "Penelitian":
         st.markdown("<h2 style='text-align:center; color:#facc15; font-weight: 800;'>📖 Info Penelitian</h2>", unsafe_allow_html=True)
         st.markdown("<br>", unsafe_allow_html=True)
@@ -451,7 +477,7 @@ else:
             <div class='research-card'>
                 <h4>🎯 Tujuan Penelitian</h4>
                 <ul style='color: #f8fafc; padding-left: 20px; line-height: 1.6;'>
-                    <li>Menerapkan pendekatan data longitudinal dan model hibrida Mixed Effects Random Forest (MERF) untuk menangkap tren perubahan waktu sekaligus</li>
+                    <li>Menerapkan pendekatan data longitudinal dan model hibrida Mixed Effects Random Forest (MERF) untuk menangkap tren perubahan waktu sekaligus.</li>
                     <li>Membangun aplikasi web interaktif ForestGuard sebagai media visualisasi spasial-temporal (Choropleth Map) dan sistem prediksi risiko deforestasi yang praktis dan mudah dipahami oleh pemangku kebijakan serta masyarakat umum.</li>
                 </ul>
             </div>
@@ -473,7 +499,7 @@ else:
             <div class='research-card'>
                 <h4>🤖 Metode MERF (Mixed-Effects Random Forest)</h4>
                 <p style='color: #f8fafc; text-align: justify; line-height: 1.6; margin-bottom: 10px;'>
-                    <b>Mixed-Effects Random Forest (MERF)</b> merupakan algoritma lanjut yang memadukan keunggulan non-linearitas dari <i>Random Forest</i> dengan kemampuan menangani data panel berhirarki/kluster milik <i>Linear Mixed Models</i>.
+                    <b>Mixed-Effects Random Forest (MERF)</b> merupakan sebuah algoritma lanjut yang memadukan keunggulan non-linearitas dari <i>Random Forest</i> dengan kemampuan menangani data panel berhirarki/kluster milik <i>Linear Mixed Models</i>.
                 </p>
                 <p style='color: #f8fafc; text-align: justify; line-height: 1.6;'>
                     Dalam kasus deforestasi tingkat nasional, setiap provinsi memiliki karakteristik dasar lingkungan yang berbeda (efek acak) yang tidak bisa disamaratakan oleh model regresi biasa standar. MERF mengisolasi efek kontekstual wilayah ini sehingga tingkat akurasi prediksi (R²) meningkat tajam secara lokal.
@@ -502,8 +528,7 @@ else:
                     <b>Random Forest</b> berdasarkan matriks prediktor
                     <b>X</b><sub><i>i</i></sub>.<br><br>
                     &bull; <b>Z</b><sub><i>i</i></sub> : Matriks desain untuk komponen
-                    <i>random effects</i> (dalam kasus Anda, konstanta intercept
-                    untuk tiap provinsi).<br><br>
+                    <i>random effects</i> (konstanta intercept untuk tiap provinsi).<br><br>
                     &bull; <b>b</b><sub><i>i</i></sub> : Vektor penyimpangan acak
                     (<i>random effects</i>) untuk provinsi ke-<i>i</i>, di mana
                     <b>b</b><sub><i>i</i></sub> ~ <i>N</i>(0, <b>D</b>).<br><br>
@@ -580,6 +605,7 @@ else:
             </div>
             """, unsafe_allow_html=True)
 
+        # Bagian Batasan / Keterbatasan Pemodelan Risiko
         st.markdown("""
         <div style='background: linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%); padding: 25px; border-radius: 15px; border: 1px solid #ef4444; margin-top: 10px;'>
             <h5 style='margin: 0 0 15px 0; color: #fca5a5; font-weight: bold;'>⚠️ Keterbatasan Model (Limitations)</h5>
@@ -588,7 +614,7 @@ else:
                 <li style='margin-bottom: 10px;'><b>Optimal Jangka Pendek:</b> Estimasi paling akurat untuk masa depan terdekat. Prediksi terlalu jauh ke depan berisiko memperbesar akumulasi kesalahan (<i>error propagation</i>).</li>
                 <li style='margin-bottom: 10px;'><b>Efek Wilayah Baru:</b> Jika ada provinsi hasil pemekaran baru, model akan mengabaikan efek acak wilayah ($b_i = 0$) dan murni menggunakan prediksi rata-rata global.</li>
                 <li style='margin-bottom: 10px;'><b>Cakupan Variabel Makro:</b> Model menggunakan data agregat tahunan (skala provinsi), sehingga belum mencakup faktor mikro lokal seperti konflik lahan atau izin konsesi korporasi.</li>
-                <li style='margin-bottom: 10px;'><b>Resolusi Spasial Makro: </b> tidak memperhitungkan faktor pemicu eksternal mendadak (exogenous shocks) di luar variabel terdata</li>
+                <li style='margin-bottom: 10px;'><b>Resolusi Spasial Makro:</b> Tidak memperhitungkan faktor pemicu eksternal mendadak (<i>exogenous shocks</i>) di luar variabel terdata.</li>
             </ul>
         </div>
         <br>
