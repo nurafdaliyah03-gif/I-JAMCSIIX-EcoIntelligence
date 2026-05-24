@@ -5,7 +5,7 @@ import requests
 st.set_page_config(page_title="ForestGuard", layout="wide")
 
 # Link Raw GitHub yang WAJIB AKURAT
-URL_DATA = "https://raw.githubusercontent.com/nurafdaliyah03-gif/I-JAMCSIIX-Ecolintelligence/main/data_jamsicx.csv"
+URL_DATA = "https://raw.githubusercontent.com/nurafdaliyah03-gif/I-JAMCSIIX-Ecolintelligence/main/dataset_final.csv"
 
 def load_data():
     try:
