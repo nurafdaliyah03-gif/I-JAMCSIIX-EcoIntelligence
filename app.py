@@ -256,272 +256,139 @@ else:
 
 
 
-     # --- HALAMAN PENELITIAN ---
-
+# --- HALAMAN PENELITIAN ---
     elif st.session_state.page == "Penelitian":
-
         st.markdown("<h2 style='text-align:center; color:#facc15; font-weight: 800;'>📖 Info Penelitian</h2>", unsafe_allow_html=True)
-
         st.markdown("<br>", unsafe_allow_html=True)
-
         
-
         rc1, rc2 = st.columns(2)
-
         with rc1:
-
             st.markdown("""
-
             <div class='research-card'>
-
                 <h4>🎯 Tujuan Penelitian</h4>
-
                 <ul style='color: #f8fafc; padding-left: 20px; line-height: 1.6;'>
-
                     <li>Menerapkan pendekatan data longitudinal dan model hibrida Mixed Effects Random Forest (MERF) untuk menangkap tren perubahan waktu sekaligus</li>
-
                     <li>Membangun aplikasi web interaktif ForestGuard sebagai media visualisasi spasial-temporal (Choropleth Map) dan sistem prediksi risiko deforestasi yang praktis dan mudah dipahami oleh pemangku kebijakan serta masyarakat umum.</li>
-
                 </ul>
-
             </div>
-
             """, unsafe_allow_html=True)
-
             
-
             st.markdown("""
-
             <div class='research-card'>
-
                 <h4>📊 Sumber Data Penelitian</h4>
-
                 <ul style='color: #f8fafc; padding-left: 20px; line-height: 1.6;'>
-
                     <li><b>BPS (Badan Pusat Statistik):</b> Data sosio-ekonomi agregat tahunan meliputi kepadatan penduduk sektoral dan persentase kontribusi PDRB lapangan usaha.</li>
-
                     <li><b>KLHK (Kementerian Lingkungan Hidup dan Kehutanan):</b> Rekapitulasi luasan area kebakaran hutan (Karhutla) serta pemantauan status fungsi kawasan hutan.</li>
-
                     <li><b>Global Forest Watch (GFW):</b> Metrik target historis <i>Tree Cover Loss</i> ($Y$) yang dihitung dalam satuan Hektar (Ha).</li>
-
                 </ul>
-
             </div>
-
             """, unsafe_allow_html=True)
-
             
-
         with rc2:
-
             st.markdown("""
-
             <div class='research-card'>
-
                 <h4>🤖 Metode MERF (Mixed-Effects Random Forest)</h4>
-
                 <p style='color: #f8fafc; text-align: justify; line-height: 1.6; margin-bottom: 10px;'>
-
                     <b>Mixed-Effects Random Forest (MERF)</b> merupakan algoritma lanjut yang memadukan keunggulan non-linearitas dari <i>Random Forest</i> dengan kemampuan menangani data panel berhirarki/kluster milik <i>Linear Mixed Models</i>.
-
                 </p>
-
                 <p style='color: #f8fafc; text-align: justify; line-height: 1.6;'>
-
                     Dalam kasus deforestasi tingkat nasional, setiap provinsi memiliki karakteristik dasar lingkungan yang berbeda (efek acak) yang tidak bisa disamaratakan oleh model regresi biasa standar. MERF mengisolasi efek kontekstual wilayah ini sehingga tingkat akurasi prediksi (R²) meningkat tajam secara lokal.
-
                 </p>
-
             </div>
-
             """, unsafe_allow_html=True)
-
             
-
             with st.container():
-
                 st.markdown("<div class='research-card'><h4>🧮 Persamaan Dasar Model MERF</h4>", unsafe_allow_html=True)
-
                 st.write("Persamaan matematis untuk model Mixed Effects Random Forest (MERF) adalah sebagai berikut:")
-
                 st.latex(r"y_i = f(X_i) + Z_i b_i + \varepsilon_i")
-
                 st.markdown("""
-
                 <p style='font-size: 0.85rem; color: #cbd5e1; margin-top: 10px; line-height: 1.4;'>
-
                     <b>Keterangan fungsi dan simbol (p. 5):</b><br>
-
                     • $y_i$: Vektor nilai variabel respon (<i>Tree Cover Loss</i>) untuk subjek provinsi ke-$i$.<br>
-
                     • $f(X_i)$: Fungsi non-linear <i>fixed effects</i> yang diestimasi menggunakan algoritma <b>Random Forest</b> berdasarkan matriks prediktor $X_i$.<br>
-
                     • $Z_i$: Matriks desain untuk komponen <i>random effects</i> (konstanta intercept untuk tiap provinsi).<br>
-
                     • $b_i$: Vektor penyimpangan acak (<i>random effects</i>) untuk provinsi ke-$i$, di mana $b_i \sim N(0, D)$.<br>
-
                     • $\\varepsilon_i$: Vektor <i>error</i> acak sisaan (<i>residual error</i>), di mana $\\varepsilon_i \sim N(0, R_i)$ dengan $R_i = \\sigma^2 I_{n_i}$.
-
                 </p>
-
                 </div>
-
                 """, unsafe_allow_html=True)
 
-
-
         st.markdown("### 📋 Definisi Operasional Variabel Penelitian")
-
         
-
         v_col1, v_col2 = st.columns(2)
-
         with v_col1:
-
             st.markdown("""
-
             <div class='research-card'>
-
                 <table style='width: 100%; border-collapse: collapse; color: #f8fafc;'>
-
                     <tr style='border-bottom: 2px solid #15803d; color: #facc15;'>
-
                         <th style='padding: 8px; text-align: left;'>Kode</th>
-
                         <th style='padding: 8px; text-align: left;'>Nama Variabel Operasional</th>
-
                         <th style='padding: 8px; text-align: left;'>Satuan</th>
-
                     </tr>
-
                     <tr style='border-bottom: 1px solid rgba(255,255,255,0.1);'>
-
                         <td style='padding: 8px; font-weight: bold; color: #fbbf24;'>Y</td>
-
                         <td style='padding: 8px;'>Tree Cover Loss (Kehilangan Tutupan Pohon)</td>
-
                         <td style='padding: 8px;'>Hektar (Ha)</td>
-
                     </tr>
-
                     <tr style='border-bottom: 1px solid rgba(255,255,255,0.1);'>
-
                         <td style='padding: 8px; font-weight: bold; color: #22c55e;'>X1</td>
-
                         <td style='padding: 8px;'>Luas Penutupan Lahan Eksisting</td>
-
                         <td style='padding: 8px;'>Ribu Ha</td>
-
                     </tr>
-
                     <tr style='border-bottom: 1px solid rgba(255,255,255,0.1);'>
-
                         <td style='padding: 8px; font-weight: bold; color: #22c55e;'>X2</td>
-
                         <td style='padding: 8px;'>Luas Kebakaran Hutan dan Lahan (Karhutla)</td>
-
                         <td style='padding: 8px;'>Hektar (Ha)</td>
-
                     </tr>
-
                     <tr>
-
                         <td style='padding: 8px; font-weight: bold; color: #22c55e;'>X3</td>
-
                         <td style='padding: 8px;'>Total Luas Tanaman Perkebunan</td>
-
                         <td style='padding: 8px;'>Ribu Ha</td>
-
                     </tr>
-
                 </table>
-
             </div>
-
             """, unsafe_allow_html=True)
-
             
-
         with v_col2:
-
             st.markdown("""
-
             <div class='research-card'>
-
                 <table style='width: 100%; border-collapse: collapse; color: #f8fafc;'>
-
                     <tr style='border-bottom: 2px solid #15803d; color: #facc15;'>
-
                         <th style='padding: 8px; text-align: left;'>Kode</th>
-
                         <th style='padding: 8px; text-align: left;'>Nama Variabel Operasional</th>
-
                         <th style='padding: 8px; text-align: left;'>Satuan</th>
-
                     </tr>
-
                     <tr style='border-bottom: 1px solid rgba(255,255,255,0.1);'>
-
                         <td style='padding: 8px; font-weight: bold; color: #22c55e;'>X4</td>
-
                         <td style='padding: 8px;'>Kepadatan Penduduk Wilayah Terkait</td>
-
                         <td style='padding: 8px;'>Jiwa/km²</td>
-
                     </tr>
-
                     <tr style='border-bottom: 1px solid rgba(255,255,255,0.1);'>
-
                         <td style='padding: 8px; font-weight: bold; color: #22c55e;'>X5</td>
-
                         <td style='padding: 8px;'>Total Populasi Ternak Besar/Kecil Terdata</td>
-
                         <td style='padding: 8px;'>Ekor</td>
-
                     </tr>
-
                     <tr>
-
                         <td style='padding: 8px; font-weight: bold; color: #22c55e;'>X6</td>
-
                         <td style='padding: 8px;'>Persentase PDRB Sektor Pertambangan</td>
-
                         <td style='padding: 8px;'>Persen (%)</td>
-
                     </tr>
-
                 </table>
-
             </div>
-
             """, unsafe_allow_html=True)
 
-
-
-  # --- BAGIAN KETERBATASAN MODEL (SAMA PERSIS DENGAN GAMBAR ASLI) ---
-
+        # --- BAGIAN KETERBATASAN MODEL (SAMA PERSIS DENGAN GAMBAR ASLI) ---
         st.markdown("""
-
         <div style='background: linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%); padding: 25px; border-radius: 15px; border: 1px solid #ef4444; margin-top: 10px;'>
-
             <h5 style='margin: 0 0 15px 0; color: #fca5a5; font-weight: bold;'>⚠️ Keterbatasan Model (Limitations)</h5>
-
             <ul style='margin: 0; padding-left: 20px; font-size: 0.9rem; color: #ffeeee; text-align: justify; line-height: 1.6; list-style-type: disc;'>
-
                 <li style='margin-bottom: 10px;'><b>Ketergantungan Data Historis:</b> Model memprediksi berdasarkan tren masa lalu, sehingga tidak bisa membaca perubahan mendadak seperti kebijakan hukum baru atau penegakan hukum di lapangan.</li>
-
                 <li style='margin-bottom: 10px;'><b>Optimal Jangka Pendek:</b> Estimasi paling akurat untuk masa depan terdekat. Prediksi terlalu jauh ke depan berisiko memperbesar akumulasi kesalahan (<i>error propagation</i>).</li>
-
                 <li style='margin-bottom: 10px;'><b>Efek Wilayah Baru:</b> Jika ada provinsi hasil pemekaran baru, model akan mengabaikan efek acak wilayah ($b_i = 0$) dan murni menggunakan prediksi rata-rata global.</li>
-
                 <li style='margin-bottom: 10px;'><b>Cakupan Variabel Makro:</b> Model menggunakan data agregat tahunan (skala provinsi), sehingga belum mencakup faktor mikro lokal seperti konflik lahan atau izin konsesi korporasi.</li>
-
                 <li style='margin-bottom: 10px;'><b>Resolusi Spasial Makro: </b> tidak memperhitungkan faktor pemicu eksternal mendadak (exogenous shocks) di luar variabel terdata</li>
-
             </ul>
-
         </div>
-
         <br>
-
+        """, unsafe_allow_html=True)
         """, unsafe_allow_html=True)
