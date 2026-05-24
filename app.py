@@ -462,7 +462,12 @@ else:
 
 
 
-            st.dataframe(pd.DataFrame(national_preds).head(15), use_container_width=True, hide_index=True)
+ st.dataframe(
+    pd.DataFrame(national_preds),
+    use_container_width=True,
+    hide_index=True,
+    height=500
+)
 
 
 
