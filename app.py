@@ -73,14 +73,7 @@ else:
     if st.session_state.page == "Dashboard":
         df = st.session_state.df
         st.header("📊 Dashboard Deskriptif Spasial")
-        
-        # Legenda Kriteria
-        st.markdown("""
-        <div class='legend-box'>
-            <b>Legenda Tingkat Kehilangan Tutupan Pohon:</b> 🟢 Rendah (Hijau) ➔ 🟡 Sedang (Kuning) ➔ 🔴 Tinggi (Merah)
-        </div>
-        """, unsafe_allow_html=True)
-        
+        st.markdown("<div class='legend-box'><b>Legenda Tingkat Kehilangan Tutupan Pohon:</b> 🟢 Rendah (Hijau) ➔ 🟡 Sedang (Kuning) ➔ 🔴 Tinggi (Merah)</div>", unsafe_allow_html=True)
         col_f1, col_f2 = st.columns(2)
         sel_thn = col_f1.selectbox("Pilih Tahun:", sorted(df['TAHUN'].unique(), reverse=True))
         sel_prov = col_f2.selectbox("Fokus Wilayah (Zoom Provinsi):", ["Semua Provinsi"] + sorted(df['PROVINSI'].unique().tolist()))
@@ -128,7 +121,12 @@ else:
             hist = df[df['PROVINSI'] == prov_target].sort_values('TAHUN').copy()
             hist['Status'] = 'Data Aktual'
             future = pd.DataFrame({'TAHUN': [last_yr+1, last_yr+2, last_yr+3], col_y: [hist[col_y].iloc[-1] * (1.03**i) for i in range(1, 4)], 'Status': 'Prediksi'})
-            df_plot = pd.concat([hist[['TAHUN', col_y, 'Status']], future])
+            
+            # --- PERBAIKAN GRAFIK (Menyambungkan Garis) ---
+            last_actual = hist.iloc[[-1]].copy()
+            last_actual['Status'] = 'Prediksi'
+            df_plot = pd.concat([hist[['TAHUN', col_y, 'Status']], last_actual, future])
+            
             fig_pred = px.line(df_plot, x='TAHUN', y=col_y, color='Status', markers=True, color_discrete_map={'Data Aktual': '#22c55e', 'Prediksi': '#ef4444'})
             st.plotly_chart(fig_pred, use_container_width=True)
 
@@ -224,7 +222,6 @@ else:
             </div>
             """, unsafe_allow_html=True)
 
-        # --- BAGIAN KETERBATASAN MODEL ---
         st.markdown("""
         <div style='background: linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%); padding: 25px; border-radius: 15px; border: 1px solid #ef4444; margin-top: 10px;'>
             <h5 style='margin: 0 0 15px 0; color: #fca5a5; font-weight: bold;'>⚠️ Keterbatasan Model (Limitations)</h5>
