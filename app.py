@@ -12,13 +12,25 @@ st.set_page_config(page_title="I-JAMCSIIX - Eco Intelligence", layout="wide", in
 if 'page' not in st.session_state:
     st.session_state.page = "Portal"
 
+# Definisikan nama kolom target dan X sesuai dengan struktur asli file CSV Anda
+col_y = "Y (TREE COVER LOSS- Ha)"
+
+# Di sini kita sesuaikan X5 dengan spasi ganda bawaan dari file CSV Anda agar terbaca sempurna
+cols_x = {
+    "X1": "X1 (LUAS PENUTUPAN LAHAN - RIBU Ha)",
+    "X2": "X2 (LUAS KEBAKARAN HUTAN DAN LAHAN - Ha)",
+    "X3": "X3 (TOTAL LUAS TANAMAN PERKEBUNAN - RIBU Ha)",
+    "X4": "X4 (KEPADATAN PENDUDUK - jiwa/km2)",
+    "X5": "X5  (TOTAL POPULASI TERNAK - EKOR)", # Spasi ganda dipertahankan agar pas dengan CSV
+    "X6": "X6 (PDRB PERTAMBANGAN DAN PENGGALIAN PERSEN) " # Ada spasi di akhir kolom asli
+}
+
 # Membaca data langsung tanpa fitur unggah (Sistem Otomatis)
 csv_filename = "data_jamsicx.csv"
 if 'df' not in st.session_state or st.session_state.df is None:
     if os.path.exists(csv_filename):
         raw_df = pd.read_csv(csv_filename)
-        # Trik Sakti: Bersihkan spasi ganda di nama kolom agar tidak KeyError lagi!
-        raw_df.columns = raw_df.columns.str.strip().str.replace(r'\s+', ' ', regex=True)
+        # Jangan gunakan regex pembersih massal agar string kolom Y tidak rusak
         if 'PROVINSI' in raw_df.columns:
             raw_df['PROVINSI'] = raw_df['PROVINSI'].astype(str).str.strip().str.upper()
         st.session_state.df = raw_df
@@ -145,17 +157,6 @@ def load_geojson():
 
 geojson = load_geojson()
 
-col_y = "Y (TREE COVER LOSS- Ha)"
-# Nama kunci dictionary dipastikan sudah pas dengan kolom CSV yang dibersihkan spasi gandanya
-cols_x = {
-    "X1": "X1 (LUAS PENUTUPAN LAHAN - RIBU Ha)",
-    "X2": "X2 (LUAS KEBAKARAN HUTAN DAN LAHAN - Ha)",
-    "X3": "X3 (TOTAL LUAS TANAMAN PERKEBUNAN - RIBU Ha)",
-    "X4": "X4 (KEPADATAN PENDUDUK - jiwa/km2)",
-    "X5": "X5 (TOTAL POPULASI TERNAK - EKOR)",
-    "X6": "X6 (PDRB PERTAMBANGAN DAN PENGGALIAN PERSEN)"
-}
-
 # --- 5. LOGIKA NAVIGASI ---
 if st.session_state.page == "Portal":
     st.markdown("<br><br><h1 class='main-title'>🌳 ForestGuard</h1>", unsafe_allow_html=True)
@@ -254,7 +255,7 @@ else:
             fig2.update_layout(paper_bgcolor='white')
             st.plotly_chart(fig2, use_container_width=True)
 
-    # --- HALAMAN PREDIKSI MERF ---
+    # --- HALAMAN PREDIKSI MERF (LOGIKA SIMULASI INPUT BARU - SUDAH FIX KEYERROR DAN DASHBOARD) ---
     elif st.session_state.page == "Prediksi" and st.session_state.df is not None:
         df = st.session_state.df
         st.header("📈 Prediksi Deforestasi Multi-Tahun (MERF)")
