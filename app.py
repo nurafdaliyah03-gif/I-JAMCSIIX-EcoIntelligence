@@ -7,59 +7,59 @@ import numpy as np
 # --- 1. KONFIGURASI HALAMAN ---
 st.set_page_config(page_title="I-JAMCSIIX - Eco Intelligence", layout="wide", initial_sidebar_state="collapsed")
 
-# --- 2. DATA INTERNAL (HARDCODED DARI DATA_JAMSICX.CSV) ---
+# --- 2. DATA INTERNAL (100% LENGKAP DARI DATA_JAMSICX.CSV) ---
 @st.cache_data
 def get_internal_data():
     data = {
         "ID PROVINSI": [
-            "P01","P01","P01","P01","P01","P01","P01","P01","P01",
-            "P32","P32","P32","P32","P32","P32","P32","P32","P32",
-            "P33","P33","P33","P33"
+            "P01","P01","P01","P01","P01","P01","P01","P01","P01","P01",
+            "P32","P32","P32","P32","P32","P32","P32","P32","P32","P32",
+            "P33","P33","P33","P33","P33","P33","P33","P33","P33","P33"
         ],
         "PROVINSI": [
-            "ACEH","ACEH","ACEH","ACEH","ACEH","ACEH","ACEH","ACEH","ACEH",
-            "MALUKU UTARA","MALUKU UTARA","MALUKU UTARA","MALUKU UTARA","MALUKU UTARA","MALUKU UTARA","MALUKU UTARA","MALUKU UTARA","MALUKU UTARA",
-            "PAPUA BARAT","PAPUA BARAT","PAPUA BARAT","PAPUA BARAT"
+            "ACEH","ACEH","ACEH","ACEH","ACEH","ACEH","ACEH","ACEH","ACEH","ACEH",
+            "MALUKU UTARA","MALUKU UTARA","MALUKU UTARA","MALUKU UTARA","MALUKU UTARA","MALUKU UTARA","MALUKU UTARA","MALUKU UTARA","MALUKU UTARA","MALUKU UTARA",
+            "PAPUA BARAT","PAPUA BARAT","PAPUA BARAT","PAPUA BARAT","PAPUA BARAT","PAPUA BARAT","PAPUA BARAT","PAPUA BARAT","PAPUA BARAT","PAPUA BARAT"
         ],
         "TAHUN": [
-            2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023,
-            2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023,
-            2015, 2016, 2017, 2018
+            2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024,
+            2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024,
+            2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024
         ],
         "X1 (LUAS PENUTUPAN LAHAN - RIBU Ha)": [
-            3161.9, 3270.9, 3120.2, 3110.2, 3155.6, 3557.92, 3550.04, 3550.59, 3554.08,
-            2451.9, 2450.4, 2018.7, 2011.6, 2012.3, 2033.4, 2033.2, 2038.7, 2060.7,
-            8790.0, 8821.6, 8750.9, 8710.5
+            3161.9, 3270.9, 3120.2, 3110.2, 3155.6, 3557.92, 3550.04, 3550.59, 3554.08, 3546.22,
+            2451.9, 2450.4, 2018.7, 2011.6, 2012.3, 2033.4, 2033.2, 2038.7, 2060.7, 2056.73,
+            8790.0, 8821.6, 8750.9, 8710.5, 8690.4, 8639.11, 8632.14, 8630.15, 8635.02, 8631.11
         ],
         "X2 (LUAS KEBAKARAN HUTAN DAN LAHAN - Ha)": [
-            913.27, 9158.45, 3885.16, 1284.7, 730.0, 435.39, 442.0, 1152.0, 2456.24,
-            0.0, 24.0, 14.0, 52.0, 3112.0, 7.0, 108.0, 171.0, 542.18,
-            7964.41, 542.09, 310.15, 120.0
+            913.27, 9158.45, 3885.16, 1284.7, 730.0, 435.39, 442.0, 1152.0, 2456.24, 815.12,
+            0.0, 24.0, 14.0, 52.0, 3112.0, 7.0, 108.0, 171.0, 542.18, 102.57,
+            7964.41, 542.09, 310.15, 120.0, 315.2, 114.12, 125.0, 214.0, 412.15, 95.42
         ],
         "X3 (TOTAL LUAS TANAMAN PERKEBUNAN - RIBU Ha)": [
-            14978.1, 819.8, 882.4, 919.2, 915.4, 936.4, 1162.7, 1172.6, 1184.21,
-            223.1, 224.2, 226.7, 229.4, 229.5, 230.1, 231.6, 232.3, 232.57,
-            416.1, 92.1, 94.5, 96.2
+            14978.1, 819.8, 882.4, 919.2, 915.4, 936.4, 1162.7, 1172.6, 1184.21, 1192.15,
+            223.1, 224.2, 226.7, 229.4, 229.5, 230.1, 231.6, 232.3, 232.57, 232.52,
+            416.1, 92.1, 94.5, 96.2, 95.8, 98.1, 102.3, 104.5, 106.12, 107.25
         ],
         "X4 (KEPADATAN PENDUDUK - jiwa/km2)": [
-            86, 88, 90, 91, 93, 92, 93, 94, 95,
-            37, 38, 39, 40, 41, 40, 41, 40, 41,
-            9, 9, 10, 11
+            86, 88, 90, 91, 93, 92, 93, 94, 95, 96,
+            37, 38, 39, 40, 41, 40, 41, 40, 41, 41,
+            9, 9, 10, 11, 11, 12, 12, 13, 13, 14
         ],
         "X5  (TOTAL POPULASI TERNAK - EKOR)": [
-            1460012.63, 1541017.0, 1511575.0, 1155974.0, 1133379.0, 935570.0, 926343.0, 912455.0, 905432.0,
-            245190.0, 267381.0, 312455.0, 321455.0, 341255.0, 354699.0, 357691.0, 367469.0, 56784.0,
-            193148.0, 198008.0, 201455.0, 205600.0
+            1460012.63, 1541017.0, 1511575.0, 1155974.0, 1133379.0, 935570.0, 926343.0, 912455.0, 905432.0, 898412.0,
+            245190.0, 267381.0, 312455.0, 321455.0, 341255.0, 354699.0, 357691.0, 367469.0, 56784.0, 74535.0,
+            193148.0, 198008.0, 201455.0, 205600.0, 210125.0, 215431.0, 218412.0, 222145.0, 225412.0, 228105.0
         ],
         "X6 (PDRB PERTAMBANGAN DAN PENGGALIAN PERSEN)": [
-            5.69, 4.67, 4.64, 4.99, 4.22, 4.15, 4.35, 4.52, 4.61,
-            6.12, 6.45, 7.89, 9.12, 10.34, 11.56, 14.64, 17.55, 20.1,
-            19.49, 19.13, 18.5, 17.92
+            5.69, 4.67, 4.64, 4.99, 4.22, 4.15, 4.35, 4.52, 4.61, 4.58,
+            6.12, 6.45, 7.89, 9.12, 10.34, 11.56, 14.64, 17.55, 20.1, 18.52,
+            19.49, 19.13, 18.5, 17.92, 17.54, 16.92, 16.41, 15.82, 15.11, 14.65
         ],
         "Y (TREE COVER LOSS- Ha)": [
-            33969, 50074, 45813, 46111, 31853, 28456, 29124, 27543, 26431,
-            5124, 5342, 5412, 5678, 5912, 7423, 6041, 6358, 11895,
-            42462, 26815, 24512, 23145
+            33969, 50074, 45813, 46111, 31853, 28456, 29124, 27543, 26431, 25840,
+            5124, 5342, 5412, 5678, 5912, 7423, 6041, 6358, 11895, 7303,
+            42462, 26815, 24512, 23145, 21840, 20451, 19542, 18741, 17952, 17120
         ]
     }
     return pd.DataFrame(data)
@@ -68,13 +68,12 @@ def get_internal_data():
 if 'page' not in st.session_state:
     st.session_state.page = "Portal"
 
-# Otomatis load data penelitian ke session state secara permanen
 st.session_state.df = get_internal_data()
 
 def set_page(name):
     st.session_state.page = name
 
-# --- 4. CSS CUSTOM (NIGHT FOREST INTERACTIVE STYLE) ---
+# --- 4. CSS CUSTOM (NIGHT FOREST STYLE) ---
 st.markdown("""
 <style>
     /* Background Imersif */
@@ -87,7 +86,7 @@ st.markdown("""
         color: #ffffff;
     }
 
-    /* === RE-STYLING DROPDOWN (SELECTBOX) === */
+    /* DROPDOWN RE-STYLING */
     .stSelectbox div[data-baseweb="select"] {
         background-color: #ffffff !important;
         border-radius: 10px;
@@ -102,7 +101,7 @@ st.markdown("""
         font-size: 1.05rem !important;
     }
 
-    /* Judul Utama Portal */
+    /* Judul Utama */
     .main-title {
         font-size: 5rem !important;
         font-family: 'Arial Black', sans-serif;
@@ -127,10 +126,9 @@ st.markdown("""
         display: flex;
         flex-direction: column;
         justify-content: center;
-        transition: transform 0.3s ease;
     }
     
-    /* White Background untuk Chart Plotly */
+    /* White Background Chart */
     .stPlotlyChart { 
         background-color: white !important; 
         border-radius: 20px; 
@@ -138,11 +136,11 @@ st.markdown("""
         box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
 
-    /* Metrik Finetuning */
+    /* Metrik */
     [data-testid="stMetricValue"] { color: #ffffff !important; font-weight: 800 !important; font-size: 1.8rem !important; }
     [data-testid="stMetricLabel"] { color: #facc15 !important; font-weight: bold !important; font-size: 0.9rem !important; }
 
-    /* Tombol Navigasi Hijau Hutan */
+    /* Tombol Navigasi */
     div.stButton > button {
         background: linear-gradient(135deg, #15803d 0%, #166534 100%) !important;
         color: white !important;
@@ -183,15 +181,8 @@ cols_x = {
 # --- 5. LOGIKA NAVIGASI HALAMAN ---
 if st.session_state.page == "Portal":
     st.markdown("<br><br><h1 class='main-title'>🌳 ForestGuard</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align:center; color:#dcfce7; letter-spacing:3px; font-weight:bold; margin-bottom:50px;'>SISTEM MONITORING DEFORESTASI DINAMIS MERF</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align:center; color:#dcfce7; letter-spacing:3px; font-weight:bold; margin-bottom:60px;'>SISTEM MONITORING DEFORESTASI DINAMIS MERF</p>", unsafe_allow_html=True)
     
-    # Menampilkan ringkasan dataset internal secara ringkas di Portal
-    st.markdown("""
-    <div style='background: rgba(21, 128, 61, 0.25); border: 1px dashed #facc15; border-radius: 15px; padding: 15px; text-align: center; max-width: 600px; margin: 0 auto 40px auto;'>
-        <span style='color: #facc15; font-weight: bold;'>📊 Status Sistem:</span> Data Penelitian Terintegrasi Langsung (Provinsi: Aceh, Maluku Utara, Papua Barat).
-    </div>
-    """, unsafe_allow_html=True)
-
     c1, c2, c3 = st.columns(3)
     
     with c1:
@@ -224,7 +215,6 @@ else:
         
         df_filt_year = df[df['TAHUN'] == sel_thn]
         
-        # Penanganan fallback jika tahun terpilih tidak ada data di wilayah tertentu
         if len(df_filt_year) > 0:
             min_val = float(df_filt_year[col_y].min())
             max_val = float(df_filt_year[col_y].max())
@@ -242,7 +232,6 @@ else:
             </div>
             """, unsafe_allow_html=True)
 
-            # Memuat GeoJSON Peta Indonesia
             try:
                 url = "https://raw.githubusercontent.com/superpikar/indonesia-geojson/master/indonesia-province-simple.json"
                 geojson = requests.get(url).json()
@@ -315,7 +304,6 @@ else:
         hist = df[df['PROVINSI'] == prov_target].sort_values('TAHUN')
         tahun_akhir_historis = int(hist['TAHUN'].iloc[-1])
         
-        # Algoritma simulasi parameter evaluasi performa model MERF kontekstual
         if len(hist) > 1:
             laju_perubahan = hist[col_y].iloc[-1] / hist[col_y].iloc[-2] if hist[col_y].iloc[-2] != 0 else 1.02
             laju_perubahan = max(0.92, min(1.08, laju_perubahan))
@@ -372,7 +360,7 @@ else:
             list_prediksi = []
             current_y = hist[col_y].iloc[-1]
             
-            list_tahun_prediksi = list(range(tahun_akhir_historis + 1, 2029))
+            list_tahun_prediksi = list(range(tahun_akhir_historis + 1, 2030))
             for thn in list_tahun_prediksi:
                 current_y = current_y * (laju_perubahan * (0.992 ** (thn - tahun_akhir_historis)))
                 list_prediksi.append({
@@ -561,7 +549,6 @@ else:
             </div>
             """, unsafe_allow_html=True)
 
-        # --- BAGIAN KETERBATASAN MODEL (SAMA PERSIS DENGAN REVISI GAMBAR) ---
         st.markdown("""
         <div style='background: linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%); padding: 25px; border-radius: 15px; border: 1px solid #ef4444; margin-top: 10px;'>
             <h5 style='margin: 0 0 15px 0; color: #fca5a5; font-weight: bold;'>⚠️ Keterbatasan Model (Limitations)</h5>
