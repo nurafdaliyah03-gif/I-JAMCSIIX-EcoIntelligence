@@ -161,8 +161,8 @@ cols_x = {
     "X2": "X2 (LUAS KEBAKARAN HUTAN DAN LAHAN - Ha)",
     "X3": "X3 (TOTAL LUAS TANAMAN PERKEBUNAN - RIBU Ha)",
     "X4": "X4 (KEPADATAN PENDUDUK - jiwa/km2)",
-    "X5": "X5 (TOTAL POPULASI TERNAK - EKOR)",
-    "X6": "X6 (PDRB PERTAMBANGAN DAN PENGGALIAN PERSEN)"
+    "X5": "X5  (TOTAL POPULASI TERNAK - EKOR)",
+    "X6": "X6 (PDRB PERTAMBANGAN DAN PENGGALIAN PERSEN) "
 }
 
 # =========================================================
