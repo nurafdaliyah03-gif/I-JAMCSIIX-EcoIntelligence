@@ -261,7 +261,74 @@ def prepare_data(df):
 
     data = df.copy()
 
-    data = data.sort_values(['PROVINSI', 'TAHUN'])
+    # =========================
+    # FIX FORMAT DATA
+    # =========================
+
+    # pastikan nama kolom rapi
+    data.columns = (
+        data.columns
+        .str.strip()
+        .str.replace(r'\s+', ' ', regex=True)
+    )
+
+    # pastikan provinsi & tahun valid
+    data['PROVINSI'] = (
+        data['PROVINSI']
+        .astype(str)
+        .str.upper()
+        .str.strip()
+    )
+
+    data['TAHUN'] = pd.to_numeric(
+        data['TAHUN'],
+        errors='coerce'
+    )
+
+    # =========================
+    # KONVERSI SEMUA KOLOM NUMERIK
+    # =========================
+
+    all_numeric_cols = [col_y] + list(cols_x.values())
+
+    for col in all_numeric_cols:
+
+        if col in data.columns:
+
+            data[col] = (
+                data[col]
+                .astype(str)
+                .str.replace(',', '', regex=False)
+                .str.replace(' ', '', regex=False)
+                .str.replace('-', '', regex=False)
+            )
+
+            data[col] = pd.to_numeric(
+                data[col],
+                errors='coerce'
+            )
+
+    # =========================
+    # HAPUS DATA INVALID
+    # =========================
+
+    data = data.replace([np.inf, -np.inf], np.nan)
+
+    data = data.dropna(
+        subset=['PROVINSI', 'TAHUN', col_y]
+    )
+
+    # =========================
+    # SORT
+    # =========================
+
+    data = data.sort_values(
+        ['PROVINSI', 'TAHUN']
+    )
+
+    # =========================
+    # LAG TARGET
+    # =========================
 
     data['Y_lag1'] = (
         data
@@ -269,19 +336,34 @@ def prepare_data(df):
         .shift(1)
     )
 
+    # =========================
+    # MOVING AVERAGE
+    # =========================
+
     for key, col in cols_x.items():
 
-        if col is not None and col in data.columns:
+        if col in data.columns:
 
             data[f'{key}_ma3'] = (
                 data
                 .groupby('PROVINSI')[col]
                 .transform(
-                    lambda x: x.rolling(3, min_periods=1).mean()
+                    lambda x: x.rolling(
+                        3,
+                        min_periods=1
+                    ).mean()
                 )
             )
 
+    # =========================
+    # DROP NA
+    # =========================
+
     data = data.dropna().copy()
+
+    # =========================
+    # LOG TRANSFORM
+    # =========================
 
     data['Y_log'] = np.log1p(data[col_y])
 
@@ -291,13 +373,38 @@ def prepare_data(df):
 
     for key in cols_x.keys():
 
-        if cols_x[key] is not None and f'{key}_ma3' in data.columns:
+        ma_col = f'{key}_ma3'
 
-            new_col = f'{key}_ma3_log'
+        if ma_col in data.columns:
 
-            data[new_col] = np.log1p(data[f'{key}_ma3'])
+            log_col = f'{key}_ma3_log'
 
-            feature_cols.append(new_col)
+            data[log_col] = np.log1p(
+                data[ma_col]
+            )
+
+            feature_cols.append(log_col)
+
+    # =========================
+    # FINAL CLEANING
+    # =========================
+
+    data = data.replace(
+        [np.inf, -np.inf],
+        np.nan
+    )
+
+    data = data.dropna()
+
+    # pastikan semua feature numeric
+    for col in feature_cols:
+
+        data[col] = pd.to_numeric(
+            data[col],
+            errors='coerce'
+        )
+
+    data = data.dropna()
 
     return data, feature_cols
 
