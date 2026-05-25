@@ -18,10 +18,10 @@ if 'df' not in st.session_state:
 def set_page(name):
     st.session_state.page = name
 
-# --- 3. CSS CUSTOM (FIX KONTRAS WARNA & READABILITY) ---
+# --- 3. CSS CUSTOM ---
 st.markdown("""
 <style>
-    /* Background Imersif — HD Premium, No Blur */
+    /* Background Imersif */
     .stApp {
         background: linear-gradient(rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.35)), 
                      url('https://raw.githubusercontent.com/tanti1i/jamsicx-apps/main/404268504069646243.jpg.jpeg');
@@ -34,7 +34,7 @@ st.markdown("""
         color: #ffffff;
     }
 
-    /* === FIX DROPDOWN (SELECTBOX) RE-STYLING === */
+    /* === FIX DROPDOWN (SELECTBOX) === */
     .stSelectbox div[data-baseweb="select"] {
         background-color: #ffffff !important;
         border-radius: 10px;
@@ -49,7 +49,7 @@ st.markdown("""
         font-size: 1.05rem !important;
     }
 
-    /* === FIX FILE UPLOADER RE-STYLING === */
+    /* === FIX FILE UPLOADER === */
     [data-testid="stFileUploader"] label p {
         color: #facc15 !important;
         font-weight: bold !important;
@@ -91,7 +91,7 @@ st.markdown("""
         justify-content: center;
     }
 
-    /* === PREMIUM DARK CHART BACKGROUND (GANTI DARI WHITE) === */
+    /* === PREMIUM DARK CHART BACKGROUND === */
     .stPlotlyChart { 
         background: rgba(15,35,20,0.45) !important;
         backdrop-filter: blur(12px);
@@ -105,7 +105,7 @@ st.markdown("""
     [data-testid="stMetricValue"] { color: #ffffff !important; font-weight: 800 !important; font-size: 1.8rem !important; }
     [data-testid="stMetricLabel"] { color: #facc15 !important; font-weight: bold !important; font-size: 0.9rem !important; }
 
-    /* Tombol Navigasi Umum */
+    /* Tombol Navigasi */
     div.stButton > button {
         background: linear-gradient(135deg, #15803d 0%, #166534 100%) !important;
         color: white !important;
@@ -114,7 +114,7 @@ st.markdown("""
         width: 100%;
     }
 
-    /* Info Research Cards Styling */
+    /* Research Cards */
     .research-card {
         background: rgba(15, 23, 42, 0.65);
         border: 1px solid rgba(250, 191, 36, 0.3);
@@ -128,6 +128,20 @@ st.markdown("""
         margin-top: 0px;
         border-bottom: 2px solid #15803d;
         padding-bottom: 8px;
+    }
+
+    /* DataTable di halaman prediksi */
+    [data-testid="stDataFrame"] {
+        background: rgba(15, 35, 20, 0.65) !important;
+        border-radius: 16px;
+        border: 1px solid rgba(250, 204, 21, 0.18) !important;
+        padding: 5px;
+    }
+
+    /* Table styling prediksi */
+    .stTable {
+        background: rgba(15, 35, 20, 0.65) !important;
+        border-radius: 16px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -183,32 +197,22 @@ def load_internal_data():
     CSV_URL = "https://raw.githubusercontent.com/tanti1i/jamsicx-apps/refs/heads/main/data_jamsicx.csv"
     try:
         df = pd.read_csv(CSV_URL)
-        # ── REVISI FIX: strip + padatkan semua spasi ganda di nama kolom ──
-        df.columns = (
-            df.columns
-            .str.strip()
-            .str.replace(r'\s+', ' ', regex=True)
-        )
+        df.columns = df.columns.str.strip()
         if 'PROVINSI' in df.columns:
             df['PROVINSI'] = df['PROVINSI'].astype(str).str.strip().str.upper()
         if 'TAHUN' in df.columns:
             df['TAHUN'] = df['TAHUN'].astype(int)
-        # ── Konversi semua kolom X & Y ke numerik saat loading ──
         for col_key, col_name in {**{"Y": col_y}, **cols_x}.items():
             if col_name in df.columns:
                 df[col_name] = pd.to_numeric(
                     df[col_name].astype(str).str.replace(',', '').str.strip(),
                     errors='coerce'
                 )
-            else:
-                # Kolom tidak ditemukan setelah normalisasi — buat kolom NaN
-                df[col_name] = np.nan
         return df
     except Exception as e:
         st.error(f"❌ Gagal memuat data dari GitHub: {e}")
         return None
 
-# Batas lat/lon per provinsi — dipakai untuk zoom peta yang akurat
 PROV_BOUNDS = {
     "ACEH":                 (-0.5,  6.5,  94.0,  99.5),
     "SUMATERA UTARA":       ( 0.5,  4.5,  97.5, 100.5),
@@ -248,157 +252,104 @@ PROV_BOUNDS = {
 
 geojson = load_geojson()
 
-# === AUTO-LOAD DATA DARI GITHUB CSV ===
 if st.session_state.df is None:
     st.session_state.df = load_internal_data()
 
+# --- KONSTANTA WARNA PREMIUM (dipakai bersama) ---
+C_BG = 'rgba(15,35,20,0.65)'
+C_PLOT = 'rgba(25,50,30,0.55)'
+C_TEXT = '#cbd5e1'
+C_GOLD = '#facc15'
+C_GRID = 'rgba(255,255,255,0.06)'
+C_BORDER = 'rgba(250,204,21,0.20)'
+
+CUSTOM_SCALE = [
+    [0.00, '#1a7a3a'],
+    [0.20, '#4caf50'],
+    [0.40, '#d4e157'],
+    [0.55, '#ffca28'],
+    [0.70, '#ff7043'],
+    [0.85, '#e53935'],
+    [1.00, '#7b0000'],
+]
+
 # =========================================================
-# FUNGSI PENDUKUNG PREDIKSI (MERF)
+# FUNGSI MERF
 # =========================================================
 
 @st.cache_data
-def prepare_data(df):
-
-    data = df.copy()
-
+def prepare_data(df_input):
+    data = df_input.copy()
     data = data.sort_values(['PROVINSI', 'TAHUN'])
-
-    data['Y_lag1'] = (
-        data
-        .groupby('PROVINSI')[col_y]
-        .shift(1)
-    )
-
+    data['Y_lag1'] = data.groupby('PROVINSI')[col_y].shift(1)
     for key, col in cols_x.items():
-
         if col is not None and col in data.columns:
-
             data[f'{key}_ma3'] = (
-                data
-                .groupby('PROVINSI')[col]
-                .transform(
-                    lambda x: x.rolling(3, min_periods=1).mean()
-                )
+                data.groupby('PROVINSI')[col]
+                .transform(lambda x: x.rolling(3, min_periods=1).mean())
             )
-
     data = data.dropna().copy()
-
     data['Y_log'] = np.log1p(data[col_y])
-
     data['Y_lag1_log'] = np.log1p(data['Y_lag1'])
-
     feature_cols = ['Y_lag1_log']
-
     for key in cols_x.keys():
-
-        if cols_x[key] is not None and f'{key}_ma3' in data.columns:
-
+        col = cols_x[key]
+        if col is not None and col in data.columns:
             new_col = f'{key}_ma3_log'
-
             data[new_col] = np.log1p(data[f'{key}_ma3'])
-
             feature_cols.append(new_col)
-
     return data, feature_cols
 
-
 @st.cache_resource
-def load_or_train_model(df):
-
-    data, feature_cols = prepare_data(df)
-
+def load_or_train_model(_df):
+    data, feature_cols = prepare_data(_df)
     train_data = data[data['TAHUN'] <= 2021]
-
     X_train = train_data[feature_cols]
     y_train = train_data['Y_log']
-
     Z_train = np.ones((len(train_data), 1))
-
     clusters_train = train_data["PROVINSI"]
-
     model = MERF()
-
     model.fit(X_train, Z_train, clusters_train, y_train)
-
     return model, feature_cols
 
-
 def forecast_all_provinces(model, feature_cols, df, n_years=3):
-
     data = df.copy()
-
     hasil_semua = []
-
     provinsi_list = sorted(data['PROVINSI'].unique())
-
     for provinsi in provinsi_list:
-
-        prov_data = (
-            data[data['PROVINSI'] == provinsi]
-            .sort_values('TAHUN')
-        )
-
+        prov_data = data[data['PROVINSI'] == provinsi].sort_values('TAHUN')
         latest = prov_data.iloc[-1]
-
         current_y = latest[col_y]
-
         current_year = int(latest['TAHUN'])
-
         x_hist = {}
-
         for key, col in cols_x.items():
-
             if col is not None and col in prov_data.columns:
-
                 x_hist[key] = prov_data[col].tail(3).tolist()
-
         for i in range(1, n_years + 1):
-
             tahun = current_year + i
-
-            future_input = {
-                'Y_lag1_log': np.log1p(current_y)
-            }
-
+            future_input = {'Y_lag1_log': np.log1p(current_y)}
             for key in x_hist.keys():
-
                 ma3 = np.mean(x_hist[key][-3:])
-
                 future_input[f'{key}_ma3_log'] = np.log1p(ma3)
-
-            X_future = pd.DataFrame([future_input])
-
-            X_future = X_future[feature_cols]
-
+            X_future = pd.DataFrame([future_input])[feature_cols]
             Z_future = np.ones((1, 1))
-
             cluster_future = pd.Series([provinsi])
-
-            pred_log = model.predict(
-                X_future, Z_future, cluster_future
-            )[0]
-
+            pred_log = model.predict(X_future, Z_future, cluster_future)[0]
             pred = np.expm1(pred_log)
-
             hasil_semua.append({
                 "PROVINSI": provinsi,
                 "TAHUN": tahun,
-                "PREDIKSI": round(pred, 2),
+                "PREDIKSI (Ha)": round(pred, 2),
                 "STATUS": "Prediksi"
             })
-
             current_y = pred
-
             for key in x_hist.keys():
-
-                x_hist[key].append(ma3)
-
+                x_hist[key].append(np.mean(x_hist[key][-3:]))
     return pd.DataFrame(hasil_semua)
 
 # --- 6. LOGIKA NAVIGASI ---
 if st.session_state.page == "Portal":
     st.markdown("<br><br><h1 class='main-title'>🌳 ForestGuard</h1>", unsafe_allow_html=True)
-    
     st.markdown("<br>", unsafe_allow_html=True)
     c1, c2, c3 = st.columns(3)
     is_locked = st.session_state.df is None
@@ -419,7 +370,7 @@ else:
     st.markdown("---")
 
     # =========================================================
-    # DASHBOARD — REVISI LENGKAP
+    # DASHBOARD
     # =========================================================
     if st.session_state.page == "Dashboard" and st.session_state.df is not None:
         df = st.session_state.df
@@ -434,25 +385,6 @@ else:
             unsafe_allow_html=True
         )
 
-        # ── Konstanta Warna Premium ──────────────────────────────
-        C_BG = 'rgba(15,35,20,0.65)'
-        C_PLOT = 'rgba(25,50,30,0.55)'
-        C_TEXT    = '#cbd5e1'
-        C_GOLD    = '#facc15'
-        C_GRID    = 'rgba(255,255,255,0.06)'
-        C_BORDER  = 'rgba(250,204,21,0.20)'
-
-        CUSTOM_SCALE = [
-            [0.00, '#1a7a3a'],
-            [0.20, '#4caf50'],
-            [0.40, '#d4e157'],
-            [0.55, '#ffca28'],
-            [0.70, '#ff7043'],
-            [0.85, '#e53935'],
-            [1.00, '#7b0000'],
-        ]
-
-        # ── Filter Row ───────────────────────────────────────────
         fc1, fc2, fc3 = st.columns([1, 1.2, 1])
         with fc1:
             list_thn = sorted(df['TAHUN'].unique(), reverse=True)
@@ -461,18 +393,12 @@ else:
             list_prov = ["Semua Provinsi"] + sorted(df['PROVINSI'].unique().tolist())
             sel_prov = st.selectbox("🗺️ Fokus Wilayah (Zoom Provinsi):", list_prov)
         with fc3:
-            # ── REVISI FIX: hanya tampilkan X yang kolomnya benar-benar ada di df ──
-            valid_x_keys = [
-                k for k, v in cols_x.items()
-                if v in df.columns and df[v].notna().any()
-            ]
-            var_x = st.selectbox("📈 Analisis Korelasi X:", valid_x_keys)
+            var_x = st.selectbox("📈 Analisis Korelasi X:", list(cols_x.keys()))
 
         df_yr = df[df['TAHUN'] == sel_thn].copy()
         g_min = 0
         g_max = 200000
 
-        # ── PETA CHOROPLETH (full-width) ──────────────────────────
         if geojson:
             fig_map = px.choropleth(
                 data_frame=df_yr,
@@ -492,10 +418,7 @@ else:
                 lon_range = [93.5, 142.5]
                 map_title = f"🌳 Tree Cover Loss per Provinsi — {sel_thn}"
             else:
-                bounds = PROV_BOUNDS.get(
-                    sel_prov,
-                    (-11.5, 7.5, 93.5, 142.5)
-                )
+                bounds = PROV_BOUNDS.get(sel_prov, (-11.5, 7.5, 93.5, 142.5))
                 lat_pad = (bounds[1] - bounds[0]) * 0.12
                 lon_pad = (bounds[3] - bounds[2]) * 0.12
                 lat_range = [bounds[0] - lat_pad, bounds[1] + lat_pad]
@@ -520,16 +443,9 @@ else:
             )
 
             if sel_prov != "Semua Provinsi":
-                fig_map.update_traces(
-                    marker_line_color=C_GOLD,
-                    marker_line_width=1.2,
-                    selector=dict(type='choropleth')
-                )
+                fig_map.update_traces(marker_line_color=C_GOLD, marker_line_width=1.2, selector=dict(type='choropleth'))
             else:
-                fig_map.update_traces(
-                    marker_line_color='rgba(255,255,255,0.15)',
-                    marker_line_width=0.5,
-                )
+                fig_map.update_traces(marker_line_color='rgba(255,255,255,0.15)', marker_line_width=0.5)
 
             fig_map.update_layout(
                 height=560,
@@ -537,16 +453,9 @@ else:
                 paper_bgcolor='rgba(0,0,0,0)',
                 plot_bgcolor='rgba(0,0,0,0)',
                 font=dict(color=C_TEXT, family="Arial, sans-serif"),
-                title=dict(
-                    text=map_title,
-                    font=dict(color=C_GOLD, size=15, family="Arial Black"),
-                    x=0.01, y=0.98,
-                ),
+                title=dict(text=map_title, font=dict(color=C_GOLD, size=15, family="Arial Black"), x=0.01, y=0.98),
                 coloraxis_colorbar=dict(
-                    title=dict(
-                        text="Tree Cover<br>Loss (Ha)",
-                        font=dict(color=C_TEXT, size=11)
-                    ),
+                    title=dict(text="Tree Cover<br>Loss (Ha)", font=dict(color=C_TEXT, size=11)),
                     tickfont=dict(color=C_TEXT, size=9),
                     bgcolor='rgba(7,20,34,0.85)',
                     bordercolor=C_BORDER,
@@ -557,10 +466,8 @@ else:
                     tickformat=',d',
                 ),
             )
-
             st.plotly_chart(fig_map, use_container_width=True)
 
-        # ── METRIC CARDS (jika provinsi spesifik) ────────────────
         if sel_prov != "Semua Provinsi":
             row_prov = df_yr[df_yr['PROVINSI'] == sel_prov]
             if not row_prov.empty:
@@ -570,13 +477,12 @@ else:
 
                 sp1, m1, m2, m3, sp2 = st.columns([2, 3, 3, 3, 2])
                 with m1:
-                     st.metric("🌲 Tree Cover Loss", f"{loss_val:,.0f} Ha")
+                    st.metric("🌲 Tree Cover Loss", f"{loss_val:,.0f} Ha")
                 with m2:
                     st.metric("🏆 Ranking Nasional", f"#{rank_val} / 34")
                 with m3:
                     st.metric("📊 % Kontribusi Nasional", f"{pct_nasional:.2f}%")
 
-        # ── BARIS BAWAH: Scatter + Bar/Tren ──────────────────────
         col_l, col_r = st.columns([1, 1])
 
         with col_l:
@@ -591,118 +497,76 @@ else:
                 hover_col = "TAHUN"
                 sc_title = f"Korelasi {var_x} vs TCL — {sel_prov} (2015–2024)"
 
-            # ── REVISI FIX: pastikan hover_col & x_col_name ada di df_sc_raw ──
-            available_cols = [
-                c for c in [hover_col, x_col_name, col_y]
-                if c in df_sc_raw.columns
-            ]
-            missing_cols = [
-                c for c in [hover_col, x_col_name, col_y]
-                if c not in df_sc_raw.columns
-            ]
+            df_sc = df_sc_raw[[hover_col, x_col_name, col_y]].copy()
+            df_sc[x_col_name] = pd.to_numeric(
+                df_sc[x_col_name].astype(str).str.replace(',', '').str.strip(), errors='coerce'
+            )
+            df_sc[col_y] = pd.to_numeric(
+                df_sc[col_y].astype(str).str.replace(',', '').str.strip(), errors='coerce'
+            )
+            df_sc = df_sc.replace([np.inf, -np.inf], np.nan).dropna(subset=[x_col_name, col_y])
 
-            if missing_cols:
+            can_trendline = (
+                len(df_sc) >= 2
+                and df_sc[x_col_name].nunique() > 1
+                and df_sc[col_y].nunique() > 1
+            )
+
+            if df_sc.empty:
                 st.markdown(
                     f"""
-                    <div style='background:rgba(15,35,20,0.65); border:1px solid rgba(250,204,21,0.20);
+                    <div style='background:{C_BG}; border:1px solid {C_BORDER};
                                 border-radius:20px; padding:30px; height:370px;
                                 display:flex; flex-direction:column; justify-content:center; align-items:center;'>
                         <p style='color:#facc15; font-size:1.1rem; font-weight:700; text-align:center;'>
-                            ⚠️ Kolom Tidak Ditemukan
+                            ⚠️ Data {var_x} Tidak Tersedia
                         </p>
                         <p style='color:#94a3b8; font-size:0.9rem; text-align:center;'>
-                            Kolom berikut tidak ada di data: <b>{', '.join(missing_cols)}</b>
+                            Kolom <b>{x_col_name}</b> tidak memiliki data numerik valid untuk filter yang dipilih.
                         </p>
                     </div>
                     """,
                     unsafe_allow_html=True
                 )
             else:
-                # ── Cleaning: pastikan kedua kolom numerik, buang NaN/inf ──
-                df_sc = df_sc_raw[[hover_col, x_col_name, col_y]].copy()
-                df_sc[x_col_name] = pd.to_numeric(
-                    df_sc[x_col_name].astype(str).str.replace(',', '').str.strip(),
-                    errors='coerce'
-                )
-                df_sc[col_y] = pd.to_numeric(
-                    df_sc[col_y].astype(str).str.replace(',', '').str.strip(),
-                    errors='coerce'
-                )
-                df_sc = df_sc.replace([np.inf, -np.inf], np.nan).dropna(
-                    subset=[x_col_name, col_y]
-                )
-
-                # ── Cek apakah data cukup untuk trendline OLS ──
-                can_trendline = (
-                    len(df_sc) >= 2
-                    and df_sc[x_col_name].nunique() > 1
-                    and df_sc[col_y].nunique() > 1
-                )
-
-                if df_sc.empty:
-                    st.markdown(
-                        f"""
-                        <div style='background:rgba(15,35,20,0.65); border:1px solid rgba(250,204,21,0.20);
-                                    border-radius:20px; padding:30px; height:370px;
-                                    display:flex; flex-direction:column; justify-content:center; align-items:center;'>
-                            <p style='color:#facc15; font-size:1.1rem; font-weight:700; text-align:center;'>
-                                ⚠️ Data {var_x} Tidak Tersedia
-                            </p>
-                            <p style='color:#94a3b8; font-size:0.9rem; text-align:center;'>
-                                Kolom <b>{x_col_name}</b> tidak memiliki data numerik valid
-                                untuk filter yang dipilih.
-                            </p>
-                        </div>
-                        """,
-                        unsafe_allow_html=True
+                try:
+                    fig_sc = px.scatter(
+                        df_sc, x=x_col_name, y=col_y, color=col_y,
+                        trendline="ols" if can_trendline else None,
+                        hover_name=hover_col,
+                        color_continuous_scale=CUSTOM_SCALE,
+                        range_color=[g_min, g_max],
+                        title=sc_title,
+                        labels={col_y: "TCL (Ha)", x_col_name: var_x},
                     )
-                else:
-                    try:
-                        fig_sc = px.scatter(
-                            df_sc,
-                            x=x_col_name,
-                            y=col_y,
-                            color=col_y,
-                            trendline="ols" if can_trendline else None,
-                            hover_name=hover_col,
-                            color_continuous_scale=CUSTOM_SCALE,
-                            range_color=[g_min, g_max],
-                            title=sc_title,
-                            labels={col_y: "TCL (Ha)", x_col_name: var_x},
-                        )
-                    except Exception:
-                        fig_sc = px.scatter(
-                            df_sc,
-                            x=x_col_name,
-                            y=col_y,
-                            color=col_y,
-                            trendline=None,
-                            hover_name=hover_col,
-                            color_continuous_scale=CUSTOM_SCALE,
-                            range_color=[g_min, g_max],
-                            title=sc_title + " (trendline tidak tersedia)",
-                            labels={col_y: "TCL (Ha)", x_col_name: var_x},
-                        )
-
-                    fig_sc.update_layout(
-                        paper_bgcolor=C_BG,
-                        plot_bgcolor=C_PLOT,
-                        font=dict(color=C_TEXT, size=11),
-                        title=dict(font=dict(color=C_GOLD, size=13), x=0.01),
-                        xaxis=dict(gridcolor=C_GRID, zerolinecolor=C_GRID, linecolor=C_BORDER),
-                        yaxis=dict(gridcolor=C_GRID, zerolinecolor=C_GRID, linecolor=C_BORDER),
-                        coloraxis_colorbar=dict(
-                            title=dict(text="Loss (Ha)", font=dict(color=C_TEXT, size=10)),
-                            tickfont=dict(color=C_TEXT, size=8),
-                            bgcolor='rgba(7,20,34,0.85)',
-                            bordercolor=C_BORDER, borderwidth=1,
-                            len=0.80, thickness=11,
-                            tickformat=',d',
-                        ),
-                        height=370,
-                        margin=dict(l=10, r=10, t=50, b=10),
+                except Exception:
+                    fig_sc = px.scatter(
+                        df_sc, x=x_col_name, y=col_y, color=col_y,
+                        trendline=None,
+                        hover_name=hover_col,
+                        color_continuous_scale=CUSTOM_SCALE,
+                        range_color=[g_min, g_max],
+                        title=sc_title + " (trendline tidak tersedia)",
+                        labels={col_y: "TCL (Ha)", x_col_name: var_x},
                     )
-                    st.plotly_chart(fig_sc, use_container_width=True)
+
+                fig_sc.update_layout(
+                    paper_bgcolor=C_BG, plot_bgcolor=C_PLOT,
+                    font=dict(color=C_TEXT, size=11),
+                    title=dict(font=dict(color=C_GOLD, size=13), x=0.01),
+                    xaxis=dict(gridcolor=C_GRID, zerolinecolor=C_GRID, linecolor=C_BORDER),
+                    yaxis=dict(gridcolor=C_GRID, zerolinecolor=C_GRID, linecolor=C_BORDER),
+                    coloraxis_colorbar=dict(
+                        title=dict(text="Loss (Ha)", font=dict(color=C_TEXT, size=10)),
+                        tickfont=dict(color=C_TEXT, size=8),
+                        bgcolor='rgba(7,20,34,0.85)',
+                        bordercolor=C_BORDER, borderwidth=1,
+                        len=0.80, thickness=11, tickformat=',d',
+                    ),
+                    height=370,
+                    margin=dict(l=10, r=10, t=50, b=10),
+                )
+                st.plotly_chart(fig_sc, use_container_width=True)
 
         with col_r:
             if sel_prov != "Semua Provinsi":
@@ -713,16 +577,11 @@ else:
                     labels={col_y: "TCL (Ha)", "TAHUN": "Tahun"},
                     color_discrete_sequence=['#22c55e'],
                 )
-                fig_r.update_traces(
-                    line_color='#4ade80',
-                    fillcolor='rgba(34,197,94,0.12)',
-                )
+                fig_r.update_traces(line_color='#4ade80', fillcolor='rgba(34,197,94,0.12)')
                 fig_r.add_vline(
-                    x=sel_thn, line_dash="dot",
-                    line_color=C_GOLD, line_width=1.5,
+                    x=sel_thn, line_dash="dot", line_color=C_GOLD, line_width=1.5,
                     annotation_text=f"  {sel_thn}",
-                    annotation_font_color=C_GOLD,
-                    annotation_font_size=11,
+                    annotation_font_color=C_GOLD, annotation_font_size=11,
                 )
             else:
                 top10 = (
@@ -741,241 +600,241 @@ else:
                 fig_r.update_layout(coloraxis_showscale=False)
 
             fig_r.update_layout(
-                paper_bgcolor=C_BG,
-                plot_bgcolor=C_PLOT,
+                paper_bgcolor=C_BG, plot_bgcolor=C_PLOT,
                 font=dict(color=C_TEXT, size=11),
                 title=dict(font=dict(color=C_GOLD, size=13), x=0.01),
-                xaxis=dict(gridcolor=C_GRID, zerolinecolor=C_GRID,
-                           linecolor=C_BORDER, tickformat=',d'),
-                yaxis=dict(gridcolor=C_GRID, zerolinecolor=C_GRID,
-                           linecolor=C_BORDER),
+                xaxis=dict(gridcolor=C_GRID, zerolinecolor=C_GRID, linecolor=C_BORDER, tickformat=',d'),
+                yaxis=dict(gridcolor=C_GRID, zerolinecolor=C_GRID, linecolor=C_BORDER),
                 height=370,
                 margin=dict(l=10, r=10, t=50, b=10),
             )
             st.plotly_chart(fig_r, use_container_width=True)
 
     # =========================================================
-    # PREDIKSI — DIGANTI DENGAN SYNTAX 2
+    # PREDIKSI — MERF LENGKAP + STYLING SESUAI SYNTAX 1
     # =========================================================
     elif st.session_state.page == "Prediksi" and st.session_state.df is not None:
-
-        st.markdown("""
-        <h1 style='color:#fde047;'>
-        🌍 PREDIKSI RISIKO DEFORESTASI
-        </h1>
-        """, unsafe_allow_html=True)
-
         df = st.session_state.df
 
-        st.markdown("## 📥 Upload Data Aktual Baru")
-
-        uploaded_file = st.file_uploader(
-            "Upload file CSV",
-            type="csv"
+        st.markdown(
+            "<h2 style='color:#facc15; font-weight:800; margin-bottom:4px;'>🧪 Prediksi Risiko Deforestasi (MERF)</h2>",
+            unsafe_allow_html=True
         )
+        st.markdown(
+            "<p style='color:#94a3b8; font-size:0.9rem; margin-top:0;'>"
+            "Model Mixed-Effects Random Forest — Prediksi 3 Tahun ke Depan per Provinsi</p>",
+            unsafe_allow_html=True
+        )
+
+        # Upload data baru
+        st.markdown(
+            "<h4 style='color:#facc15; margin-top:10px;'>📥 Upload Data Aktual Baru (Opsional)</h4>",
+            unsafe_allow_html=True
+        )
+        uploaded_file = st.file_uploader("Upload file CSV untuk memperbarui data aktual:", type="csv")
 
         if uploaded_file is not None:
-
             new_df = pd.read_csv(uploaded_file)
-
-            # ── REVISI FIX: normalisasi kolom CSV upload sama seperti load_internal_data ──
-            new_df.columns = (
-                new_df.columns
-                .str.strip()
-                .str.replace(r'\s+', ' ', regex=True)
-            )
-
-            new_df['PROVINSI'] = (
-                new_df['PROVINSI']
-                .astype(str)
-                .str.upper()
-                .str.strip()
-            )
-
+            new_df.columns = new_df.columns.str.strip().str.replace(r"\s+", " ", regex=True)
+            new_df['PROVINSI'] = new_df['PROVINSI'].astype(str).str.upper().str.strip()
             if 'TAHUN' in new_df.columns:
                 new_df['TAHUN'] = new_df['TAHUN'].astype(int)
-
-            # Konversi kolom numerik pada upload baru
-            for col_key, col_name in {**{"Y": col_y}, **cols_x}.items():
+            for col_name in [col_y] + list(cols_x.values()):
                 if col_name in new_df.columns:
                     new_df[col_name] = pd.to_numeric(
-                        new_df[col_name].astype(str).str.replace(',', '').str.strip(),
-                        errors='coerce'
+                        new_df[col_name].astype(str).str.replace(',', '').str.strip(), errors='coerce'
                     )
-                else:
-                    new_df[col_name] = np.nan
-
             tahun_baru = new_df['TAHUN'].unique()
-
             df = df[~df['TAHUN'].isin(tahun_baru)]
-
             df = pd.concat([df, new_df], ignore_index=True)
-
             st.session_state.df = df
+            st.success(f"✅ Data aktual tahun {list(tahun_baru)} berhasil diperbarui.")
 
-            st.success(
-                f"✅ Data aktual tahun {tahun_baru[0]} berhasil diperbarui."
+        # Training model
+        with st.spinner("⏳ Menjalankan algoritma MERF... Mohon tunggu sebentar."):
+            try:
+                model, feature_cols = load_or_train_model(df)
+                pred_global = forecast_all_provinces(model, feature_cols, df, n_years=3)
+                model_ok = True
+            except Exception as e:
+                st.error(f"❌ Gagal menjalankan model MERF: {e}")
+                model_ok = False
+
+        if model_ok:
+            # Pilih provinsi
+            prov_target = st.selectbox(
+                "📍 Pilih Provinsi untuk Detail Prediksi:",
+                sorted(df['PROVINSI'].unique())
             )
 
-        with st.spinner("Menjalankan model MERF..."):
+            pred_prov = pred_global[pred_global['PROVINSI'] == prov_target].copy()
+            hist = df[df['PROVINSI'] == prov_target].sort_values('TAHUN')
 
-            model, feature_cols = load_or_train_model(df)
+            latest_year = int(hist['TAHUN'].max())
+            latest_value = float(hist[col_y].iloc[-1])
+            avg_loss = float(hist[col_y].mean())
 
-        pred_global = forecast_all_provinces(
-            model, feature_cols, df, n_years=3
-        )
-
-        prov_target = st.selectbox(
-            "📍 Pilih Provinsi",
-            sorted(df['PROVINSI'].unique())
-        )
-
-        pred_prov = pred_global[
-            pred_global['PROVINSI'] == prov_target
-        ]
-
-        hist = (
-            df[df['PROVINSI'] == prov_target]
-            .sort_values('TAHUN')
-        )
-
-        latest_year = hist['TAHUN'].max()
-
-        latest_value = hist[col_y].iloc[-1]
-
-        avg_loss = hist[col_y].mean()
-
-        # ── Ringkasan ──────────────────────────────────────────
-        st.markdown("## 📊 Ringkasan Wilayah")
-
-        s1, s2, s3 = st.columns(3)
-
-        s1.metric("Tahun Aktual Terakhir", latest_year)
-
-        s2.metric("Loss Aktual Terakhir", f"{latest_value:,.2f}")
-
-        s3.metric("Rata-rata Loss", f"{avg_loss:,.2f}")
-
-        st.markdown("---")
-
-        # ── Monitoring Risiko ──────────────────────────────────
-        pred_awal = pred_prov['PREDIKSI'].iloc[0]
-        pred_akhir = pred_prov['PREDIKSI'].iloc[-1]
-
-        change_percent = (
-            (pred_akhir - pred_awal) / pred_awal
-        ) * 100
-
-        if pred_akhir > pred_awal:
-            trend_text = "↑ Naik"
-        else:
-            trend_text = "↓ Turun"
-
-        if pred_akhir < 5000:
-            risk_status = "Rendah 🟢"
-        elif pred_akhir < 15000:
-            risk_status = "Sedang 🟡"
-        else:
-            risk_status = "Tinggi 🔴"
-
-        # ── Tabel dan Grafik ───────────────────────────────────
-        cl, cr = st.columns([1, 1.5])
-
-        with cl:
-
-            st.markdown("""
-            <h3 style='color:#fde047;'>
-            📄 Hasil Prediksi
-            </h3>
-            """, unsafe_allow_html=True)
-
-            st.dataframe(
-                pred_prov,
-                use_container_width=True,
-                hide_index=True
+            # Metric Cards
+            st.markdown("<br>", unsafe_allow_html=True)
+            st.markdown(
+                "<h4 style='color:#facc15;'>📊 Ringkasan Wilayah</h4>",
+                unsafe_allow_html=True
             )
+            s1, s2, s3 = st.columns(3)
+            s1.metric("📅 Tahun Aktual Terakhir", str(latest_year))
+            s2.metric("🌲 Loss Aktual Terakhir", f"{latest_value:,.2f} Ha")
+            s3.metric("📈 Rata-rata Loss Historis", f"{avg_loss:,.2f} Ha")
 
-            st.markdown("""
-            <br>
-            <h3 style='color:#ffffff;'>
-            📋 Monitoring Risiko Deforestasi
-            </h3>
-            """, unsafe_allow_html=True)
+            st.markdown("---")
 
-            monitor_df = pd.DataFrame({
-                "Indikator": [
-                    "Tren Prediksi",
-                    "Status Risiko",
-                    "Perubahan 3 Tahun",
-                    "Prediksi Tahun Akhir"
-                ],
-                "Nilai": [
-                    trend_text,
-                    risk_status,
-                    f"{change_percent:.2f}%",
-                    f"{pred_akhir:,.2f}"
-                ]
-            })
+            # Kalkulasi monitoring
+            pred_awal = float(pred_prov['PREDIKSI (Ha)'].iloc[0])
+            pred_akhir = float(pred_prov['PREDIKSI (Ha)'].iloc[-1])
+            change_percent = ((pred_akhir - pred_awal) / pred_awal) * 100 if pred_awal != 0 else 0
 
-            st.table(monitor_df)
+            trend_text = "↑ Naik" if pred_akhir >= pred_awal else "↓ Turun"
 
-        with cr:
+            if pred_akhir < 5000:
+                risk_status = "Rendah 🟢"
+                risk_color = "#22c55e"
+            elif pred_akhir < 15000:
+                risk_status = "Sedang 🟡"
+                risk_color = "#facc15"
+            else:
+                risk_status = "Tinggi 🔴"
+                risk_color = "#ef4444"
 
-            st.markdown("""
-            <h3 style='color:#fde047;'>
-            📈 Aktual vs Prediksi
-            </h3>
-            """, unsafe_allow_html=True)
+            cl, cr = st.columns([1, 1.5])
 
-            aktual = pd.DataFrame({
-                'TAHUN': hist['TAHUN'],
-                'LOSS': hist[col_y],
-                'Status': 'Aktual'
-            })
+            with cl:
+                st.markdown(
+                    "<h4 style='color:#facc15;'>📄 Hasil Prediksi 3 Tahun</h4>",
+                    unsafe_allow_html=True
+                )
+                st.dataframe(pred_prov, use_container_width=True, hide_index=True)
 
-            prediksi_awal = pd.DataFrame({
-                'TAHUN': [latest_year],
-                'LOSS': [latest_value],
-                'Status': ['Prediksi']
-            })
+                st.markdown("<br>", unsafe_allow_html=True)
+                st.markdown(
+                    "<h4 style='color:#facc15;'>📋 Monitoring Risiko Deforestasi</h4>",
+                    unsafe_allow_html=True
+                )
 
-            prediksi_lanjutan = pd.DataFrame({
-                'TAHUN': pred_prov['TAHUN'],
-                'LOSS': pred_prov['PREDIKSI'],
-                'Status': 'Prediksi'
-            })
+                monitor_df = pd.DataFrame({
+                    "Indikator": [
+                        "Tren Prediksi",
+                        "Status Risiko",
+                        "Perubahan 3 Tahun",
+                        "Prediksi Tahun Akhir"
+                    ],
+                    "Nilai": [
+                        trend_text,
+                        risk_status,
+                        f"{change_percent:.2f}%",
+                        f"{pred_akhir:,.2f} Ha"
+                    ]
+                })
+                st.table(monitor_df)
 
-            prediksi = pd.concat([prediksi_awal, prediksi_lanjutan])
+                # Risk badge
+                st.markdown(
+                    f"""
+                    <div style='background:rgba(15,35,20,0.65); border:2px solid {risk_color};
+                                border-radius:16px; padding:20px; text-align:center; margin-top:10px;'>
+                        <p style='color:#94a3b8; margin:0; font-size:0.85rem;'>STATUS RISIKO AKHIR PREDIKSI</p>
+                        <p style='color:{risk_color}; font-size:2rem; font-weight:900; margin:8px 0;'>{risk_status}</p>
+                        <p style='color:#cbd5e1; margin:0; font-size:0.85rem;'>Prediksi: {pred_akhir:,.0f} Ha</p>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
 
-            gabung = pd.concat([aktual, prediksi])
+            with cr:
+                st.markdown(
+                    "<h4 style='color:#facc15;'>📈 Grafik Aktual vs Prediksi</h4>",
+                    unsafe_allow_html=True
+                )
 
-            fig_pred = px.line(
-                gabung,
-                x='TAHUN',
-                y='LOSS',
-                color='Status',
-                markers=True,
-                color_discrete_map={
-                    'Aktual': '#22c55e',
-                    'Prediksi': '#ef4444'
-                }
+                aktual_df = pd.DataFrame({
+                    'TAHUN': hist['TAHUN'],
+                    'LOSS (Ha)': hist[col_y],
+                    'Status': 'Aktual'
+                })
+
+                # Sambungkan dari titik aktual terakhir ke prediksi
+                bridge_df = pd.DataFrame({
+                    'TAHUN': [latest_year],
+                    'LOSS (Ha)': [latest_value],
+                    'Status': ['Prediksi']
+                })
+
+                pred_line_df = pd.DataFrame({
+                    'TAHUN': pred_prov['TAHUN'],
+                    'LOSS (Ha)': pred_prov['PREDIKSI (Ha)'],
+                    'Status': 'Prediksi'
+                })
+
+                gabung = pd.concat([aktual_df, bridge_df, pred_line_df], ignore_index=True)
+
+                fig_pred = px.line(
+                    gabung,
+                    x='TAHUN',
+                    y='LOSS (Ha)',
+                    color='Status',
+                    markers=True,
+                    color_discrete_map={
+                        'Aktual': '#22c55e',
+                        'Prediksi': '#ef4444'
+                    },
+                    title=f"Tren Deforestasi Aktual & Prediksi — {prov_target}",
+                    labels={'LOSS (Ha)': 'Tree Cover Loss (Ha)', 'TAHUN': 'Tahun'}
+                )
+
+                # Garis pemisah aktual-prediksi
+                fig_pred.add_vline(
+                    x=latest_year, line_dash="dot",
+                    line_color=C_GOLD, line_width=1.5,
+                    annotation_text=f"  Batas Prediksi",
+                    annotation_font_color=C_GOLD,
+                    annotation_font_size=11,
+                )
+
+                fig_pred.update_layout(
+                    paper_bgcolor=C_BG,
+                    plot_bgcolor=C_PLOT,
+                    font=dict(color=C_TEXT, size=11),
+                    title=dict(font=dict(color=C_GOLD, size=13), x=0.01),
+                    xaxis=dict(gridcolor=C_GRID, zerolinecolor=C_GRID, linecolor=C_BORDER, tickformat='d'),
+                    yaxis=dict(gridcolor=C_GRID, zerolinecolor=C_GRID, linecolor=C_BORDER, tickformat=',d'),
+                    legend=dict(
+                        bgcolor='rgba(15,35,20,0.7)',
+                        bordercolor=C_BORDER,
+                        borderwidth=1,
+                        font=dict(color=C_TEXT)
+                    ),
+                    height=550,
+                    margin=dict(l=10, r=10, t=50, b=10),
+                )
+                st.plotly_chart(fig_pred, use_container_width=True)
+
+            # Tabel semua provinsi
+            st.markdown("---")
+            st.markdown(
+                "<h4 style='color:#facc15;'>🗺️ Prediksi Seluruh Provinsi (3 Tahun ke Depan)</h4>",
+                unsafe_allow_html=True
             )
-
-            fig_pred.update_layout(
-                paper_bgcolor='white',
-                plot_bgcolor='white',
-                height=550
-            )
-
-            st.plotly_chart(fig_pred, use_container_width=True)
+            pivot_pred = pred_global.pivot_table(
+                index='PROVINSI', columns='TAHUN', values='PREDIKSI (Ha)'
+            ).reset_index()
+            pivot_pred.columns = [str(c) for c in pivot_pred.columns]
+            st.dataframe(pivot_pred, use_container_width=True, hide_index=True)
 
     # =========================================================
-    # PENELITIAN — TIDAK DIUBAH
+    # PENELITIAN
     # =========================================================
     elif st.session_state.page == "Penelitian":
         st.markdown("<h2 style='text-align:center; color:#facc15; font-weight: 800;'>📖 Info Penelitian</h2>", unsafe_allow_html=True)
         st.markdown("<br>", unsafe_allow_html=True)
-        
+
         rc1, rc2 = st.columns(2)
         with rc1:
             st.markdown("""
@@ -987,7 +846,7 @@ else:
                 </ul>
             </div>
             """, unsafe_allow_html=True)
-            
+
             st.markdown("""
             <div class='research-card'>
                 <h4>📊 Sumber Data Penelitian</h4>
@@ -998,7 +857,7 @@ else:
                 </ul>
             </div>
             """, unsafe_allow_html=True)
-            
+
         with rc2:
             st.markdown("""
             <div class='research-card'>
