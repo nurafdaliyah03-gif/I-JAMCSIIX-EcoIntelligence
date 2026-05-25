@@ -54,28 +54,18 @@ def set_page(name):
     st.session_state.page = name
 
 # =========================================================
-# AUTO DETECT KOLOM
+# NAMA KOLOM FIX
 # =========================================================
 
-all_cols = st.session_state.df.columns.tolist()
-
-
-def cari_kolom(keyword):
-    for col in all_cols:
-        if keyword.lower() in col.lower():
-            return col
-    return None
-
-
-col_y = cari_kolom("TREE COVER LOSS")
+col_y = "Y (TREE COVER LOSS- Ha)"
 
 cols_x = {
-    "X1": cari_kolom("LUAS PENUTUPAN LAHAN"),
-    "X2": cari_kolom("KEBAKARAN HUTAN"),
-    "X3": cari_kolom("TOTAL LUAS TANAMAN"),
-    "X4": cari_kolom("KEPADATAN PENDUDUK"),
-    "X5": cari_kolom("TOTAL POPULASI TERNAK"),
-    "X6": cari_kolom("PDRB PERTAMBANGAN")
+    "X1": "X1 (LUAS PENUTUPAN LAHAN - RIBU Ha)",
+    "X2": "X2 (LUAS KEBAKARAN HUTAN DAN LAHAN - Ha)",
+    "X3": "X3 (TOTAL LUAS TANAMAN PERKEBUNAN - RIBU Ha)",
+    "X4": "X4 (KEPADATAN PENDUDUK - jiwa/km2)",
+    "X5": "X5 (TOTAL POPULASI TERNAK - EKOR)",
+    "X6": "X6 (PDRB PERTAMBANGAN DAN PENGGALIAN PERSEN)"
 }
 
 # =========================================================
@@ -147,7 +137,6 @@ div.stButton > button {
 # =========================================================
 
 @st.cache_data
-
 def load_geojson():
 
     try:
@@ -185,7 +174,6 @@ geojson = load_geojson()
 # =========================================================
 
 @st.cache_data
-
 def prepare_data(df):
 
     data = df.copy()
@@ -194,20 +182,14 @@ def prepare_data(df):
         ['PROVINSI', 'TAHUN']
     )
 
-    # =====================================================
     # LAG Y
-    # =====================================================
-
     data['Y_lag1'] = (
         data
         .groupby('PROVINSI')[col_y]
         .shift(1)
     )
 
-    # =====================================================
     # LAG X
-    # =====================================================
-
     for key, col in cols_x.items():
 
         data[f'{key}_lag1'] = (
@@ -216,10 +198,7 @@ def prepare_data(df):
             .shift(1)
         )
 
-    # =====================================================
     # MOVING AVERAGE 3 TAHUN
-    # =====================================================
-
     for key, col in cols_x.items():
 
         data[f'{key}_ma3'] = (
@@ -233,10 +212,7 @@ def prepare_data(df):
 
     data = data.dropna().copy()
 
-    # =====================================================
     # LOG TRANSFORM
-    # =====================================================
-
     data['Y_log'] = np.log1p(data[col_y])
 
     feature_cols = []
@@ -258,11 +234,10 @@ def prepare_data(df):
     return data, feature_cols
 
 # =========================================================
-# TRAIN GLOBAL MODEL
+# TRAIN MODEL GLOBAL
 # =========================================================
 
 @st.cache_resource
-
 def load_or_train_model(df):
 
     try:
@@ -339,7 +314,6 @@ def load_or_train_model(df):
 # =========================================================
 
 @st.cache_data
-
 def forecast_all_provinces(
     model,
     feature_cols,
@@ -378,10 +352,6 @@ def forecast_all_provinces(
                 .tolist()
             )
 
-        # =============================================
-        # RECURSIVE FORECASTING
-        # =============================================
-
         for i in range(1, n_years + 1):
 
             tahun = current_year + i
@@ -415,7 +385,6 @@ def forecast_all_provinces(
 
             current_y = pred
 
-            # UPDATE MOVING WINDOW
             for key in x_hist.keys():
                 x_hist[key].append(ma3)
 
@@ -550,30 +519,6 @@ else:
                     use_container_width=True
                 )
 
-        with cr:
-
-            var_x = st.selectbox(
-                "Pilih Variabel X",
-                list(cols_x.keys())
-            )
-
-            fig2 = px.scatter(
-                df_filt,
-                x=cols_x[var_x],
-                y=col_y,
-                color=col_y,
-                trendline="ols"
-            )
-
-            fig2.update_layout(
-                paper_bgcolor='white'
-            )
-
-            st.plotly_chart(
-                fig2,
-                use_container_width=True
-            )
-
     # =====================================================
     # PREDIKSI
     # =====================================================
@@ -588,50 +533,6 @@ else:
 
         df = st.session_state.df
 
-        # =================================================
-        # UPLOAD DATA BARU
-        # =================================================
-
-        with st.expander("📥 Upload Data Aktual Baru"):
-
-            uploaded_file = st.file_uploader(
-                "Upload CSV Data Aktual",
-                type="csv"
-            )
-
-            if uploaded_file:
-
-                new_df = pd.read_csv(uploaded_file)
-
-                new_df.columns = (
-                    new_df.columns
-                    .str.strip()
-                )
-
-                new_df.columns = (
-                    new_df.columns
-                    .str.replace(
-                        r"\s+",
-                        " ",
-                        regex=True
-                    )
-                )
-
-                st.success(
-                    "Data berhasil ditambahkan"
-                )
-
-                st.session_state.df = pd.concat(
-                    [df, new_df],
-                    ignore_index=True
-                )
-
-                df = st.session_state.df
-
-        # =================================================
-        # LOAD MODEL GLOBAL
-        # =================================================
-
         with st.spinner(
             "Menjalankan model global ForestGuard..."
         ):
@@ -639,10 +540,6 @@ else:
             model, feature_cols, metrics = (
                 load_or_train_model(df)
             )
-
-        # =================================================
-        # METRICS
-        # =================================================
 
         st.markdown("### 📌 Evaluasi Model")
 
@@ -665,22 +562,12 @@ else:
 
         st.markdown("---")
 
-        # =================================================
-        # FORECAST GLOBAL
-        # =================================================
-
-        last_year = int(df['TAHUN'].max())
-
         pred_global = forecast_all_provinces(
             model,
             feature_cols,
             df,
             n_years=3
         )
-
-        # =================================================
-        # FILTER VISUAL
-        # =================================================
 
         prov_target = st.selectbox(
             "Pilih Provinsi",
@@ -708,12 +595,6 @@ else:
             )
 
         with cr:
-
-            st.markdown("""
-            <h4 style='color:#facc15;'>
-            📈 Aktual vs Prediksi
-            </h4>
-            """, unsafe_allow_html=True)
 
             hist = (
                 df[df['PROVINSI'] == prov_target]
