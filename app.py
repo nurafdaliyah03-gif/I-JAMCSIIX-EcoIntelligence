@@ -129,6 +129,192 @@ st.markdown("""
         border-bottom: 2px solid #15803d;
         padding-bottom: 8px;
     }
+
+    /* ===================================================
+       PREDIKSI MERF — PREMIUM DARK FOREST THEME
+       =================================================== */
+
+    /* Format Upload Card */
+    .upload-format-card {
+        background: rgba(10, 28, 15, 0.75);
+        border: 1.5px solid rgba(250, 204, 21, 0.45);
+        border-radius: 20px;
+        padding: 28px 32px;
+        margin-bottom: 24px;
+        backdrop-filter: blur(14px);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.55), inset 0 0 0 1px rgba(255,255,255,0.04);
+    }
+    .upload-format-card h4 {
+        color: #fde047 !important;
+        font-size: 1.05rem;
+        font-weight: 800;
+        letter-spacing: 0.03em;
+        margin: 0 0 14px 0;
+        padding-bottom: 10px;
+        border-bottom: 2px solid rgba(21, 128, 61, 0.7);
+    }
+    .upload-format-card ul {
+        margin: 0;
+        padding-left: 22px;
+        list-style: none;
+    }
+    .upload-format-card ul li {
+        color: #e2e8f0;
+        font-size: 0.93rem;
+        line-height: 1.85;
+        padding-left: 4px;
+    }
+    .upload-format-card ul li::before {
+        content: "▸ ";
+        color: #4ade80;
+        font-weight: bold;
+    }
+    .upload-format-card ul li b {
+        color: #fde047;
+    }
+    .upload-format-note {
+        color: #94a3b8;
+        font-size: 0.85rem;
+        margin-top: 14px;
+        padding-top: 10px;
+        border-top: 1px solid rgba(255,255,255,0.08);
+        line-height: 1.6;
+    }
+
+    /* Ringkasan Wilayah — Metric Cards */
+    .metric-card-row {
+        display: flex;
+        gap: 18px;
+        margin-bottom: 24px;
+    }
+    .metric-card {
+        flex: 1;
+        background: rgba(10, 28, 15, 0.72);
+        border: 1.5px solid rgba(250, 204, 21, 0.35);
+        border-radius: 18px;
+        padding: 22px 20px 18px 20px;
+        text-align: center;
+        backdrop-filter: blur(12px);
+        box-shadow: 0 6px 24px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.04);
+        transition: border-color 0.2s;
+    }
+    .metric-card:hover {
+        border-color: rgba(250, 204, 21, 0.65);
+    }
+    .metric-card .mc-label {
+        color: #facc15;
+        font-size: 0.82rem;
+        font-weight: 700;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+    }
+    .metric-card .mc-value {
+        color: #ffffff;
+        font-size: 2rem;
+        font-weight: 900;
+        letter-spacing: -0.01em;
+        text-shadow: 0 2px 12px rgba(74,222,128,0.25);
+        line-height: 1.1;
+    }
+    .metric-card .mc-icon {
+        font-size: 1.6rem;
+        margin-bottom: 6px;
+    }
+
+    /* Tabel Prediksi — Dark Premium */
+    .pred-table-wrap {
+        background: rgba(10, 28, 15, 0.72);
+        border: 1.5px solid rgba(250, 204, 21, 0.30);
+        border-radius: 18px;
+        padding: 4px 2px;
+        backdrop-filter: blur(12px);
+        box-shadow: 0 6px 24px rgba(0,0,0,0.5);
+        overflow: hidden;
+        margin-bottom: 18px;
+    }
+
+    /* Monitoring Risiko — Dark Premium Table */
+    .monitor-table-wrap {
+        background: rgba(10, 28, 15, 0.72);
+        border: 1.5px solid rgba(250, 204, 21, 0.30);
+        border-radius: 18px;
+        padding: 18px 20px;
+        backdrop-filter: blur(12px);
+        box-shadow: 0 6px 24px rgba(0,0,0,0.5);
+        overflow: hidden;
+    }
+    .monitor-table-wrap h3 {
+        color: #ffffff !important;
+        font-size: 1rem;
+        font-weight: 800;
+        margin: 0 0 14px 0;
+        padding-bottom: 8px;
+        border-bottom: 2px solid rgba(21, 128, 61, 0.6);
+    }
+    .monitor-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .monitor-table thead tr th {
+        background: rgba(21, 128, 61, 0.35);
+        color: #facc15;
+        font-size: 0.82rem;
+        font-weight: 800;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        padding: 10px 16px;
+        text-align: left;
+        border-bottom: 1px solid rgba(250,204,21,0.20);
+    }
+    .monitor-table tbody tr {
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+        transition: background 0.15s;
+    }
+    .monitor-table tbody tr:hover {
+        background: rgba(21, 128, 61, 0.15);
+    }
+    .monitor-table tbody tr td {
+        padding: 11px 16px;
+        font-size: 0.95rem;
+        color: #f1f5f9;
+    }
+    .monitor-table tbody tr td:first-child {
+        color: #94a3b8;
+        font-size: 0.88rem;
+        font-weight: 600;
+    }
+    .monitor-table tbody tr td:last-child {
+        color: #ffffff;
+        font-weight: 700;
+        font-size: 1rem;
+    }
+
+    /* Dataframe override untuk halaman prediksi */
+    .pred-df-container .stDataFrame {
+        background: transparent !important;
+    }
+    .pred-df-container iframe {
+        border-radius: 14px !important;
+    }
+
+    /* Section title prediksi */
+    .pred-section-title {
+        color: #fde047;
+        font-size: 1.15rem;
+        font-weight: 800;
+        margin: 0 0 14px 0;
+        padding-bottom: 8px;
+        border-bottom: 2px solid rgba(21, 128, 61, 0.6);
+        letter-spacing: 0.02em;
+    }
+
+    /* Separator line prediksi */
+    .pred-divider {
+        border: none;
+        border-top: 1px solid rgba(250,204,21,0.15);
+        margin: 20px 0;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -419,7 +605,7 @@ else:
     st.markdown("---")
 
     # =========================================================
-    # DASHBOARD — REVISI LENGKAP
+    # DASHBOARD — TIDAK DIUBAH
     # =========================================================
     if st.session_state.page == "Dashboard" and st.session_state.df is not None:
         df = st.session_state.df
@@ -755,36 +941,64 @@ else:
             st.plotly_chart(fig_r, use_container_width=True)
 
     # =========================================================
-    # PREDIKSI — DIGANTI DENGAN SYNTAX 2
+    # PREDIKSI MERF — REVISI VISUAL PREMIUM DARK FOREST THEME
     # =========================================================
     elif st.session_state.page == "Prediksi" and st.session_state.df is not None:
 
+        # ── Konstanta warna konsisten dengan dashboard ──
+        C_BG      = 'rgba(15,35,20,0.65)'
+        C_PLOT    = 'rgba(25,50,30,0.55)'
+        C_TEXT    = '#cbd5e1'
+        C_GOLD    = '#facc15'
+        C_GRID    = 'rgba(255,255,255,0.06)'
+        C_BORDER  = 'rgba(250,204,21,0.20)'
+
         st.markdown("""
-        <h1 style='color:#fde047;'>
-        🌍 PREDIKSI RISIKO DEFORESTASI
+        <h1 style='color:#fde047; font-weight:900; letter-spacing:0.02em; margin-bottom:4px;'>
+            🌍 PREDIKSI RISIKO DEFORESTASI
         </h1>
+        <p style='color:#94a3b8; font-size:0.9rem; margin-top:0; margin-bottom:20px;'>
+            Model Mixed-Effects Random Forest (MERF) — Estimasi deforestasi berbasis data panel provinsi Indonesia
+        </p>
         """, unsafe_allow_html=True)
 
         df = st.session_state.df
 
-        st.markdown("## 📥 Upload Data Aktual Baru")
+        # ── BAGIAN 1: Upload Data — Premium Format Card ──────────
+        st.markdown("""
+        <p class='pred-section-title'>📥 Upload Data Aktual Baru</p>
+        """, unsafe_allow_html=True)
 
         uploaded_file = st.file_uploader(
             "Upload file CSV",
             type="csv"
         )
-        st.caption("""
-        📌 Format data harus sama seperti template dibawah ini:
-        
-        Kolom wajib: PROVINSI, TAHUN, Y (TREE COVER LOSS- Ha),  
-        X1 (LUAS PENUTUPAN LAHAN - RIBU Ha),  
-        X2 (LUAS KEBAKARAN HUTAN DAN LAHAN - Ha),  
-        X3 (TOTAL LUAS TANAMAN PERKEBUNAN - RIBU Ha),  
-        X4 (KEPADATAN PENDUDUK - jiwa/km2),  
-        X5 (TOTAL POPULASI TERNAK - EKOR),  
-        X6 (PDRB PERTAMBANGAN DAN PENGGALIAN PERSEN).  
-        Nama kolom dan urutan data harus sesuai agar sistem dapat membaca file dengan benar.
-        """)
+
+        # ── FORMAT DATA CARD — Premium Dark Glassmorphism ────────
+        st.markdown("""
+        <div class='upload-format-card'>
+            <h4>📌 Format Data yang Harus Diunggah</h4>
+            <p style='color:#94a3b8; font-size:0.87rem; margin:0 0 12px 0; line-height:1.6;'>
+                Format data <b style='color:#fde047;'>harus sama persis</b> seperti template berikut. 
+                Nama kolom dan urutan data harus sesuai agar sistem dapat membaca file dengan benar.
+            </p>
+            <ul>
+                <li><b>PROVINSI</b> — Nama provinsi (huruf kapital, sesuai standar BPS)</li>
+                <li><b>TAHUN</b> — Tahun observasi (format angka bulat, contoh: 2023)</li>
+                <li><b>Y (TREE COVER LOSS- Ha)</b> — Variabel target: kehilangan tutupan pohon dalam satuan Hektar</li>
+                <li><b>X1 (LUAS PENUTUPAN LAHAN - RIBU Ha)</b> — Luas total penutupan lahan (ribu hektar)</li>
+                <li><b>X2 (LUAS KEBAKARAN HUTAN DAN LAHAN - Ha)</b> — Luas area terdampak kebakaran hutan dan lahan (hektar)</li>
+                <li><b>X3 (TOTAL LUAS TANAMAN PERKEBUNAN - RIBU Ha)</b> — Total luas tanaman perkebunan (ribu hektar)</li>
+                <li><b>X4 (KEPADATAN PENDUDUK - jiwa/km2)</b> — Kepadatan penduduk per kilometer persegi</li>
+                <li><b>X5 (TOTAL POPULASI TERNAK - EKOR)</b> — Total populasi ternak seluruh jenis (ekor)</li>
+                <li><b>X6 (PDRB PERTAMBANGAN DAN PENGGALIAN PERSEN)</b> — Kontribusi sektor pertambangan & penggalian terhadap PDRB (%)</li>
+            </ul>
+            <p class='upload-format-note'>
+                ⚠️ Pastikan tidak ada kolom yang hilang, nama kolom tidak diubah, dan tidak ada baris kosong di tengah data. 
+                Sistem akan menolak file yang tidak sesuai format.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
 
         if uploaded_file is not None:
 
@@ -837,6 +1051,8 @@ else:
             model, feature_cols, df, n_years=3
         )
 
+        st.markdown("<hr class='pred-divider'>", unsafe_allow_html=True)
+
         prov_target = st.selectbox(
             "📍 Pilih Provinsi",
             sorted(df['PROVINSI'].unique())
@@ -852,25 +1068,37 @@ else:
         )
 
         latest_year = hist['TAHUN'].max()
-
         latest_value = hist[col_y].iloc[-1]
-
         avg_loss = hist[col_y].mean()
 
-        # ── Ringkasan ──────────────────────────────────────────
-        st.markdown("## 📊 Ringkasan Wilayah")
+        # ── BAGIAN 2: Ringkasan Wilayah — Premium Metric Cards ───
+        st.markdown("""
+        <p class='pred-section-title'>📊 Ringkasan Wilayah</p>
+        """, unsafe_allow_html=True)
 
-        s1, s2, s3 = st.columns(3)
+        st.markdown(f"""
+        <div class='metric-card-row'>
+            <div class='metric-card'>
+                <div class='mc-icon'>📅</div>
+                <div class='mc-label'>Tahun Aktual Terakhir</div>
+                <div class='mc-value'>{latest_year}</div>
+            </div>
+            <div class='metric-card'>
+                <div class='mc-icon'>🌲</div>
+                <div class='mc-label'>Loss Aktual Terakhir</div>
+                <div class='mc-value'>{latest_value:,.2f}</div>
+            </div>
+            <div class='metric-card'>
+                <div class='mc-icon'>📈</div>
+                <div class='mc-label'>Rata-rata Loss</div>
+                <div class='mc-value'>{avg_loss:,.2f}</div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
-        s1.metric("Tahun Aktual Terakhir", latest_year)
+        st.markdown("<hr class='pred-divider'>", unsafe_allow_html=True)
 
-        s2.metric("Loss Aktual Terakhir", f"{latest_value:,.2f}")
-
-        s3.metric("Rata-rata Loss", f"{avg_loss:,.2f}")
-
-        st.markdown("---")
-
-        # ── Monitoring Risiko ──────────────────────────────────
+        # ── Monitoring Risiko (hitung di sini sebelum dipakai) ───
         pred_awal = pred_prov['PREDIKSI'].iloc[0]
         pred_akhir = pred_prov['PREDIKSI'].iloc[-1]
 
@@ -880,63 +1108,123 @@ else:
 
         if pred_akhir > pred_awal:
             trend_text = "↑ Naik"
+            trend_color = "#ef4444"
         else:
             trend_text = "↓ Turun"
+            trend_color = "#4ade80"
 
         if pred_akhir < 5000:
             risk_status = "Rendah 🟢"
+            risk_color = "#4ade80"
         elif pred_akhir < 15000:
             risk_status = "Sedang 🟡"
+            risk_color = "#facc15"
         else:
             risk_status = "Tinggi 🔴"
+            risk_color = "#ef4444"
 
-        # ── Tabel dan Grafik ───────────────────────────────────
+        # ── BAGIAN 3 & 4: Tabel Prediksi + Grafik ────────────────
         cl, cr = st.columns([1, 1.5])
 
         with cl:
 
+            # ── Tabel Hasil Prediksi — Dark Premium ──────────────
             st.markdown("""
-            <h3 style='color:#fde047;'>
-            📄 Hasil Prediksi
-            </h3>
+            <p class='pred-section-title'>📄 Hasil Prediksi</p>
             """, unsafe_allow_html=True)
 
+            # Style dataframe via pandas Styler
+            styled_pred = pred_prov.style.set_properties(**{
+                'background-color': 'rgba(10,28,15,0)',
+                'color': '#f1f5f9',
+                'border': '1px solid rgba(250,204,21,0.15)',
+                'font-size': '0.94rem',
+                'font-weight': '600',
+            }).set_table_styles([
+                {
+                    'selector': 'thead tr th',
+                    'props': [
+                        ('background-color', 'rgba(21,128,61,0.40)'),
+                        ('color', '#facc15'),
+                        ('font-weight', '800'),
+                        ('font-size', '0.82rem'),
+                        ('letter-spacing', '0.06em'),
+                        ('text-transform', 'uppercase'),
+                        ('border-bottom', '2px solid rgba(250,204,21,0.30)'),
+                        ('padding', '10px 14px'),
+                    ]
+                },
+                {
+                    'selector': 'tbody tr:hover',
+                    'props': [('background-color', 'rgba(21,128,61,0.18)')]
+                },
+                {
+                    'selector': 'tbody tr td',
+                    'props': [
+                        ('padding', '9px 14px'),
+                        ('border-bottom', '1px solid rgba(255,255,255,0.05)'),
+                    ]
+                },
+                {
+                    'selector': '',
+                    'props': [
+                        ('border-radius', '14px'),
+                        ('overflow', 'hidden'),
+                        ('width', '100%'),
+                    ]
+                },
+            ])
+
+            st.markdown("<div class='pred-table-wrap'>", unsafe_allow_html=True)
             st.dataframe(
                 pred_prov,
                 use_container_width=True,
                 hide_index=True
             )
+            st.markdown("</div>", unsafe_allow_html=True)
 
-            st.markdown("""
-            <br>
-            <h3 style='color:#ffffff;'>
-            📋 Monitoring Risiko Deforestasi
-            </h3>
+            st.markdown("<br>", unsafe_allow_html=True)
+
+            # ── BAGIAN 5: Monitoring Risiko — Dark Premium Table ──
+            st.markdown(f"""
+            <div class='monitor-table-wrap'>
+                <h3>📋 Monitoring Risiko Deforestasi</h3>
+                <table class='monitor-table'>
+                    <thead>
+                        <tr>
+                            <th>Indikator</th>
+                            <th>Nilai</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Tren Prediksi</td>
+                            <td style='color:{trend_color};'>{trend_text}</td>
+                        </tr>
+                        <tr>
+                            <td>Status Risiko</td>
+                            <td style='color:{risk_color};'>{risk_status}</td>
+                        </tr>
+                        <tr>
+                            <td>Perubahan 3 Tahun</td>
+                            <td style='color:{"#ef4444" if change_percent > 0 else "#4ade80"};'>
+                                {change_percent:.2f}%
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Prediksi Tahun Akhir</td>
+                            <td>{pred_akhir:,.2f}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
             """, unsafe_allow_html=True)
-
-            monitor_df = pd.DataFrame({
-                "Indikator": [
-                    "Tren Prediksi",
-                    "Status Risiko",
-                    "Perubahan 3 Tahun",
-                    "Prediksi Tahun Akhir"
-                ],
-                "Nilai": [
-                    trend_text,
-                    risk_status,
-                    f"{change_percent:.2f}%",
-                    f"{pred_akhir:,.2f}"
-                ]
-            })
-
-            st.table(monitor_df)
 
         with cr:
 
+            # ── BAGIAN 4: Grafik Aktual vs Prediksi — Dark Theme ─
             st.markdown("""
-            <h3 style='color:#fde047;'>
-            📈 Aktual vs Prediksi
-            </h3>
+            <p class='pred-section-title'>📈 Aktual vs Prediksi</p>
             """, unsafe_allow_html=True)
 
             aktual = pd.DataFrame({
@@ -973,10 +1261,48 @@ else:
                 }
             )
 
+            # ── Dark Premium Chart Theme — selaras dengan dashboard ──
             fig_pred.update_layout(
-                paper_bgcolor='white',
-                plot_bgcolor='white',
-                height=550
+                paper_bgcolor=C_BG,
+                plot_bgcolor=C_PLOT,
+                font=dict(color=C_TEXT, size=11, family="Arial, sans-serif"),
+                title=dict(
+                    text=f"Tren Deforestasi & Proyeksi — {prov_target}",
+                    font=dict(color=C_GOLD, size=13, family="Arial Black"),
+                    x=0.01,
+                ),
+                xaxis=dict(
+                    gridcolor=C_GRID,
+                    zerolinecolor=C_GRID,
+                    linecolor=C_BORDER,
+                    tickcolor=C_TEXT,
+                    title=dict(text="Tahun", font=dict(color=C_TEXT)),
+                    tickfont=dict(color=C_TEXT),
+                ),
+                yaxis=dict(
+                    gridcolor=C_GRID,
+                    zerolinecolor=C_GRID,
+                    linecolor=C_BORDER,
+                    tickcolor=C_TEXT,
+                    title=dict(text="Tree Cover Loss (Ha)", font=dict(color=C_TEXT)),
+                    tickfont=dict(color=C_TEXT),
+                    tickformat=',d',
+                ),
+                legend=dict(
+                    bgcolor='rgba(10,28,15,0.75)',
+                    bordercolor=C_BORDER,
+                    borderwidth=1,
+                    font=dict(color=C_TEXT, size=11),
+                    title=dict(text="", font=dict(color=C_GOLD)),
+                ),
+                height=550,
+                margin=dict(l=10, r=10, t=50, b=10),
+            )
+
+            # ── Marker & line styling ──
+            fig_pred.update_traces(
+                line=dict(width=2.5),
+                marker=dict(size=7, line=dict(width=1.5, color='rgba(255,255,255,0.4)')),
             )
 
             st.plotly_chart(fig_pred, use_container_width=True)
