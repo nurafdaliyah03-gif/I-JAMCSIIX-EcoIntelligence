@@ -1,19 +1,8 @@
-if 'df' not in st.session_state: 
-    url = "https://raw.githubusercontent.com/nurafdaliyah03-gif/I-JAMCSIIX-EcoIntelligence/refs/heads/main/data_jamsicx.csv"
-    
-    df = pd.read_csv(url)
+import streamlit as st
+import pandas as pd
+import plotly.express as px
+import requests
+import numpy as np
 
-    df.columns = df.columns.str.strip()
-    df['PROVINSI'] = df['PROVINSI'].astype(str).str.strip().str.upper()
-
-    st.session_state.df = df
-
-
-# CEK STRUKTUR DATA (SEMENTARA)
-st.subheader("Cek Struktur Data")
-
-st.write("5 Baris Awal:")
-st.dataframe(st.session_state.df.head())
-
-st.write("Tipe Data:")
-st.write(st.session_state.df.dtypes.astype(str))
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
