@@ -1,6 +1,7 @@
 streamlit
 pandas
+numpy
 plotly
 requests
-numpy
-statsmodels
+scikit-learn
+merf
