@@ -89,28 +89,31 @@ st.markdown("""
 
 .stApp {
     background:
-    linear-gradient(rgba(0,0,0,0.75), rgba(0,0,0,0.75)),
+    linear-gradient(rgba(0,0,0,0.78), rgba(0,0,0,0.78)),
     url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=2000&auto=format&fit=crop');
 
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
-    color: white;
+    color: #f8fafc;
 }
 
+/* JUDUL UTAMA */
 .main-title {
     font-size: 5rem !important;
     font-family: 'Arial Black', sans-serif;
-    background: linear-gradient(to bottom, #facc15 0%, #fbbf24 100%);
+    background: linear-gradient(to bottom, #fde047 0%, #facc15 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     text-align: center;
     font-weight: 900 !important;
 }
 
+/* CARD MENU */
 .menu-card {
-    background: rgba(255,255,255,0.1);
-    backdrop-filter: blur(15px);
+    background: rgba(255,255,255,0.10);
+    backdrop-filter: blur(18px);
+    border: 1px solid rgba(255,255,255,0.12);
     border-radius: 30px;
     padding: 40px;
     text-align: center;
@@ -118,8 +121,10 @@ st.markdown("""
     display: flex;
     flex-direction: column;
     justify-content: center;
+    color: #ffffff;
 }
 
+/* METRIC */
 .metric-card {
     background: rgba(255,255,255,0.08);
     padding: 20px;
@@ -127,25 +132,66 @@ st.markdown("""
     backdrop-filter: blur(10px);
 }
 
+/* CHART */
 .stPlotlyChart {
-    background-color: white !important;
-    border-radius: 20px;
+    background-color: rgba(255,255,255,0.96) !important;
+    border-radius: 22px;
     padding: 15px;
 }
 
+/* BUTTON */
 div.stButton > button {
     background: linear-gradient(135deg, #15803d 0%, #166534 100%) !important;
     color: white !important;
-    border: 1px solid #facc15 !important;
+    border: 1px solid #fde047 !important;
     border-radius: 12px;
     width: 100%;
+    font-weight: 700;
 }
 
+/* CARD PENELITIAN */
 .research-card {
-    background: rgba(15, 23, 42, 0.65);
-    border-radius: 16px;
+    background: rgba(15, 23, 42, 0.72);
+    border-radius: 18px;
     padding: 25px;
     margin-bottom: 20px;
+    color: #f8fafc;
+}
+
+/* TEXT GLOBAL */
+h1, h2, h3, h4, h5, h6,
+label, p, li, span, div {
+    color: #f8fafc !important;
+}
+
+/* SELECTBOX */
+.stSelectbox label {
+    color: #f8fafc !important;
+    font-weight: 700;
+}
+
+/* METRIC VALUE */
+[data-testid="stMetricValue"] {
+    color: #fde047 !important;
+    font-weight: 800;
+}
+
+/* METRIC LABEL */
+[data-testid="stMetricLabel"] {
+    color: #ffffff !important;
+}
+
+/* DATAFRAME */
+[data-testid="stDataFrame"] {
+    background-color: rgba(255,255,255,0.96);
+    border-radius: 16px;
+    padding: 5px;
+}
+
+/* SUCCESS MESSAGE */
+.stSuccess {
+    background-color: rgba(34,197,94,0.2);
+    color: white;
 }
 
 </style>
@@ -792,31 +838,6 @@ else:
                 fig_pred,
                 use_container_width=True
             )
-
-        # =================================================
-        # BAR CHART PREDIKSI
-        # =================================================
-
-        st.markdown("## 🔥 Perbandingan Prediksi Antar Tahun")
-
-        fig_bar = px.bar(
-            pred_prov,
-            x='TAHUN',
-            y='PREDIKSI',
-            color='PREDIKSI',
-            text='PREDIKSI'
-        )
-
-        fig_bar.update_layout(
-            paper_bgcolor='white',
-            plot_bgcolor='white',
-            height=500
-        )
-
-        st.plotly_chart(
-            fig_bar,
-            use_container_width=True
-        )
 
     # =====================================================
     # PENELITIAN
