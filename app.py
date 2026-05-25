@@ -4,10 +4,6 @@ import plotly.express as px
 import requests
 import numpy as np
 
-from sklearn.metrics import (
-    mean_squared_error
-)
-
 from merf.merf import MERF
 
 # =========================================================
@@ -46,7 +42,7 @@ if 'df' not in st.session_state:
     st.session_state.df = df
 
 # =========================================================
-# NAVIGASI HALAMAN
+# NAVIGASI
 # =========================================================
 
 def set_page(name):
@@ -95,7 +91,6 @@ st.markdown("""
     background-attachment: fixed;
 }
 
-/* TITLE */
 .main-title {
     font-size: 5rem !important;
     font-family: 'Arial Black';
@@ -106,7 +101,6 @@ st.markdown("""
     font-weight: 900;
 }
 
-/* CARD */
 .menu-card {
     background: rgba(255,255,255,0.10);
     border-radius: 28px;
@@ -117,7 +111,6 @@ st.markdown("""
     border: 1px solid rgba(255,255,255,0.1);
 }
 
-/* BUTTON */
 div.stButton > button {
     background: linear-gradient(135deg,#15803d,#166534) !important;
     color: white !important;
@@ -127,25 +120,21 @@ div.stButton > button {
     font-weight: bold;
 }
 
-/* TEXT */
 h1,h2,h3,h4,h5,h6,p,label,span,li,div {
     color: #f8fafc !important;
 }
 
-/* METRIC */
 [data-testid="stMetricValue"] {
     color: #fde047 !important;
     font-weight: 800;
 }
 
-/* CHART */
 .stPlotlyChart {
     background: rgba(255,255,255,0.97);
     border-radius: 20px;
     padding: 12px;
 }
 
-/* TABLE */
 [data-testid="stDataFrame"] {
     background: rgba(255,255,255,0.97);
     border-radius: 18px;
@@ -210,15 +199,11 @@ def prepare_data(df):
         ['PROVINSI', 'TAHUN']
     )
 
-    # LAG Y
-
     data['Y_lag1'] = (
         data
         .groupby('PROVINSI')[col_y]
         .shift(1)
     )
-
-    # MOVING AVERAGE X
 
     for key, col in cols_x.items():
 
@@ -234,8 +219,6 @@ def prepare_data(df):
             )
 
     data = data.dropna().copy()
-
-    # LOG TRANSFORM
 
     data['Y_log'] = np.log1p(data[col_y])
 
@@ -258,7 +241,7 @@ def prepare_data(df):
     return data, feature_cols
 
 # =========================================================
-# TRAIN MODEL MERF
+# TRAIN MODEL
 # =========================================================
 
 @st.cache_resource
@@ -267,23 +250,14 @@ def load_or_train_model(df):
     data, feature_cols = prepare_data(df)
 
     train_data = data[data['TAHUN'] <= 2021]
-    test_data = data[data['TAHUN'] > 2021]
 
     X_train = train_data[feature_cols]
     y_train = train_data['Y_log']
 
-    X_test = test_data[feature_cols]
-    y_test = test_data['Y_log']
-
-    # RANDOM EFFECT
     Z_train = np.ones((len(train_data), 1))
-    Z_test = np.ones((len(test_data), 1))
 
-    # CLUSTER
     clusters_train = train_data["PROVINSI"]
-    clusters_test = test_data["PROVINSI"]
 
-    # MODEL MERF
     model = MERF()
 
     model.fit(
@@ -293,31 +267,10 @@ def load_or_train_model(df):
         y_train
     )
 
-    pred_test_log = model.predict(
-        X_test,
-        Z_test,
-        clusters_test
-    )
-
-    pred_test = np.expm1(pred_test_log)
-
-    actual_test = np.expm1(y_test)
-
-    rmse = np.sqrt(
-        mean_squared_error(
-            actual_test,
-            pred_test
-        )
-    )
-
-    metrics = {
-        "RMSE": rmse
-    }
-
-    return model, feature_cols, metrics
+    return model, feature_cols
 
 # =========================================================
-# FORECASTING MERF
+# FORECASTING
 # =========================================================
 
 def forecast_all_provinces(
@@ -361,10 +314,6 @@ def forecast_all_provinces(
                     .tail(3)
                     .tolist()
                 )
-
-        # ====================================
-        # RECURSIVE FORECASTING
-        # ====================================
 
         for i in range(1, n_years + 1):
 
@@ -487,10 +436,6 @@ elif st.session_state.page == "Prediksi":
 
     df = st.session_state.df
 
-    # =====================================================
-    # UPDATE DATA AKTUAL
-    # =====================================================
-
     st.markdown("## 📥 Upload Data Aktual Baru")
 
     uploaded_file = st.file_uploader(
@@ -542,36 +487,13 @@ elif st.session_state.page == "Prediksi":
             f"✅ Data aktual tahun {tahun_baru[0]} berhasil diperbarui."
         )
 
-    # =====================================================
-    # LOAD MODEL MERF
-    # =====================================================
-
     with st.spinner(
         "Menjalankan model MERF..."
     ):
 
-        model, feature_cols, metrics = (
+        model, feature_cols = (
             load_or_train_model(df)
         )
-
-    # =====================================================
-    # EVALUASI MODEL
-    # =====================================================
-
-    st.markdown("## 📌 Evaluasi Model MERF")
-
-    m1, m2 = st.columns(2)
-
-    m1.metric(
-        "RMSE",
-        f"{metrics['RMSE']:.2f}"
-    )
-
-    st.markdown("---")
-
-    # =====================================================
-    # FORECASTING
-    # =====================================================
 
     pred_global = forecast_all_provinces(
         model,
@@ -579,10 +501,6 @@ elif st.session_state.page == "Prediksi":
         df,
         n_years=3
     )
-
-    # =====================================================
-    # PILIH PROVINSI
-    # =====================================================
 
     prov_target = st.selectbox(
         "📍 Pilih Provinsi",
@@ -727,7 +645,7 @@ elif st.session_state.page == "Prediksi":
         prediksi = pd.concat([
             prediksi_awal,
             prediksi_lanjutan
-        ])    
+        ])
 
         gabung = pd.concat([
             aktual,
