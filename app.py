@@ -567,11 +567,6 @@ elif st.session_state.page == "Prediksi":
         f"{metrics['RMSE']:.2f}"
     )
 
-    m2.metric(
-        "Model",
-        "MERF Global"
-    )
-
     st.markdown("---")
 
     # =====================================================
