@@ -233,6 +233,31 @@ st.markdown("""
         margin-bottom: 6px;
     }
 
+    /* Tabel Prediksi — Dark Premium */
+    .pred-table-wrap {
+        background: rgba(10, 28, 15, 0.72);
+        border: 1.5px solid rgba(250, 204, 21, 0.30);
+        border-radius: 18px;
+        padding: 4px 2px;
+        backdrop-filter: blur(12px);
+        box-shadow: 0 6px 24px rgba(0,0,0,0.5);
+        overflow: hidden;
+        margin-bottom: 18px;
+    }
+
+    /* === OVERRIDE DATAFRAME WARNA AGAR DARK THEMED === */
+    .pred-table-wrap [data-testid="stDataFrame"] {
+        background: transparent !important;
+    }
+    .pred-table-wrap [data-testid="stDataFrame"] iframe {
+        border-radius: 14px !important;
+        color-scheme: dark !important;
+    }
+    /* Force dark background on the dataframe iframe wrapper */
+    .pred-table-wrap > div {
+        background: rgba(10, 28, 15, 0.0) !important;
+    }
+
     /* Monitoring Risiko — Dark Premium Table */
     .monitor-table-wrap {
         background: rgba(10, 28, 15, 0.72);
@@ -287,6 +312,14 @@ st.markdown("""
         color: #ffffff;
         font-weight: 700;
         font-size: 1rem;
+    }
+
+    /* Dataframe override untuk halaman prediksi */
+    .pred-df-container .stDataFrame {
+        background: transparent !important;
+    }
+    .pred-df-container iframe {
+        border-radius: 14px !important;
     }
 
     /* Section title prediksi — DIPERBESAR */
@@ -1145,43 +1178,78 @@ else:
 
         with cl:
 
-            # ── Tabel Hasil Prediksi — selaras dengan Monitoring Risiko ──
+            # ── Tabel Hasil Prediksi — Dark Premium ──────────────
             st.markdown("""
             <p class='pred-section-title'>📄 Hasil Prediksi</p>
             """, unsafe_allow_html=True)
 
-            # Bangun baris tabel HTML dari pred_prov (nilai tidak berubah)
-            rows_html = ""
-            for idx, row in enumerate(pred_prov.itertuples(index=False)):
-                even_bg = "background:rgba(21,128,61,0.12);" if idx % 2 == 1 else ""
-                rows_html += f"""
-                <tr style='{even_bg}border-bottom:1px solid rgba(255,255,255,0.06);transition:background 0.15s;'
-                    onmouseover="this.style.background='rgba(21,128,61,0.25)'"
-                    onmouseout="this.style.background='{('rgba(21,128,61,0.12)' if idx % 2 == 1 else 'transparent')}'">
-                    <td style='padding:11px 16px;color:#94a3b8;font-size:0.88rem;font-weight:600;'>{row.PROVINSI}</td>
-                    <td style='padding:11px 16px;color:#f1f5f9;font-size:0.95rem;'>{row.TAHUN}</td>
-                    <td style='padding:11px 16px;color:#ffffff;font-weight:700;font-size:1rem;'>{row.PREDIKSI:,.2f}</td>
-                    <td style='padding:11px 16px;color:#f1f5f9;font-size:0.95rem;'>{row.STATUS}</td>
-                </tr>"""
+            # Style dataframe via pandas Styler — dark themed
+            styled_pred = (
+                pred_prov.style
+                .set_properties(**{
+                    'background-color': 'rgba(10,28,15,0.85)',
+                    'color': '#f1f5f9',
+                    'border': '1px solid rgba(250,204,21,0.15)',
+                    'font-size': '0.94rem',
+                    'font-weight': '600',
+                })
+                .set_table_styles([
+                    {
+                        'selector': 'thead tr th',
+                        'props': [
+                            ('background-color', 'rgba(21,128,61,0.60)'),
+                            ('color', '#facc15'),
+                            ('font-weight', '800'),
+                            ('font-size', '0.82rem'),
+                            ('letter-spacing', '0.06em'),
+                            ('text-transform', 'uppercase'),
+                            ('border-bottom', '2px solid rgba(250,204,21,0.30)'),
+                            ('padding', '10px 14px'),
+                        ]
+                    },
+                    {
+                        'selector': 'tbody tr',
+                        'props': [
+                            ('background-color', 'rgba(10,28,15,0.80)'),
+                        ]
+                    },
+                    {
+                        'selector': 'tbody tr:nth-child(even)',
+                        'props': [
+                            ('background-color', 'rgba(21,128,61,0.12)'),
+                        ]
+                    },
+                    {
+                        'selector': 'tbody tr:hover',
+                        'props': [('background-color', 'rgba(21,128,61,0.25)')]
+                    },
+                    {
+                        'selector': 'tbody tr td',
+                        'props': [
+                            ('padding', '9px 14px'),
+                            ('border-bottom', '1px solid rgba(255,255,255,0.05)'),
+                            ('color', '#f1f5f9'),
+                        ]
+                    },
+                    {
+                        'selector': '',
+                        'props': [
+                            ('border-radius', '14px'),
+                            ('overflow', 'hidden'),
+                            ('width', '100%'),
+                            ('background-color', 'rgba(10,28,15,0.85)'),
+                        ]
+                    },
+                ])
+            )
 
-            st.markdown(f"""
-            <div class='monitor-table-wrap'>
-                <h3>📄 Tabel Prediksi</h3>
-                <table class='monitor-table'>
-                    <thead>
-                        <tr>
-                            <th>PROVINSI</th>
-                            <th>TAHUN</th>
-                            <th>PREDIKSI</th>
-                            <th>STATUS</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {rows_html}
-                    </tbody>
-                </table>
-            </div>
-            """, unsafe_allow_html=True)
+            st.markdown("<div class='pred-table-wrap'>", unsafe_allow_html=True)
+            st.dataframe(
+                styled_pred,
+                use_container_width=True,
+                hide_index=True
+            )
+            st.markdown("</div>", unsafe_allow_html=True)
 
             st.markdown("<br>", unsafe_allow_html=True)
 
