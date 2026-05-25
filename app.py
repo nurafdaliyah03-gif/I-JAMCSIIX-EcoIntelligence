@@ -570,170 +570,25 @@ elif st.session_state.page == "Prediksi":
             load_or_train_model(df)
         )
 
-    # =====================================================
-    # METRICS
-    # =====================================================
+# =====================================================
+# METRICS
+# =====================================================
 
-    st.markdown("## 📌 Evaluasi Model MERF")
+st.markdown("## 📌 Evaluasi Model MERF")
 
-    m1, m2 = st.columns(2)
+m1, m2 = st.columns(2)
 
-    m1.metric(
-        "RMSE",
-        f"{metrics['RMSE']:.2f}"
-    )
+m1.metric(
+    "RMSE",
+    f"{metrics['RMSE']:.2f}"
+)
 
-    m2.metric(
-        "Jumlah Provinsi",
-        f"{df['PROVINSI'].nunique()}"
-    )
+m2.metric(
+    "Jumlah Provinsi",
+    len(df['PROVINSI'].unique())
+)
 
-    st.markdown("---")
-
-    # =====================================================
-    # FORECASTING
-    # =====================================================
-
-    pred_global = forecast_all_provinces(
-        model,
-        feature_cols,
-        df,
-        n_years=3
-    )
-
-    # =====================================================
-    # PILIH PROVINSI
-    # =====================================================
-
-    prov_target = st.selectbox(
-        "📍 Pilih Provinsi",
-        sorted(df['PROVINSI'].unique())
-    )
-
-    pred_prov = pred_global[
-        pred_global['PROVINSI'] == prov_target
-    ]
-
-    hist = (
-        df[df['PROVINSI'] == prov_target]
-        .sort_values('TAHUN')
-    )
-
-    latest_year = hist['TAHUN'].max()
-
-    latest_value = hist[col_y].iloc[-1]
-
-    avg_loss = hist[col_y].mean()
-
-    pred_akhir = pred_prov.iloc[-1]['PREDIKSI']
-
-    pred_awal = pred_prov.iloc[0]['PREDIKSI']
-
-    # =====================================================
-    # STATUS RISIKO
-    # =====================================================
-
-    if pred_akhir > 100000:
-
-        status_risiko = "Tinggi 🔴"
-
-    elif pred_akhir > 50000:
-
-        status_risiko = "Sedang 🟠"
-
-    else:
-
-        status_risiko = "Rendah 🟢"
-
-    # =====================================================
-    # TREN
-    # =====================================================
-
-    if pred_akhir > pred_awal:
-
-        tren = "↑ Naik"
-
-    elif pred_akhir < pred_awal:
-
-        tren = "↓ Turun"
-
-    else:
-
-        tren = "→ Stabil"
-
-    # =====================================================
-    # PERSENTASE PERUBAHAN
-    # =====================================================
-
-    perubahan = (
-        (
-            pred_akhir - pred_awal
-        ) / pred_awal
-    ) * 100
-
-    # =====================================================
-    # RINGKASAN
-    # =====================================================
-
-    st.markdown("## 📊 Ringkasan Wilayah")
-
-    s1, s2, s3 = st.columns(3)
-
-    s1.metric(
-        "Tahun Aktual Terakhir",
-        latest_year
-    )
-
-    s2.metric(
-        "Loss Aktual Terakhir",
-        f"{latest_value:,.2f}"
-    )
-
-    s3.metric(
-        "Rata-rata Loss",
-        f"{avg_loss:,.2f}"
-    )
-
-    st.markdown("---")
-
-    # =====================================================
-    # TABEL MONITORING
-    # =====================================================
-
-    st.markdown("""
-    <h3 style='color:#fde047;'>
-    📋 Monitoring Risiko Deforestasi
-    </h3>
-    """, unsafe_allow_html=True)
-
-    monitoring_df = pd.DataFrame({
-
-        "Indikator": [
-
-            "Tren Prediksi",
-            "Status Risiko",
-            "Perubahan 3 Tahun",
-            "Prediksi Tahun Akhir"
-
-        ],
-
-        "Nilai": [
-
-            tren,
-            status_risiko,
-            f"{perubahan:.2f}%",
-            f"{pred_akhir:,.2f}"
-
-        ]
-    })
-
-    st.dataframe(
-        monitoring_df,
-        use_container_width=True,
-        hide_index=True
-    )
-
-    st.markdown("---")
+st.markdown("---")
     
     # =====================================================
     # TABEL DAN GRAFIK
