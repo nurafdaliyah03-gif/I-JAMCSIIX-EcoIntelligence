@@ -576,7 +576,7 @@ elif st.session_state.page == "Prediksi":
 
     st.markdown("## 📌 Evaluasi Model MERF")
 
-    m1, m2, m3 = st.columns(3)
+    m1, m2 = st.columns(2)
 
     m1.metric(
         "RMSE",
@@ -584,13 +584,8 @@ elif st.session_state.page == "Prediksi":
     )
 
     m2.metric(
-        "MAE",
-        f"{metrics['MAE']:.2f}"
-    )
-
-    m3.metric(
-        "R²",
-        f"{metrics['R2']:.3f}"
+        "Jumlah Provinsi",
+        f"{df['PROVINSI'].nunique()}"
     )
 
     st.markdown("---")
@@ -630,6 +625,52 @@ elif st.session_state.page == "Prediksi":
 
     avg_loss = hist[col_y].mean()
 
+    pred_akhir = pred_prov.iloc[-1]['PREDIKSI']
+
+    pred_awal = pred_prov.iloc[0]['PREDIKSI']
+
+    # =====================================================
+    # STATUS RISIKO
+    # =====================================================
+
+    if pred_akhir > 100000:
+
+        status_risiko = "Tinggi 🔴"
+
+    elif pred_akhir > 50000:
+
+        status_risiko = "Sedang 🟠"
+
+    else:
+
+        status_risiko = "Rendah 🟢"
+
+    # =====================================================
+    # TREN
+    # =====================================================
+
+    if pred_akhir > pred_awal:
+
+        tren = "↑ Naik"
+
+    elif pred_akhir < pred_awal:
+
+        tren = "↓ Turun"
+
+    else:
+
+        tren = "→ Stabil"
+
+    # =====================================================
+    # PERSENTASE PERUBAHAN
+    # =====================================================
+
+    perubahan = (
+        (
+            pred_akhir - pred_awal
+        ) / pred_awal
+    ) * 100
+
     # =====================================================
     # RINGKASAN
     # =====================================================
@@ -655,6 +696,45 @@ elif st.session_state.page == "Prediksi":
 
     st.markdown("---")
 
+    # =====================================================
+    # TABEL MONITORING
+    # =====================================================
+
+    st.markdown("""
+    <h3 style='color:#fde047;'>
+    📋 Monitoring Risiko Deforestasi
+    </h3>
+    """, unsafe_allow_html=True)
+
+    monitoring_df = pd.DataFrame({
+
+        "Indikator": [
+
+            "Tren Prediksi",
+            "Status Risiko",
+            "Perubahan 3 Tahun",
+            "Prediksi Tahun Akhir"
+
+        ],
+
+        "Nilai": [
+
+            tren,
+            status_risiko,
+            f"{perubahan:.2f}%",
+            f"{pred_akhir:,.2f}"
+
+        ]
+    })
+
+    st.dataframe(
+        monitoring_df,
+        use_container_width=True,
+        hide_index=True
+    )
+
+    st.markdown("---")
+    
     # =====================================================
     # TABEL DAN GRAFIK
     # =====================================================
