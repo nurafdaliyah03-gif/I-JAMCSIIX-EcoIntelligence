@@ -774,7 +774,8 @@ else:
             type="csv"
         )
         st.caption("""
-        📌 Format data harus sama seperti template asli.  
+        📌 Format data harus sama seperti template dibawah ini:
+        
         Kolom wajib: PROVINSI, TAHUN, Y (TREE COVER LOSS- Ha),  
         X1 (LUAS PENUTUPAN LAHAN - RIBU Ha),  
         X2 (LUAS KEBAKARAN HUTAN DAN LAHAN - Ha),  
