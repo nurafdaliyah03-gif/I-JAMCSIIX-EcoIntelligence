@@ -24,35 +24,31 @@ initial_sidebar_state="collapsed"
 )
 
 # =========================================================
-
 # SESSION STATE
-
 # =========================================================
-
 if 'page' not in st.session_state:
-st.session_state.page = "Portal"
+    st.session_state.page = "Portal"
 
 if 'df' not in st.session_state:
 
-```
-url = "https://raw.githubusercontent.com/nurafdaliyah03-gif/I-JAMCSIIX-EcoIntelligence/refs/heads/main/data_jamsicx.csv"
+    url = "https://raw.githubusercontent.com/nurafdaliyah03-gif/I-JAMCSIIX-EcoIntelligence/refs/heads/main/data_jamsicx.csv"
 
-df = pd.read_csv(url)
+    df = pd.read_csv(url)
 
-df.columns = df.columns.str.strip()
+    df.columns = df.columns.str.strip()
 
-df['PROVINSI'] = (
-    df['PROVINSI']
-    .astype(str)
-    .str.strip()
-    .str.upper()
-)
+    df['PROVINSI'] = (
+        df['PROVINSI']
+        .astype(str)
+        .str.strip()
+        .str.upper()
+    )
 
-st.session_state.df = df
-```
+    st.session_state.df = df
+
 
 def set_page(name):
-st.session_state.page = name
+    st.session_state.page = name
 
 # =========================================================
 
