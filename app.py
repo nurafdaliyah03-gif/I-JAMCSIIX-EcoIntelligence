@@ -590,74 +590,101 @@ m2.metric(
 
 st.markdown("---")
     
-    # =====================================================
-    # TABEL DAN GRAFIK
-    # =====================================================
+# =====================================================
+# TABEL DAN GRAFIK
+# =====================================================
 
-    cl, cr = st.columns([1,1.5])
+cl, cr = st.columns([1,1.5])
 
-    with cl:
+with cl:
 
-        st.markdown("""
-        <h3 style='color:#fde047;'>
-        📄 Hasil Prediksi
-        </h3>
-        """, unsafe_allow_html=True)
+    st.markdown("""
+    <h3 style='color:#fde047;'>
+    📄 Hasil Prediksi
+    </h3>
+    """, unsafe_allow_html=True)
 
-        st.dataframe(
-            pred_prov,
-            use_container_width=True,
-            hide_index=True
-        )
+    st.dataframe(
+        pred_prov,
+        use_container_width=True,
+        hide_index=True
+    )
 
-    with cr:
+    # =========================================
+    # MONITORING RISIKO
+    # =========================================
 
-        st.markdown("""
-        <h3 style='color:#fde047;'>
-        📈 Aktual vs Prediksi
-        </h3>
-        """, unsafe_allow_html=True)
+    st.markdown("""
+    <br>
+    <h3 style='color:#ffffff;'>
+    📋 Monitoring Risiko Deforestasi
+    </h3>
+    """, unsafe_allow_html=True)
 
-        aktual = pd.DataFrame({
-            'TAHUN': hist['TAHUN'],
-            'LOSS': hist[col_y],
-            'Status': 'Aktual'
-        })
+    monitor_df = pd.DataFrame({
+        "Indikator": [
+            "Tren Prediksi",
+            "Status Risiko",
+            "Perubahan 3 Tahun",
+            "Prediksi Tahun Akhir"
+        ],
+        "Nilai": [
+            trend_text,
+            risk_status,
+            f"{change_percent:.2f}%",
+            f"{pred_akhir:,.2f}"
+        ]
+    })
 
-        prediksi = pd.DataFrame({
-            'TAHUN': pred_prov['TAHUN'],
-            'LOSS': pred_prov['PREDIKSI'],
-            'Status': 'Prediksi'
-        })
+    st.table(monitor_df)
 
-        gabung = pd.concat([
-            aktual,
-            prediksi
-        ])
+with cr:
 
-        fig_pred = px.line(
-            gabung,
-            x='TAHUN',
-            y='LOSS',
-            color='Status',
-            markers=True,
-            color_discrete_map={
-                'Aktual': '#22c55e',
-                'Prediksi': '#ef4444'
-            }
-        )
+    st.markdown("""
+    <h3 style='color:#fde047;'>
+    📈 Aktual vs Prediksi
+    </h3>
+    """, unsafe_allow_html=True)
 
-        fig_pred.update_layout(
-            paper_bgcolor='white',
-            plot_bgcolor='white',
-            height=550
-        )
+    aktual = pd.DataFrame({
+        'TAHUN': hist['TAHUN'],
+        'LOSS': hist[col_y],
+        'Status': 'Aktual'
+    })
 
-        st.plotly_chart(
-            fig_pred,
-            use_container_width=True
-        )
+    prediksi = pd.DataFrame({
+        'TAHUN': pred_prov['TAHUN'],
+        'LOSS': pred_prov['PREDIKSI'],
+        'Status': 'Prediksi'
+    })
 
+    gabung = pd.concat([
+        aktual,
+        prediksi
+    ])
+
+    fig_pred = px.line(
+        gabung,
+        x='TAHUN',
+        y='LOSS',
+        color='Status',
+        markers=True,
+        color_discrete_map={
+            'Aktual': '#22c55e',
+            'Prediksi': '#ef4444'
+        }
+    )
+
+    fig_pred.update_layout(
+        paper_bgcolor='white',
+        plot_bgcolor='white',
+        height=550
+    )
+
+    st.plotly_chart(
+        fig_pred,
+        use_container_width=True
+    )
 # =========================================================
 # DASHBOARD
 # =========================================================
