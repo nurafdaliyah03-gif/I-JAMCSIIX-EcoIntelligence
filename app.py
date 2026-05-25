@@ -1,6 +1,3 @@
-# ForestGuard — Full Streamlit Syntax (Konsep MERF Deployment)
-
-```python
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -788,4 +785,3 @@ else:
 
         </div>
         """, unsafe_allow_html=True)
-
