@@ -717,11 +717,22 @@ elif st.session_state.page == "Prediksi":
             'Status': 'Aktual'
         })
 
-        prediksi = pd.DataFrame({
+        prediksi_awal = pd.DataFrame({
+            'TAHUN': [latest_year],
+            'LOSS': [latest_value],
+            'Status': ['Prediksi']
+        })
+
+        prediksi_lanjutan = pd.DataFrame({
             'TAHUN': pred_prov['TAHUN'],
             'LOSS': pred_prov['PREDIKSI'],
             'Status': 'Prediksi'
         })
+
+        prediksi = pd.concat([
+            prediksi_awal,
+            prediksi_lanjutan
+        ])    
 
         gabung = pd.concat([
             aktual,
