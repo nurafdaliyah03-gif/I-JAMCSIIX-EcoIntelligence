@@ -773,6 +773,17 @@ else:
             "Upload file CSV",
             type="csv"
         )
+        st.caption("""
+        📌 Format data harus sama seperti template asli.  
+        Kolom wajib: PROVINSI, TAHUN, Y (TREE COVER LOSS- Ha),  
+        X1 (LUAS PENUTUPAN LAHAN - RIBU Ha),  
+        X2 (LUAS KEBAKARAN HUTAN DAN LAHAN - Ha),  
+        X3 (TOTAL LUAS TANAMAN PERKEBUNAN - RIBU Ha),  
+        X4 (KEPADATAN PENDUDUK - jiwa/km2),  
+        X5 (TOTAL POPULASI TERNAK - EKOR),  
+        X6 (PDRB PERTAMBANGAN DAN PENGGALIAN PERSEN).  
+        Nama kolom dan urutan data harus sesuai agar sistem dapat membaca file dengan benar.
+        """)
 
         if uploaded_file is not None:
 
