@@ -3,14 +3,14 @@ import pandas as pd
 import plotly.express as px
 import requests
 import numpy as np
-import joblib
 
-from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import (
     mean_absolute_error,
     mean_squared_error,
     r2_score
 )
+
+from merf.merf import MERF
 
 # =========================================================
 # KONFIGURASI HALAMAN
@@ -48,14 +48,14 @@ if 'df' not in st.session_state:
     st.session_state.df = df
 
 # =========================================================
-# PAGE NAVIGATION
+# NAVIGASI HALAMAN
 # =========================================================
 
 def set_page(name):
     st.session_state.page = name
 
 # =========================================================
-# AUTO DETECT KOLOM
+# DETEKSI KOLOM
 # =========================================================
 
 all_cols = st.session_state.df.columns.tolist()
@@ -89,109 +89,75 @@ st.markdown("""
 
 .stApp {
     background:
-    linear-gradient(rgba(0,0,0,0.78), rgba(0,0,0,0.78)),
+    linear-gradient(rgba(0,0,0,0.82), rgba(0,0,0,0.82)),
     url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=2000&auto=format&fit=crop');
 
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
-    color: #f8fafc;
 }
 
-/* JUDUL UTAMA */
+/* TITLE */
 .main-title {
     font-size: 5rem !important;
-    font-family: 'Arial Black', sans-serif;
+    font-family: 'Arial Black';
     background: linear-gradient(to bottom, #fde047 0%, #facc15 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     text-align: center;
-    font-weight: 900 !important;
+    font-weight: 900;
 }
 
-/* CARD MENU */
+/* CARD */
 .menu-card {
     background: rgba(255,255,255,0.10);
-    backdrop-filter: blur(18px);
-    border: 1px solid rgba(255,255,255,0.12);
-    border-radius: 30px;
+    border-radius: 28px;
     padding: 40px;
+    height: 320px;
     text-align: center;
-    height: 330px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    color: #ffffff;
-}
-
-/* METRIC */
-.metric-card {
-    background: rgba(255,255,255,0.08);
-    padding: 20px;
-    border-radius: 20px;
-    backdrop-filter: blur(10px);
-}
-
-/* CHART */
-.stPlotlyChart {
-    background-color: rgba(255,255,255,0.96) !important;
-    border-radius: 22px;
-    padding: 15px;
+    backdrop-filter: blur(18px);
+    border: 1px solid rgba(255,255,255,0.1);
 }
 
 /* BUTTON */
 div.stButton > button {
-    background: linear-gradient(135deg, #15803d 0%, #166534 100%) !important;
+    background: linear-gradient(135deg,#15803d,#166534) !important;
     color: white !important;
-    border: 1px solid #fde047 !important;
     border-radius: 12px;
+    border: 1px solid #fde047 !important;
     width: 100%;
-    font-weight: 700;
+    font-weight: bold;
 }
 
-/* CARD PENELITIAN */
-.research-card {
-    background: rgba(15, 23, 42, 0.72);
-    border-radius: 18px;
-    padding: 25px;
-    margin-bottom: 20px;
-    color: #f8fafc;
-}
-
-/* TEXT GLOBAL */
-h1, h2, h3, h4, h5, h6,
-label, p, li, span, div {
+/* TEXT */
+h1,h2,h3,h4,h5,h6,p,label,span,li,div {
     color: #f8fafc !important;
 }
 
-/* SELECTBOX */
-.stSelectbox label {
-    color: #f8fafc !important;
-    font-weight: 700;
-}
-
-/* METRIC VALUE */
+/* METRIC */
 [data-testid="stMetricValue"] {
     color: #fde047 !important;
     font-weight: 800;
 }
 
-/* METRIC LABEL */
-[data-testid="stMetricLabel"] {
-    color: #ffffff !important;
+/* CHART */
+.stPlotlyChart {
+    background: rgba(255,255,255,0.97);
+    border-radius: 20px;
+    padding: 12px;
 }
 
-/* DATAFRAME */
+/* TABLE */
 [data-testid="stDataFrame"] {
-    background-color: rgba(255,255,255,0.96);
-    border-radius: 16px;
+    background: rgba(255,255,255,0.97);
+    border-radius: 18px;
     padding: 5px;
 }
 
-/* SUCCESS MESSAGE */
-.stSuccess {
-    background-color: rgba(34,197,94,0.2);
-    color: white;
+.research-card {
+    background: rgba(15,23,42,0.7);
+    border-radius: 18px;
+    padding: 25px;
 }
 
 </style>
@@ -246,9 +212,7 @@ def prepare_data(df):
         ['PROVINSI', 'TAHUN']
     )
 
-    # ==========================
     # LAG Y
-    # ==========================
 
     data['Y_lag1'] = (
         data
@@ -256,9 +220,7 @@ def prepare_data(df):
         .shift(1)
     )
 
-    # ==========================
     # MOVING AVERAGE X
-    # ==========================
 
     for key, col in cols_x.items():
 
@@ -275,21 +237,17 @@ def prepare_data(df):
 
     data = data.dropna().copy()
 
-    # ==========================
     # LOG TRANSFORM
-    # ==========================
 
     data['Y_log'] = np.log1p(data[col_y])
 
-    feature_cols = []
-
     data['Y_lag1_log'] = np.log1p(data['Y_lag1'])
 
-    feature_cols.append('Y_lag1_log')
+    feature_cols = ['Y_lag1_log']
 
-    for key, col in cols_x.items():
+    for key in cols_x.keys():
 
-        if col is not None:
+        if cols_x[key] is not None:
 
             new_col = f'{key}_ma3_log'
 
@@ -302,7 +260,7 @@ def prepare_data(df):
     return data, feature_cols
 
 # =========================================================
-# TRAIN MODEL
+# TRAIN MODEL MERF
 # =========================================================
 
 @st.cache_resource
@@ -319,15 +277,29 @@ def load_or_train_model(df):
     X_test = test_data[feature_cols]
     y_test = test_data['Y_log']
 
-    model = RandomForestRegressor(
-        n_estimators=500,
-        max_depth=10,
-        random_state=42
+    # RANDOM EFFECT
+    Z_train = np.ones((len(train_data), 1))
+    Z_test = np.ones((len(test_data), 1))
+
+    # CLUSTER
+    clusters_train = train_data["PROVINSI"]
+    clusters_test = test_data["PROVINSI"]
+
+    # MODEL MERF
+    model = MERF()
+
+    model.fit(
+        X_train,
+        Z_train,
+        clusters_train,
+        y_train
     )
 
-    model.fit(X_train, y_train)
-
-    pred_test_log = model.predict(X_test)
+    pred_test_log = model.predict(
+        X_test,
+        Z_test,
+        clusters_test
+    )
 
     pred_test = np.expm1(pred_test_log)
 
@@ -359,7 +331,7 @@ def load_or_train_model(df):
     return model, feature_cols, metrics
 
 # =========================================================
-# FORECASTING
+# FORECASTING MERF
 # =========================================================
 
 def forecast_all_provinces(
@@ -388,7 +360,9 @@ def forecast_all_provinces(
 
         current_y = latest[col_y]
 
-        current_year = int(latest['TAHUN'])
+        current_year = int(
+            latest['TAHUN']
+        )
 
         x_hist = {}
 
@@ -416,17 +390,33 @@ def forecast_all_provinces(
 
             for key in x_hist.keys():
 
-                ma3 = np.mean(x_hist[key][-3:])
+                ma3 = np.mean(
+                    x_hist[key][-3:]
+                )
 
                 future_input[
                     f'{key}_ma3_log'
                 ] = np.log1p(ma3)
 
-            X_future = pd.DataFrame([future_input])
+            X_future = pd.DataFrame([
+                future_input
+            ])
 
-            X_future = X_future[feature_cols]
+            X_future = X_future[
+                feature_cols
+            ]
 
-            pred_log = model.predict(X_future)[0]
+            Z_future = np.ones((1,1))
+
+            cluster_future = pd.Series(
+                [provinsi]
+            )
+
+            pred_log = model.predict(
+                X_future,
+                Z_future,
+                cluster_future
+            )[0]
 
             pred = np.expm1(pred_log)
 
@@ -498,372 +488,356 @@ if st.session_state.page == "Portal":
             st.rerun()
 
 # =========================================================
-# HALAMAN LAIN
+# HALAMAN PREDIKSI
 # =========================================================
 
-else:
+elif st.session_state.page == "Prediksi":
 
-    if st.button("⬅️ KEMBALI KE PORTAL"):
-        set_page("Portal")
-        st.rerun()
+    st.markdown("""
+    <h1 style='color:#fde047;'>
+    🌍 PREDIKSI RISIKO DEFORESTASI
+    </h1>
+    """, unsafe_allow_html=True)
+
+    df = st.session_state.df
+
+    # =====================================================
+    # UPDATE DATA AKTUAL
+    # =====================================================
+
+    st.markdown("## 📥 Upload Data Aktual Baru")
+
+    uploaded_file = st.file_uploader(
+        "Upload file CSV",
+        type="csv"
+    )
+
+    if uploaded_file is not None:
+
+        new_df = pd.read_csv(uploaded_file)
+
+        new_df.columns = (
+            new_df.columns
+            .str.strip()
+        )
+
+        new_df.columns = (
+            new_df.columns
+            .str.replace(
+                r"\s+",
+                " ",
+                regex=True
+            )
+        )
+
+        new_df['PROVINSI'] = (
+            new_df['PROVINSI']
+            .astype(str)
+            .str.upper()
+            .str.strip()
+        )
+
+        # HAPUS DATA TAHUN SAMA
+        tahun_baru = new_df['TAHUN'].unique()
+
+        df = df[
+            ~df['TAHUN'].isin(
+                tahun_baru
+            )
+        ]
+
+        # GABUNGKAN
+        df = pd.concat(
+            [df, new_df],
+            ignore_index=True
+        )
+
+        st.session_state.df = df
+
+        st.success(
+            f"✅ Data aktual tahun {tahun_baru[0]} berhasil diperbarui."
+        )
+
+    # =====================================================
+    # LOAD MODEL MERF
+    # =====================================================
+
+    with st.spinner(
+        "Menjalankan model MERF..."
+    ):
+
+        model, feature_cols, metrics = (
+            load_or_train_model(df)
+        )
+
+    # =====================================================
+    # METRICS
+    # =====================================================
+
+    st.markdown("## 📌 Evaluasi Model MERF")
+
+    m1, m2, m3 = st.columns(3)
+
+    m1.metric(
+        "RMSE",
+        f"{metrics['RMSE']:.2f}"
+    )
+
+    m2.metric(
+        "MAE",
+        f"{metrics['MAE']:.2f}"
+    )
+
+    m3.metric(
+        "R²",
+        f"{metrics['R2']:.3f}"
+    )
 
     st.markdown("---")
 
     # =====================================================
-    # DASHBOARD
+    # FORECASTING
     # =====================================================
 
-    if st.session_state.page == "Dashboard":
+    pred_global = forecast_all_provinces(
+        model,
+        feature_cols,
+        df,
+        n_years=3
+    )
 
-        df = st.session_state.df
+    # =====================================================
+    # PILIH PROVINSI
+    # =====================================================
 
-        st.header("📊 Dashboard Deskriptif Spasial")
+    prov_target = st.selectbox(
+        "📍 Pilih Provinsi",
+        sorted(df['PROVINSI'].unique())
+    )
 
-        col1, col2 = st.columns(2)
+    pred_prov = pred_global[
+        pred_global['PROVINSI'] == prov_target
+    ]
 
-        sel_thn = col1.selectbox(
-            "Pilih Tahun",
-            sorted(df['TAHUN'].unique(), reverse=True)
+    hist = (
+        df[df['PROVINSI'] == prov_target]
+        .sort_values('TAHUN')
+    )
+
+    latest_year = hist['TAHUN'].max()
+
+    latest_value = hist[col_y].iloc[-1]
+
+    avg_loss = hist[col_y].mean()
+
+    # =====================================================
+    # RINGKASAN
+    # =====================================================
+
+    st.markdown("## 📊 Ringkasan Wilayah")
+
+    s1, s2, s3 = st.columns(3)
+
+    s1.metric(
+        "Tahun Aktual Terakhir",
+        latest_year
+    )
+
+    s2.metric(
+        "Loss Aktual Terakhir",
+        f"{latest_value:,.2f}"
+    )
+
+    s3.metric(
+        "Rata-rata Loss",
+        f"{avg_loss:,.2f}"
+    )
+
+    st.markdown("---")
+
+    # =====================================================
+    # TABEL DAN GRAFIK
+    # =====================================================
+
+    cl, cr = st.columns([1,1.5])
+
+    with cl:
+
+        st.markdown("""
+        <h3 style='color:#fde047;'>
+        📄 Hasil Prediksi
+        </h3>
+        """, unsafe_allow_html=True)
+
+        st.dataframe(
+            pred_prov,
+            use_container_width=True,
+            hide_index=True
         )
 
-        sel_prov = col2.selectbox(
-            "Fokus Wilayah",
-            ["Semua Provinsi"] +
-            sorted(df['PROVINSI'].unique())
+    with cr:
+
+        st.markdown("""
+        <h3 style='color:#fde047;'>
+        📈 Aktual vs Prediksi
+        </h3>
+        """, unsafe_allow_html=True)
+
+        aktual = pd.DataFrame({
+            'TAHUN': hist['TAHUN'],
+            'LOSS': hist[col_y],
+            'Status': 'Aktual'
+        })
+
+        prediksi = pd.DataFrame({
+            'TAHUN': pred_prov['TAHUN'],
+            'LOSS': pred_prov['PREDIKSI'],
+            'Status': 'Prediksi'
+        })
+
+        gabung = pd.concat([
+            aktual,
+            prediksi
+        ])
+
+        fig_pred = px.line(
+            gabung,
+            x='TAHUN',
+            y='LOSS',
+            color='Status',
+            markers=True,
+            color_discrete_map={
+                'Aktual': '#22c55e',
+                'Prediksi': '#ef4444'
+            }
         )
 
-        df_filt = df[df['TAHUN'] == sel_thn]
+        fig_pred.update_layout(
+            paper_bgcolor='white',
+            plot_bgcolor='white',
+            height=550
+        )
 
-        cl, cr = st.columns([1.1, 0.9])
+        st.plotly_chart(
+            fig_pred,
+            use_container_width=True
+        )
 
-        with cl:
+# =========================================================
+# DASHBOARD
+# =========================================================
 
-            if geojson:
+elif st.session_state.page == "Dashboard":
 
-                data_peta = (
-                    df_filt
-                    if sel_prov == "Semua Provinsi"
-                    else df_filt[
-                        df_filt['PROVINSI'] == sel_prov
-                    ]
-                )
+    st.header("📊 Dashboard Deskriptif Spasial")
 
-                fig = px.choropleth(
-                    data_peta,
-                    geojson=geojson,
-                    locations="PROVINSI",
-                    featureidkey="properties.PROV_KEY",
-                    color=col_y,
-                    color_continuous_scale="RdYlGn_r"
-                )
+    df = st.session_state.df
 
-                fig.update_geos(
-                    fitbounds="locations",
-                    visible=False
-                )
+    col1, col2 = st.columns(2)
 
-                fig.update_layout(
-                    paper_bgcolor='white',
-                    height=550
-                )
+    sel_thn = col1.selectbox(
+        "Pilih Tahun",
+        sorted(df['TAHUN'].unique(), reverse=True)
+    )
 
-                st.plotly_chart(
-                    fig,
-                    use_container_width=True
-                )
+    sel_prov = col2.selectbox(
+        "Fokus Wilayah",
+        ["Semua Provinsi"] +
+        sorted(df['PROVINSI'].unique())
+    )
 
-        with cr:
+    df_filt = df[
+        df['TAHUN'] == sel_thn
+    ]
 
-            var_x = st.selectbox(
-                "Pilih Variabel X",
-                list(cols_x.keys())
+    cl, cr = st.columns([1.2,1])
+
+    with cl:
+
+        if geojson:
+
+            data_peta = (
+                df_filt
+                if sel_prov == "Semua Provinsi"
+                else df_filt[
+                    df_filt['PROVINSI'] == sel_prov
+                ]
             )
 
-            fig2 = px.scatter(
-                df_filt,
-                x=cols_x[var_x],
-                y=col_y,
+            fig = px.choropleth(
+                data_peta,
+                geojson=geojson,
+                locations="PROVINSI",
+                featureidkey="properties.PROV_KEY",
                 color=col_y,
-                trendline="ols"
+                color_continuous_scale="RdYlGn_r"
             )
 
-            fig2.update_layout(
+            fig.update_geos(
+                fitbounds="locations",
+                visible=False
+            )
+
+            fig.update_layout(
                 paper_bgcolor='white',
                 height=550
             )
 
             st.plotly_chart(
-                fig2,
+                fig,
                 use_container_width=True
             )
 
-    # =====================================================
-    # PREDIKSI
-    # =====================================================
+    with cr:
 
-    elif st.session_state.page == "Prediksi":
-
-        st.markdown("""
-        <h1 style='color:#facc15;'>
-        🌍 PREDIKSI RISIKO DEFORESTASI
-        </h1>
-        """, unsafe_allow_html=True)
-
-        df = st.session_state.df
-
-        # =================================================
-        # UPLOAD DATA AKTUAL BARU
-        # =================================================
-
-        st.markdown("## 📥 Update Data Aktual")
-
-        uploaded_file = st.file_uploader(
-            "Upload CSV Data Aktual Baru",
-            type="csv"
+        var_x = st.selectbox(
+            "Pilih Variabel X",
+            list(cols_x.keys())
         )
 
-        if uploaded_file is not None:
-
-            new_df = pd.read_csv(uploaded_file)
-
-            new_df.columns = (
-                new_df.columns
-                .str.strip()
-            )
-
-            new_df.columns = (
-                new_df.columns
-                .str.replace(
-                    r"\s+",
-                    " ",
-                    regex=True
-                )
-            )
-
-            new_df['PROVINSI'] = (
-                new_df['PROVINSI']
-                .astype(str)
-                .str.upper()
-                .str.strip()
-            )
-
-            # HAPUS DUPLIKAT TAHUN YANG SAMA
-            tahun_baru = new_df['TAHUN'].unique()
-
-            df = df[
-                ~df['TAHUN'].isin(tahun_baru)
-            ]
-
-            # GABUNGKAN
-            df = pd.concat(
-                [df, new_df],
-                ignore_index=True
-            )
-
-            st.session_state.df = df
-
-            st.success(
-                f"✅ Data aktual tahun {tahun_baru[0]} berhasil diperbarui."
-            )
-
-        # =================================================
-        # LOAD MODEL
-        # =================================================
-
-        with st.spinner(
-            "Menjalankan model ForestGuard..."
-        ):
-
-            model, feature_cols, metrics = (
-                load_or_train_model(df)
-            )
-
-        # =================================================
-        # METRICS
-        # =================================================
-
-        st.markdown("## 📌 Evaluasi Model")
-
-        c1, c2, c3 = st.columns(3)
-
-        c1.metric(
-            "RMSE",
-            f"{metrics['RMSE']:.2f}"
+        fig2 = px.scatter(
+            df_filt,
+            x=cols_x[var_x],
+            y=col_y,
+            color=col_y,
+            trendline="ols"
         )
 
-        c2.metric(
-            "MAE",
-            f"{metrics['MAE']:.2f}"
+        fig2.update_layout(
+            paper_bgcolor='white',
+            height=550
         )
 
-        c3.metric(
-            "R²",
-            f"{metrics['R2']:.3f}"
+        st.plotly_chart(
+            fig2,
+            use_container_width=True
         )
 
-        st.markdown("---")
+# =========================================================
+# PENELITIAN
+# =========================================================
 
-        # =================================================
-        # FORECAST GLOBAL
-        # =================================================
+elif st.session_state.page == "Penelitian":
 
-        pred_global = forecast_all_provinces(
-            model,
-            feature_cols,
-            df,
-            n_years=3
-        )
+    st.markdown("""
+    <h2 style='text-align:center;
+    color:#fde047;'>
+    📖 Info Penelitian
+    </h2>
+    """, unsafe_allow_html=True)
 
-        # =================================================
-        # FILTER PROVINSI
-        # =================================================
+    st.markdown("""
+    <div class='research-card'>
 
-        prov_target = st.selectbox(
-            "📍 Pilih Provinsi",
-            sorted(df['PROVINSI'].unique())
-        )
+    <h4>🎯 Tujuan Penelitian</h4>
 
-        pred_prov = pred_global[
-            pred_global['PROVINSI'] == prov_target
-        ]
+    <ul>
+    <li>Menganalisis kehilangan tutupan pohon di Indonesia.</li>
+    <li>Menerapkan metode MERF pada data panel spasial.</li>
+    <li>Menghasilkan prediksi deforestasi multiyear.</li>
+    <li>Mengintegrasikan update data aktual secara dinamis.</li>
+    <li>Membangun dashboard ForestGuard berbasis web interaktif.</li>
+    </ul>
 
-        # =================================================
-        # HISTORICAL DATA
-        # =================================================
-
-        hist = (
-            df[df['PROVINSI'] == prov_target]
-            .sort_values('TAHUN')
-        )
-
-        latest_actual_year = hist['TAHUN'].max()
-
-        latest_actual_value = (
-            hist[col_y].iloc[-1]
-        )
-
-        avg_loss = (
-            hist[col_y].mean()
-        )
-
-        # =================================================
-        # SUMMARY CARDS
-        # =================================================
-
-        st.markdown("## 📊 Ringkasan Wilayah")
-
-        s1, s2, s3 = st.columns(3)
-
-        s1.metric(
-            "Tahun Aktual Terakhir",
-            latest_actual_year
-        )
-
-        s2.metric(
-            "Loss Aktual Terakhir",
-            f"{latest_actual_value:,.2f}"
-        )
-
-        s3.metric(
-            "Rata-rata Loss",
-            f"{avg_loss:,.2f}"
-        )
-
-        st.markdown("---")
-
-        # =================================================
-        # TABLE + GRAPH
-        # =================================================
-
-        cl, cr = st.columns([1, 1.5])
-
-        with cl:
-
-            st.markdown("""
-            <h3 style='color:#facc15;'>
-            📄 Tabel Estimasi
-            </h3>
-            """, unsafe_allow_html=True)
-
-            st.dataframe(
-                pred_prov,
-                use_container_width=True,
-                hide_index=True
-            )
-
-        with cr:
-
-            st.markdown("""
-            <h3 style='color:#facc15;'>
-            📈 Aktual vs Prediksi
-            </h3>
-            """, unsafe_allow_html=True)
-
-            aktual = pd.DataFrame({
-                'TAHUN': hist['TAHUN'],
-                'LOSS': hist[col_y],
-                'Status': 'Aktual'
-            })
-
-            prediksi = pd.DataFrame({
-                'TAHUN': pred_prov['TAHUN'],
-                'LOSS': pred_prov['PREDIKSI'],
-                'Status': 'Prediksi'
-            })
-
-            gabung = pd.concat(
-                [aktual, prediksi]
-            )
-
-            fig_pred = px.line(
-                gabung,
-                x='TAHUN',
-                y='LOSS',
-                color='Status',
-                markers=True,
-                line_group='Status',
-                color_discrete_map={
-                    'Aktual': '#22c55e',
-                    'Prediksi': '#ef4444'
-                }
-            )
-
-            fig_pred.update_layout(
-                paper_bgcolor='white',
-                plot_bgcolor='white',
-                height=550
-            )
-
-            st.plotly_chart(
-                fig_pred,
-                use_container_width=True
-            )
-
-    # =====================================================
-    # PENELITIAN
-    # =====================================================
-
-    elif st.session_state.page == "Penelitian":
-
-        st.markdown("""
-        <h2 style='text-align:center;
-        color:#facc15;'>
-        📖 Info Penelitian
-        </h2>
-        """, unsafe_allow_html=True)
-
-        st.markdown("""
-        <div class='research-card'>
-
-        <h4>🎯 Tujuan Penelitian</h4>
-
-        <ul>
-        <li>Menganalisis kehilangan tutupan pohon.</li>
-        <li>Menerapkan model MERF global.</li>
-        <li>Membangun sistem ForestGuard berbasis web.</li>
-        <li>Melakukan recursive forecasting 3 tahun ke depan.</li>
-        <li>Mendukung update data aktual tanpa retraining.</li>
-        </ul>
-
-        </div>
-        """, unsafe_allow_html=True)
+    </div>
+    """, unsafe_allow_html=True)
