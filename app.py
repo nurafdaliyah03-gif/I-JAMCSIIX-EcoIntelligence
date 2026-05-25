@@ -5,9 +5,7 @@ import requests
 import numpy as np
 
 from sklearn.metrics import (
-    mean_absolute_error,
-    mean_squared_error,
-    r2_score
+    mean_squared_error
 )
 
 from merf.merf import MERF
@@ -312,20 +310,8 @@ def load_or_train_model(df):
         )
     )
 
-    mae = mean_absolute_error(
-        actual_test,
-        pred_test
-    )
-
-    r2 = r2_score(
-        actual_test,
-        pred_test
-    )
-
     metrics = {
-        "RMSE": rmse,
-        "MAE": mae,
-        "R2": r2
+        "RMSE": rmse
     }
 
     return model, feature_cols, metrics
@@ -537,7 +523,6 @@ elif st.session_state.page == "Prediksi":
             .str.strip()
         )
 
-        # HAPUS DATA TAHUN SAMA
         tahun_baru = new_df['TAHUN'].unique()
 
         df = df[
@@ -546,7 +531,6 @@ elif st.session_state.page == "Prediksi":
             )
         ]
 
-        # GABUNGKAN
         df = pd.concat(
             [df, new_df],
             ignore_index=True
@@ -570,121 +554,203 @@ elif st.session_state.page == "Prediksi":
             load_or_train_model(df)
         )
 
-# =====================================================
-# METRICS
-# =====================================================
+    # =====================================================
+    # EVALUASI MODEL
+    # =====================================================
 
-st.markdown("## 📌 Evaluasi Model MERF")
+    st.markdown("## 📌 Evaluasi Model MERF")
 
-m1, m2 = st.columns(2)
+    m1, m2 = st.columns(2)
 
-m1.metric(
-    "RMSE",
-    f"{metrics['RMSE']:.2f}"
-)
-
-m2.metric(
-    "Jumlah Provinsi",
-    len(df['PROVINSI'].unique())
-)
-
-st.markdown("---")
-    
-# =====================================================
-# TABEL DAN GRAFIK
-# =====================================================
-
-cl, cr = st.columns([1,1.5])
-
-with cl:
-
-    st.markdown("""
-    <h3 style='color:#fde047;'>
-    📄 Hasil Prediksi
-    </h3>
-    """, unsafe_allow_html=True)
-
-    st.dataframe(
-        pred_prov,
-        use_container_width=True,
-        hide_index=True
+    m1.metric(
+        "RMSE",
+        f"{metrics['RMSE']:.2f}"
     )
 
-    # =========================================
+    m2.metric(
+        "Model",
+        "MERF Global"
+    )
+
+    st.markdown("---")
+
+    # =====================================================
+    # FORECASTING
+    # =====================================================
+
+    pred_global = forecast_all_provinces(
+        model,
+        feature_cols,
+        df,
+        n_years=3
+    )
+
+    # =====================================================
+    # PILIH PROVINSI
+    # =====================================================
+
+    prov_target = st.selectbox(
+        "📍 Pilih Provinsi",
+        sorted(df['PROVINSI'].unique())
+    )
+
+    pred_prov = pred_global[
+        pred_global['PROVINSI'] == prov_target
+    ]
+
+    hist = (
+        df[df['PROVINSI'] == prov_target]
+        .sort_values('TAHUN')
+    )
+
+    latest_year = hist['TAHUN'].max()
+
+    latest_value = hist[col_y].iloc[-1]
+
+    avg_loss = hist[col_y].mean()
+
+    # =====================================================
+    # RINGKASAN
+    # =====================================================
+
+    st.markdown("## 📊 Ringkasan Wilayah")
+
+    s1, s2, s3 = st.columns(3)
+
+    s1.metric(
+        "Tahun Aktual Terakhir",
+        latest_year
+    )
+
+    s2.metric(
+        "Loss Aktual Terakhir",
+        f"{latest_value:,.2f}"
+    )
+
+    s3.metric(
+        "Rata-rata Loss",
+        f"{avg_loss:,.2f}"
+    )
+
+    st.markdown("---")
+
+    # =====================================================
     # MONITORING RISIKO
-    # =========================================
+    # =====================================================
 
-    st.markdown("""
-    <br>
-    <h3 style='color:#ffffff;'>
-    📋 Monitoring Risiko Deforestasi
-    </h3>
-    """, unsafe_allow_html=True)
+    pred_awal = pred_prov['PREDIKSI'].iloc[0]
+    pred_akhir = pred_prov['PREDIKSI'].iloc[-1]
 
-    monitor_df = pd.DataFrame({
-        "Indikator": [
-            "Tren Prediksi",
-            "Status Risiko",
-            "Perubahan 3 Tahun",
-            "Prediksi Tahun Akhir"
-        ],
-        "Nilai": [
-            trend_text,
-            risk_status,
-            f"{change_percent:.2f}%",
-            f"{pred_akhir:,.2f}"
-        ]
-    })
+    change_percent = (
+        (
+            pred_akhir - pred_awal
+        ) / pred_awal
+    ) * 100
 
-    st.table(monitor_df)
+    if pred_akhir > pred_awal:
+        trend_text = "↑ Naik"
+    else:
+        trend_text = "↓ Turun"
 
-with cr:
+    if pred_akhir < 5000:
+        risk_status = "Rendah 🟢"
+    elif pred_akhir < 15000:
+        risk_status = "Sedang 🟡"
+    else:
+        risk_status = "Tinggi 🔴"
 
-    st.markdown("""
-    <h3 style='color:#fde047;'>
-    📈 Aktual vs Prediksi
-    </h3>
-    """, unsafe_allow_html=True)
+    # =====================================================
+    # TABEL DAN GRAFIK
+    # =====================================================
 
-    aktual = pd.DataFrame({
-        'TAHUN': hist['TAHUN'],
-        'LOSS': hist[col_y],
-        'Status': 'Aktual'
-    })
+    cl, cr = st.columns([1,1.5])
 
-    prediksi = pd.DataFrame({
-        'TAHUN': pred_prov['TAHUN'],
-        'LOSS': pred_prov['PREDIKSI'],
-        'Status': 'Prediksi'
-    })
+    with cl:
 
-    gabung = pd.concat([
-        aktual,
-        prediksi
-    ])
+        st.markdown("""
+        <h3 style='color:#fde047;'>
+        📄 Hasil Prediksi
+        </h3>
+        """, unsafe_allow_html=True)
 
-    fig_pred = px.line(
-        gabung,
-        x='TAHUN',
-        y='LOSS',
-        color='Status',
-        markers=True,
-        color_discrete_map={
-            'Aktual': '#22c55e',
-            'Prediksi': '#ef4444'
-        }
-    )
+        st.dataframe(
+            pred_prov,
+            use_container_width=True,
+            hide_index=True
+        )
 
-    fig_pred.update_layout(
-        paper_bgcolor='white',
-        plot_bgcolor='white',
-        height=550
-    )
+        st.markdown("""
+        <br>
+        <h3 style='color:#ffffff;'>
+        📋 Monitoring Risiko Deforestasi
+        </h3>
+        """, unsafe_allow_html=True)
 
-    st.plotly_chart(
-        fig_pred,
-        use_container_width=True
-    )
+        monitor_df = pd.DataFrame({
+            "Indikator": [
+                "Tren Prediksi",
+                "Status Risiko",
+                "Perubahan 3 Tahun",
+                "Prediksi Tahun Akhir"
+            ],
+            "Nilai": [
+                trend_text,
+                risk_status,
+                f"{change_percent:.2f}%",
+                f"{pred_akhir:,.2f}"
+            ]
+        })
+
+        st.table(monitor_df)
+
+    with cr:
+
+        st.markdown("""
+        <h3 style='color:#fde047;'>
+        📈 Aktual vs Prediksi
+        </h3>
+        """, unsafe_allow_html=True)
+
+        aktual = pd.DataFrame({
+            'TAHUN': hist['TAHUN'],
+            'LOSS': hist[col_y],
+            'Status': 'Aktual'
+        })
+
+        prediksi = pd.DataFrame({
+            'TAHUN': pred_prov['TAHUN'],
+            'LOSS': pred_prov['PREDIKSI'],
+            'Status': 'Prediksi'
+        })
+
+        gabung = pd.concat([
+            aktual,
+            prediksi
+        ])
+
+        fig_pred = px.line(
+            gabung,
+            x='TAHUN',
+            y='LOSS',
+            color='Status',
+            markers=True,
+            color_discrete_map={
+                'Aktual': '#22c55e',
+                'Prediksi': '#ef4444'
+            }
+        )
+
+        fig_pred.update_layout(
+            paper_bgcolor='white',
+            plot_bgcolor='white',
+            height=550
+        )
+
+        st.plotly_chart(
+            fig_pred,
+            use_container_width=True
+        )
+
 # =========================================================
 # DASHBOARD
 # =========================================================
