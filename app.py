@@ -313,7 +313,6 @@ def load_or_train_model(df):
 # GLOBAL FORECASTING
 # =========================================================
 
-@st.cache_data
 def forecast_all_provinces(
     model,
     feature_cols,
