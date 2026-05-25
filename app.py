@@ -46,23 +46,34 @@ st.markdown("""
     .stSelectbox label p {
         color: #facc15 !important; 
         font-weight: bold !important;
-        font-size: 1.05rem !important;
+        font-size: 1.25rem !important;
     }
 
     /* === FIX FILE UPLOADER RE-STYLING === */
     [data-testid="stFileUploader"] label p {
         color: #facc15 !important;
         font-weight: bold !important;
-        font-size: 1.1rem !important;
+        font-size: 1.35rem !important;
         text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
     }
     [data-testid="stFileUploader"] section div div {
         color: #ffffff !important;
+        font-size: 1.1rem !important;
     }
     [data-testid="stFileUploader"] button {
         background-color: #15803d !important;
         color: #ffffff !important;
         border: 1px solid #facc15 !important;
+        font-size: 1rem !important;
+    }
+    /* File uploader drag-drop text */
+    [data-testid="stFileUploader"] section small {
+        color: #cbd5e1 !important;
+        font-size: 1rem !important;
+    }
+    [data-testid="stFileUploader"] section p {
+        color: #e2e8f0 !important;
+        font-size: 1.05rem !important;
     }
 
     /* Judul Utama */
@@ -203,7 +214,7 @@ st.markdown("""
     }
     .metric-card .mc-label {
         color: #facc15;
-        font-size: 0.82rem;
+        font-size: 0.95rem;
         font-weight: 700;
         letter-spacing: 0.07em;
         text-transform: uppercase;
@@ -211,14 +222,14 @@ st.markdown("""
     }
     .metric-card .mc-value {
         color: #ffffff;
-        font-size: 2rem;
+        font-size: 2.2rem;
         font-weight: 900;
         letter-spacing: -0.01em;
         text-shadow: 0 2px 12px rgba(74,222,128,0.25);
         line-height: 1.1;
     }
     .metric-card .mc-icon {
-        font-size: 1.6rem;
+        font-size: 1.8rem;
         margin-bottom: 6px;
     }
 
@@ -232,6 +243,19 @@ st.markdown("""
         box-shadow: 0 6px 24px rgba(0,0,0,0.5);
         overflow: hidden;
         margin-bottom: 18px;
+    }
+
+    /* === OVERRIDE DATAFRAME WARNA AGAR DARK THEMED === */
+    .pred-table-wrap [data-testid="stDataFrame"] {
+        background: transparent !important;
+    }
+    .pred-table-wrap [data-testid="stDataFrame"] iframe {
+        border-radius: 14px !important;
+        color-scheme: dark !important;
+    }
+    /* Force dark background on the dataframe iframe wrapper */
+    .pred-table-wrap > div {
+        background: rgba(10, 28, 15, 0.0) !important;
     }
 
     /* Monitoring Risiko — Dark Premium Table */
@@ -298,10 +322,10 @@ st.markdown("""
         border-radius: 14px !important;
     }
 
-    /* Section title prediksi */
+    /* Section title prediksi — DIPERBESAR */
     .pred-section-title {
         color: #fde047;
-        font-size: 1.15rem;
+        font-size: 1.45rem;
         font-weight: 800;
         margin: 0 0 14px 0;
         padding-bottom: 8px;
@@ -314,6 +338,26 @@ st.markdown("""
         border: none;
         border-top: 1px solid rgba(250,204,21,0.15);
         margin: 20px 0;
+    }
+
+    /* === SELECTBOX LABEL PREDIKSI — DIPERBESAR === */
+    .pred-selectbox-label {
+        color: #fde047;
+        font-size: 1.3rem;
+        font-weight: 800;
+        margin-bottom: 6px;
+        display: block;
+    }
+
+    /* === UPLOAD SECTION TITLE — DIPERBESAR === */
+    .upload-section-title {
+        color: #fde047;
+        font-size: 1.45rem;
+        font-weight: 800;
+        margin: 0 0 14px 0;
+        padding-bottom: 8px;
+        border-bottom: 2px solid rgba(21, 128, 61, 0.6);
+        letter-spacing: 0.02em;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -957,7 +1001,7 @@ else:
         <h1 style='color:#fde047; font-weight:900; letter-spacing:0.02em; margin-bottom:4px;'>
             🌍 PREDIKSI RISIKO DEFORESTASI
         </h1>
-        <p style='color:#94a3b8; font-size:0.9rem; margin-top:0; margin-bottom:20px;'>
+        <p style='color:#e2e8f0; font-size:1.15rem; font-weight:600; margin-top:0; margin-bottom:20px;'>
             Model Mixed-Effects Random Forest (MERF) — Estimasi deforestasi berbasis data panel provinsi Indonesia
         </p>
         """, unsafe_allow_html=True)
@@ -966,7 +1010,7 @@ else:
 
         # ── BAGIAN 1: Upload Data — Premium Format Card ──────────
         st.markdown("""
-        <p class='pred-section-title'>📥 Upload Data Aktual Baru</p>
+        <p class='upload-section-title'>📥 Upload Data Aktual Baru</p>
         """, unsafe_allow_html=True)
 
         uploaded_file = st.file_uploader(
@@ -1053,9 +1097,15 @@ else:
 
         st.markdown("<hr class='pred-divider'>", unsafe_allow_html=True)
 
+        # ── Pilih Provinsi — label diperbesar via CSS class ──
+        st.markdown("""
+        <p class='pred-section-title'>📍 Pilih Provinsi</p>
+        """, unsafe_allow_html=True)
+
         prov_target = st.selectbox(
-            "📍 Pilih Provinsi",
-            sorted(df['PROVINSI'].unique())
+            "Pilih provinsi untuk melihat prediksi:",
+            sorted(df['PROVINSI'].unique()),
+            label_visibility="collapsed"
         )
 
         pred_prov = pred_global[
@@ -1133,51 +1183,69 @@ else:
             <p class='pred-section-title'>📄 Hasil Prediksi</p>
             """, unsafe_allow_html=True)
 
-            # Style dataframe via pandas Styler
-            styled_pred = pred_prov.style.set_properties(**{
-                'background-color': 'rgba(10,28,15,0)',
-                'color': '#f1f5f9',
-                'border': '1px solid rgba(250,204,21,0.15)',
-                'font-size': '0.94rem',
-                'font-weight': '600',
-            }).set_table_styles([
-                {
-                    'selector': 'thead tr th',
-                    'props': [
-                        ('background-color', 'rgba(21,128,61,0.40)'),
-                        ('color', '#facc15'),
-                        ('font-weight', '800'),
-                        ('font-size', '0.82rem'),
-                        ('letter-spacing', '0.06em'),
-                        ('text-transform', 'uppercase'),
-                        ('border-bottom', '2px solid rgba(250,204,21,0.30)'),
-                        ('padding', '10px 14px'),
-                    ]
-                },
-                {
-                    'selector': 'tbody tr:hover',
-                    'props': [('background-color', 'rgba(21,128,61,0.18)')]
-                },
-                {
-                    'selector': 'tbody tr td',
-                    'props': [
-                        ('padding', '9px 14px'),
-                        ('border-bottom', '1px solid rgba(255,255,255,0.05)'),
-                    ]
-                },
-                {
-                    'selector': '',
-                    'props': [
-                        ('border-radius', '14px'),
-                        ('overflow', 'hidden'),
-                        ('width', '100%'),
-                    ]
-                },
-            ])
+            # Style dataframe via pandas Styler — dark themed
+            styled_pred = (
+                pred_prov.style
+                .set_properties(**{
+                    'background-color': 'rgba(10,28,15,0.85)',
+                    'color': '#f1f5f9',
+                    'border': '1px solid rgba(250,204,21,0.15)',
+                    'font-size': '0.94rem',
+                    'font-weight': '600',
+                })
+                .set_table_styles([
+                    {
+                        'selector': 'thead tr th',
+                        'props': [
+                            ('background-color', 'rgba(21,128,61,0.60)'),
+                            ('color', '#facc15'),
+                            ('font-weight', '800'),
+                            ('font-size', '0.82rem'),
+                            ('letter-spacing', '0.06em'),
+                            ('text-transform', 'uppercase'),
+                            ('border-bottom', '2px solid rgba(250,204,21,0.30)'),
+                            ('padding', '10px 14px'),
+                        ]
+                    },
+                    {
+                        'selector': 'tbody tr',
+                        'props': [
+                            ('background-color', 'rgba(10,28,15,0.80)'),
+                        ]
+                    },
+                    {
+                        'selector': 'tbody tr:nth-child(even)',
+                        'props': [
+                            ('background-color', 'rgba(21,128,61,0.12)'),
+                        ]
+                    },
+                    {
+                        'selector': 'tbody tr:hover',
+                        'props': [('background-color', 'rgba(21,128,61,0.25)')]
+                    },
+                    {
+                        'selector': 'tbody tr td',
+                        'props': [
+                            ('padding', '9px 14px'),
+                            ('border-bottom', '1px solid rgba(255,255,255,0.05)'),
+                            ('color', '#f1f5f9'),
+                        ]
+                    },
+                    {
+                        'selector': '',
+                        'props': [
+                            ('border-radius', '14px'),
+                            ('overflow', 'hidden'),
+                            ('width', '100%'),
+                            ('background-color', 'rgba(10,28,15,0.85)'),
+                        ]
+                    },
+                ])
+            )
 
             st.markdown("<div class='pred-table-wrap'>", unsafe_allow_html=True)
             st.dataframe(
-                pred_prov,
+                styled_pred,
                 use_container_width=True,
                 hide_index=True
             )
