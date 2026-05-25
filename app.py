@@ -154,16 +154,32 @@ geojson = load_geojson()
 # NAMA KOLOM
 # =========================================================
 
-col_y = "Y (TREE COVER LOSS- Ha)"
+# =========================================================
+# AUTO DETECT KOLOM
+# =========================================================
+
+all_cols = st.session_state.df.columns.tolist()
+
+def cari_kolom(keyword):
+    for col in all_cols:
+        if keyword.lower() in col.lower():
+            return col
+    return None
+
+col_y = cari_kolom("TREE COVER LOSS")
 
 cols_x = {
-    "X1": "X1 (LUAS PENUTUPAN LAHAN - RIBU Ha)",
-    "X2": "X2 (LUAS KEBAKARAN HUTAN DAN LAHAN - Ha)",
-    "X3": "X3 (TOTAL LUAS TANAMAN PERKEBUNAN - RIBU Ha)",
-    "X4": "X4 (KEPADATAN PENDUDUK - jiwa/km2)",
-    "X5": "X5  (TOTAL POPULASI TERNAK - EKOR)",
-    "X6": "X6 (PDRB PERTAMBANGAN DAN PENGGALIAN PERSEN) "
+    "X1": cari_kolom("LUAS PENUTUPAN LAHAN"),
+    "X2": cari_kolom("KEBAKARAN HUTAN"),
+    "X3": cari_kolom("TOTAL LUAS TANAMAN"),
+    "X4": cari_kolom("KEPADATAN PENDUDUK"),
+    "X5": cari_kolom("TOTAL POPULASI TERNAK"),
+    "X6": cari_kolom("PDRB PERTAMBANGAN")
 }
+
+# DEBUG CEK KOLOM
+st.write("Kolom Y:", col_y)
+st.write("Kolom X:", cols_x)
 
 # =========================================================
 # PREPARE DATA
