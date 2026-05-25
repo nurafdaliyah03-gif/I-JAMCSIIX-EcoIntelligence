@@ -1,8 +1,12 @@
+# ForestGuard — Full Streamlit Syntax (Konsep MERF Deployment)
+
+```python
 import streamlit as st
 import pandas as pd
 import plotly.express as px
 import requests
 import numpy as np
+import joblib
 
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import (
@@ -34,8 +38,11 @@ if 'df' not in st.session_state:
 
     df = pd.read_csv(url)
 
+    # RAPIIKAN NAMA KOLOM
     df.columns = df.columns.str.strip()
+    df.columns = df.columns.str.replace(r"\s+", " ", regex=True)
 
+    # RAPIIKAN PROVINSI
     df['PROVINSI'] = (
         df['PROVINSI']
         .astype(str)
@@ -48,6 +55,31 @@ if 'df' not in st.session_state:
 
 def set_page(name):
     st.session_state.page = name
+
+# =========================================================
+# AUTO DETECT KOLOM
+# =========================================================
+
+all_cols = st.session_state.df.columns.tolist()
+
+
+def cari_kolom(keyword):
+    for col in all_cols:
+        if keyword.lower() in col.lower():
+            return col
+    return None
+
+
+col_y = cari_kolom("TREE COVER LOSS")
+
+cols_x = {
+    "X1": cari_kolom("LUAS PENUTUPAN LAHAN"),
+    "X2": cari_kolom("KEBAKARAN HUTAN"),
+    "X3": cari_kolom("TOTAL LUAS TANAMAN"),
+    "X4": cari_kolom("KEPADATAN PENDUDUK"),
+    "X5": cari_kolom("TOTAL POPULASI TERNAK"),
+    "X6": cari_kolom("PDRB PERTAMBANGAN")
+}
 
 # =========================================================
 # CSS
@@ -118,6 +150,7 @@ div.stButton > button {
 # =========================================================
 
 @st.cache_data
+
 def load_geojson():
 
     try:
@@ -151,41 +184,11 @@ def load_geojson():
 geojson = load_geojson()
 
 # =========================================================
-# NAMA KOLOM
-# =========================================================
-
-# =========================================================
-# AUTO DETECT KOLOM
-# =========================================================
-
-all_cols = st.session_state.df.columns.tolist()
-
-def cari_kolom(keyword):
-    for col in all_cols:
-        if keyword.lower() in col.lower():
-            return col
-    return None
-
-col_y = cari_kolom("TREE COVER LOSS")
-
-cols_x = {
-    "X1": cari_kolom("LUAS PENUTUPAN LAHAN"),
-    "X2": cari_kolom("KEBAKARAN HUTAN"),
-    "X3": cari_kolom("TOTAL LUAS TANAMAN"),
-    "X4": cari_kolom("KEPADATAN PENDUDUK"),
-    "X5": cari_kolom("TOTAL POPULASI TERNAK"),
-    "X6": cari_kolom("PDRB PERTAMBANGAN")
-}
-
-# DEBUG CEK KOLOM
-st.write("Kolom Y:", col_y)
-st.write("Kolom X:", cols_x)
-
-# =========================================================
 # PREPARE DATA
 # =========================================================
 
 @st.cache_data
+
 def prepare_data(df):
 
     data = df.copy()
@@ -194,11 +197,19 @@ def prepare_data(df):
         ['PROVINSI', 'TAHUN']
     )
 
+    # =====================================================
+    # LAG Y
+    # =====================================================
+
     data['Y_lag1'] = (
         data
         .groupby('PROVINSI')[col_y]
         .shift(1)
     )
+
+    # =====================================================
+    # LAG X
+    # =====================================================
 
     for key, col in cols_x.items():
 
@@ -208,7 +219,26 @@ def prepare_data(df):
             .shift(1)
         )
 
+    # =====================================================
+    # MOVING AVERAGE 3 TAHUN
+    # =====================================================
+
+    for key, col in cols_x.items():
+
+        data[f'{key}_ma3'] = (
+            data
+            .groupby('PROVINSI')[col]
+            .transform(
+                lambda x:
+                x.rolling(3, min_periods=1).mean()
+            )
+        )
+
     data = data.dropna().copy()
+
+    # =====================================================
+    # LOG TRANSFORM
+    # =====================================================
 
     data['Y_log'] = np.log1p(data[col_y])
 
@@ -220,10 +250,10 @@ def prepare_data(df):
 
     for key in cols_x.keys():
 
-        new_col = f'{key}_lag1_log'
+        new_col = f'{key}_ma3_log'
 
         data[new_col] = np.log1p(
-            data[f'{key}_lag1']
+            data[f'{key}_ma3']
         )
 
         feature_cols.append(new_col)
@@ -231,119 +261,168 @@ def prepare_data(df):
     return data, feature_cols
 
 # =========================================================
-# TRAIN MODEL
+# TRAIN GLOBAL MODEL
+# =========================================================
+
+@st.cache_resource
+
+def load_or_train_model(df):
+
+    try:
+
+        model = joblib.load("forestguard_model.pkl")
+
+        data, feature_cols = prepare_data(df)
+
+        metrics = {
+            "RMSE": 0,
+            "MAE": 0,
+            "R2": 0
+        }
+
+        return model, feature_cols, metrics
+
+    except:
+
+        data, feature_cols = prepare_data(df)
+
+        train_data = data[data['TAHUN'] <= 2021]
+        test_data = data[data['TAHUN'] > 2021]
+
+        X_train = train_data[feature_cols]
+        y_train = train_data['Y_log']
+
+        X_test = test_data[feature_cols]
+        y_test = test_data['Y_log']
+
+        model = RandomForestRegressor(
+            n_estimators=500,
+            max_depth=10,
+            random_state=42
+        )
+
+        model.fit(X_train, y_train)
+
+        # SAVE MODEL
+        joblib.dump(model, "forestguard_model.pkl")
+
+        pred_test_log = model.predict(X_test)
+
+        pred_test = np.expm1(pred_test_log)
+
+        actual_test = np.expm1(y_test)
+
+        rmse = np.sqrt(
+            mean_squared_error(
+                actual_test,
+                pred_test
+            )
+        )
+
+        mae = mean_absolute_error(
+            actual_test,
+            pred_test
+        )
+
+        r2 = r2_score(
+            actual_test,
+            pred_test
+        )
+
+        metrics = {
+            "RMSE": rmse,
+            "MAE": mae,
+            "R2": r2
+        }
+
+        return model, feature_cols, metrics
+
+# =========================================================
+# GLOBAL FORECASTING
 # =========================================================
 
 @st.cache_data
-def train_model(df):
 
-    data, feature_cols = prepare_data(df)
-
-    train_data = data[data['TAHUN'] <= 2021]
-    test_data = data[data['TAHUN'] > 2021]
-
-    X_train = train_data[feature_cols]
-    y_train = train_data['Y_log']
-
-    X_test = test_data[feature_cols]
-
-    model = RandomForestRegressor(
-        n_estimators=500,
-        max_depth=10,
-        random_state=42
-    )
-
-    model.fit(X_train, y_train)
-
-    pred_test_log = model.predict(X_test)
-
-    pred_test = np.expm1(pred_test_log)
-
-    rmse = np.sqrt(
-        mean_squared_error(
-            test_data[col_y],
-            pred_test
-        )
-    )
-
-    mae = mean_absolute_error(
-        test_data[col_y],
-        pred_test
-    )
-
-    r2 = r2_score(
-        test_data[col_y],
-        pred_test
-    )
-
-    metrics = {
-        "RMSE": rmse,
-        "MAE": mae,
-        "R2": r2
-    }
-
-    return model, feature_cols, metrics
-
-# =========================================================
-# FUTURE PREDICTION
-# =========================================================
-
-def predict_future(
+def forecast_all_provinces(
     model,
     feature_cols,
     df,
-    provinsi,
     n_years=3
 ):
 
     data = df.copy()
 
-    prov_data = (
-        data[data['PROVINSI'] == provinsi]
-        .sort_values('TAHUN')
+    hasil_semua = []
+
+    provinsi_list = sorted(
+        data['PROVINSI'].unique()
     )
 
-    latest = prov_data.iloc[-1]
+    for provinsi in provinsi_list:
 
-    current_y = latest[col_y]
+        prov_data = (
+            data[data['PROVINSI'] == provinsi]
+            .sort_values('TAHUN')
+        )
 
-    current_year = int(latest['TAHUN'])
+        latest = prov_data.iloc[-1]
 
-    x_values = {}
+        current_y = latest[col_y]
 
-    for key, col in cols_x.items():
-        x_values[key] = latest[col]
+        current_year = int(latest['TAHUN'])
 
-    results = []
+        x_hist = {}
 
-    for i in range(1, n_years + 1):
+        for key, col in cols_x.items():
 
-        tahun = current_year + i
-
-        future_input = {
-            'Y_lag1_log': np.log1p(current_y)
-        }
-
-        for key in cols_x.keys():
-
-            future_input[f'{key}_lag1_log'] = np.log1p(
-                x_values[key]
+            x_hist[key] = (
+                prov_data[col]
+                .tail(3)
+                .tolist()
             )
 
-        X_future = pd.DataFrame([future_input])
+        # =============================================
+        # RECURSIVE FORECASTING
+        # =============================================
 
-        pred_log = model.predict(X_future)[0]
+        for i in range(1, n_years + 1):
 
-        pred = np.expm1(pred_log)
+            tahun = current_year + i
 
-        results.append({
-            "Tahun": tahun,
-            "Prediksi Tree Cover Loss (Ha)": round(pred, 2)
-        })
+            future_input = {
+                'Y_lag1_log': np.log1p(current_y)
+            }
 
-        current_y = pred
+            for key in cols_x.keys():
 
-    return pd.DataFrame(results)
+                ma3 = np.mean(x_hist[key][-3:])
+
+                future_input[
+                    f'{key}_ma3_log'
+                ] = np.log1p(ma3)
+
+            X_future = pd.DataFrame([
+                future_input
+            ])
+
+            pred_log = model.predict(X_future)[0]
+
+            pred = np.expm1(pred_log)
+
+            hasil_semua.append({
+                "PROVINSI": provinsi,
+                "TAHUN": tahun,
+                "PREDIKSI": round(pred, 2),
+                "STATUS": "Prediksi"
+            })
+
+            current_y = pred
+
+            # UPDATE MOVING WINDOW
+            for key in x_hist.keys():
+                x_hist[key].append(ma3)
+
+    return pd.DataFrame(hasil_semua)
 
 # =========================================================
 # PORTAL
@@ -506,15 +585,67 @@ else:
 
         st.markdown("""
         <h2 style='color:#facc15;'>
-        🌍 PREDIKSI MERF TREE COVER LOSS
+        🌍 PREDIKSI RISIKO DEFORESTASI
         </h2>
         """, unsafe_allow_html=True)
 
         df = st.session_state.df
 
-        with st.spinner("Training Model..."):
+        # =================================================
+        # UPLOAD DATA BARU
+        # =================================================
 
-            model, feature_cols, metrics = train_model(df)
+        with st.expander("📥 Upload Data Aktual Baru"):
+
+            uploaded_file = st.file_uploader(
+                "Upload CSV Data Aktual",
+                type="csv"
+            )
+
+            if uploaded_file:
+
+                new_df = pd.read_csv(uploaded_file)
+
+                new_df.columns = (
+                    new_df.columns
+                    .str.strip()
+                )
+
+                new_df.columns = (
+                    new_df.columns
+                    .str.replace(
+                        r"\s+",
+                        " ",
+                        regex=True
+                    )
+                )
+
+                st.success(
+                    "Data berhasil ditambahkan"
+                )
+
+                st.session_state.df = pd.concat(
+                    [df, new_df],
+                    ignore_index=True
+                )
+
+                df = st.session_state.df
+
+        # =================================================
+        # LOAD MODEL GLOBAL
+        # =================================================
+
+        with st.spinner(
+            "Menjalankan model global ForestGuard..."
+        ):
+
+            model, feature_cols, metrics = (
+                load_or_train_model(df)
+            )
+
+        # =================================================
+        # METRICS
+        # =================================================
 
         st.markdown("### 📌 Evaluasi Model")
 
@@ -537,25 +668,31 @@ else:
 
         st.markdown("---")
 
+        # =================================================
+        # FORECAST GLOBAL
+        # =================================================
+
+        last_year = int(df['TAHUN'].max())
+
+        pred_global = forecast_all_provinces(
+            model,
+            feature_cols,
+            df,
+            n_years=3
+        )
+
+        # =================================================
+        # FILTER VISUAL
+        # =================================================
+
         prov_target = st.selectbox(
             "Pilih Provinsi",
             sorted(df['PROVINSI'].unique())
         )
 
-        future_years = st.slider(
-            "Jumlah Tahun Prediksi",
-            1,
-            5,
-            3
-        )
-
-        pred_df = predict_future(
-            model,
-            feature_cols,
-            df,
-            prov_target,
-            future_years
-        )
+        pred_prov = pred_global[
+            pred_global['PROVINSI'] == prov_target
+        ]
 
         cl, cr = st.columns([1, 1.4])
 
@@ -568,7 +705,7 @@ else:
             """, unsafe_allow_html=True)
 
             st.dataframe(
-                pred_df,
+                pred_prov,
                 use_container_width=True,
                 hide_index=True
             )
@@ -593,10 +730,8 @@ else:
             })
 
             prediksi = pd.DataFrame({
-                'TAHUN': pred_df['Tahun'],
-                'LOSS': pred_df[
-                    'Prediksi Tree Cover Loss (Ha)'
-                ],
+                'TAHUN': pred_prov['TAHUN'],
+                'LOSS': pred_prov['PREDIKSI'],
                 'Status': 'Prediksi'
             })
 
@@ -653,3 +788,4 @@ else:
 
         </div>
         """, unsafe_allow_html=True)
+
