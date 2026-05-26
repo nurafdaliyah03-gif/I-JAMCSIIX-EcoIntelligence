@@ -689,14 +689,14 @@ else:
             sel_thn = st.selectbox("📅 Pilih Tahun:", list_thn)
         with fc2:
             list_prov = ["Semua Provinsi"] + sorted(df['PROVINSI'].unique().tolist())
-            sel_prov = st.selectbox("🗺️ Fokus Wilayah (Zoom Provinsi):", list_prov)
+            sel_prov = st.selectbox("🗺️ Fokus Wilayah:", list_prov)
         with fc3:
             # ── REVISI FIX: hanya tampilkan X yang kolomnya benar-benar ada di df ──
             valid_x_keys = [
                 k for k, v in cols_x.items()
                 if v in df.columns and df[v].notna().any()
             ]
-            var_x = st.selectbox("📈 Analisis Korelasi X:", valid_x_keys)
+            var_x = st.selectbox("📈 Analisis Korelasi Variabel X:", valid_x_keys)
 
         df_yr = df[df['TAHUN'] == sel_thn].copy()
         g_min = 0
