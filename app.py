@@ -999,7 +999,7 @@ else:
 
         st.markdown("""
         <h1 style='color:#fde047; font-weight:900; letter-spacing:0.02em; margin-bottom:4px;'>
-            🌍 PREDIKSI RISIKO DEFORESTASI
+            🌍 SISTEM DETEKSI DINI DEFORESTASI
         </h1>
         <p style='color:#e2e8f0; font-size:1.15rem; font-weight:600; margin-top:0; margin-bottom:20px;'>
             Model Mixed-Effects Random Forest (MERF) — Estimasi deforestasi berbasis data panel provinsi Indonesia
